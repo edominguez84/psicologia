@@ -34,6 +34,9 @@
                 <li>{{ config('site.contact.area') }}</li>
                 <li>{{ config('site.contact.response') }}</li>
             </ul>
+
+            <h4 class="mb-3 mt-6 text-sm font-bold uppercase tracking-wider text-paper-50">Redes sociales</h4>
+            @include('partials.social-icons', ['dark' => true])
         </div>
     </div>
 

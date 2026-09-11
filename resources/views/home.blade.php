@@ -313,6 +313,11 @@
                     <p><strong class="text-sky-700">Zona de atención:</strong> {{ $s['contact']['area'] }}</p>
                     <p class="mt-1">{{ $s['contact']['response'] }}</p>
                 </div>
+
+                <div class="pt-2">
+                    <p class="mb-3 text-xs font-bold uppercase tracking-wider text-sky-500">Sígueme en redes</p>
+                    @include('partials.social-icons')
+                </div>
             </div>
         </div>
 

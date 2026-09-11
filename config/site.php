@@ -21,8 +21,8 @@ return [
     'registration'=> env('SITE_REGISTRATION', 'Colegiada J.V.P.P. 4615'),
 
     'contact' => [
-        'whatsapp'      => env('SITE_WHATSAPP', '50370257845'), // solo dígitos, con código de país
-        'whatsapp_show' => env('SITE_WHATSAPP_SHOW', '+503 7025 7845'),
+        'whatsapp'      => env('SITE_WHATSAPP', '50360606225'), // solo dígitos, con código de país
+        'whatsapp_show' => env('SITE_WHATSAPP_SHOW', '+503 6060 6225'),
         'email'         => env('SITE_EMAIL', 'contacto@ejemplo.com'),
         'area'          => 'Estados Unidos y Europa',
         'response'      => 'Suelo responder el mismo día',
