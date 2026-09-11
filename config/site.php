@@ -11,6 +11,10 @@
 
 return [
 
+    // Activa el modo demo (usado al exportar una versión estática sin backend,
+    // p. ej. para Netlify): los formularios funcionan en el navegador sin llamar a la API.
+    'demo_mode'   => env('SITE_DEMO_MODE', false),
+
     'name'        => env('SITE_NAME', 'Aracely Peñate'),
     'role'        => 'Psicóloga · Especialista en trauma y EMDR',
     'tagline'     => 'Terapia online en español',

@@ -1,0 +1,18 @@
+# Configuración de despliegue estático (solo demo visual, sin backend).
+# Ver static-demo/README.md para el detalle de qué funciona y qué no.
+
+[build]
+  # No hay build real: los archivos ya están pre-generados en static-demo/
+  # (HTML exportado de Laravel en modo demo + CSS/JS de Vite ya compilados).
+  publish = "static-demo"
+  command = "echo 'Nada que compilar: static-demo/ ya contiene los archivos finales.'"
+
+[[redirects]]
+  from = "/privacidad"
+  to = "/privacidad.html"
+  status = 200
+
+[[headers]]
+  for = "/build/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

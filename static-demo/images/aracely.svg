@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="#dde8e0"/>
+  <circle cx="400" cy="380" r="150" fill="#93b39d"/>
+  <path d="M180 1000c0-160 100-290 220-290s220 130 220 290z" fill="#93b39d"/>
+  <text x="400" y="560" font-family="Georgia, serif" font-size="34" fill="#33493e" text-anchor="middle">Foto profesional</text>
+  <text x="400" y="605" font-family="Georgia, serif" font-size="22" fill="#4f7360" text-anchor="middle">sustituir por public/images/aracely.jpg</text>
+</svg>

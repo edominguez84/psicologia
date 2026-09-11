@@ -6,8 +6,12 @@ const props = defineProps({
     options: { type: Array, default: () => [] },
     period: { type: String, default: '' },
     disclaimer: { type: String, default: '' },
-    endpoint: { type: String, required: true },
+    endpoint: { type: String, default: null },
     whatsapp: { type: String, default: '' },
+    // Modo demo (sin backend, p.ej. despliegue estático en Netlify):
+    // calcula el resultado en el navegador en vez de llamar a la API.
+    demoMode: { type: Boolean, default: false },
+    results: { type: Object, default: () => ({}) },
 });
 
 const answers = ref(props.questions.map(() => null));
@@ -28,8 +32,22 @@ const bandStyle = computed(() => {
     }[result.value.band];
 });
 
+function bandFor(score) {
+    if (score <= 4) return 'bajo';
+    if (score <= 9) return 'medio';
+    return 'alto';
+}
+
 async function submit() {
     if (!allAnswered.value || loading.value) return;
+
+    if (props.demoMode) {
+        const score = answers.value.reduce((sum, a) => sum + Number(a), 0);
+        const band = bandFor(score);
+        result.value = { score, max: props.questions.length * 3, band, result: props.results[band] };
+        return;
+    }
+
     loading.value = true;
     error.value = null;
     try {
@@ -130,6 +148,9 @@ function reset() {
             </div>
 
             <p class="mt-6 text-xs leading-relaxed text-ink-soft">{{ props.disclaimer }}</p>
+            <p v-if="demoMode" class="mt-3 rounded-xl border border-clay-400/30 bg-cream-100 px-4 py-3 text-xs leading-relaxed text-ink-soft">
+                <strong class="text-clay-500">Sitio de demostración:</strong> el resultado se calcula en tu navegador y no se guarda en ninguna base de datos.
+            </p>
         </template>
     </div>
 </template>

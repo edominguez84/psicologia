@@ -124,6 +124,18 @@ php artisan config:clear
 La foto de cabecera: coloca `public/images/aracely.jpg` y cambia `about.photo` en
 `config/site.php` (ahora usa un SVG de marcador de posición).
 
+## Demo estática en Netlify (sin backend)
+
+Netlify solo sirve archivos estáticos: no ejecuta PHP/Laravel ni ofrece MySQL. Por eso
+existe `static-demo/`, una exportación del HTML ya renderizado (mismo diseño, formularios
+que funcionan visualmente vía WhatsApp / cálculo en el navegador, pero **sin guardar nada
+en base de datos ni enviar email**). Ver [`static-demo/README.md`](static-demo/README.md)
+para el detalle y cómo desplegarla. El `netlify.toml` de la raíz ya la configura como
+`publish directory`, así que basta con conectar el repo en Netlify sin tocar nada más.
+
+Para el sitio 100% funcional (formularios reales) hay que desplegar el proyecto Laravel
+completo en un hosting con PHP + MySQL — Netlify no sirve para eso.
+
 ## Tests
 
 ```bash

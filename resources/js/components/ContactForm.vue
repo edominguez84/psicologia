@@ -3,7 +3,11 @@ import { reactive, ref } from 'vue';
 
 const props = defineProps({
     subjects: { type: Array, default: () => [] },
-    endpoint: { type: String, required: true },
+    endpoint: { type: String, default: null },
+    // Modo demo (sin backend, p.ej. despliegue estático en Netlify):
+    // en vez de hacer POST, arma el mensaje y abre WhatsApp.
+    demoMode: { type: Boolean, default: false },
+    whatsapp: { type: String, default: '' },
 });
 
 const form = reactive({
@@ -24,6 +28,28 @@ const generalError = ref(null);
 
 async function submit() {
     if (loading.value) return;
+
+    if (!form.name || !form.email || form.message.length < 10 || !form.consent) {
+        errors.value = {
+            ...(!form.name ? { name: ['El campo nombre es obligatorio.'] } : {}),
+            ...(!form.email ? { email: ['El campo email es obligatorio.'] } : {}),
+            ...(form.message.length < 10 ? { message: ['Cuéntame un poco más para poder ayudarte (mínimo 10 caracteres).'] } : {}),
+            ...(!form.consent ? { consent: ['Debes aceptar la política de privacidad para continuar.'] } : {}),
+        };
+        return;
+    }
+
+    if (props.demoMode) {
+        const text = [
+            `Hola, soy ${form.name}.`,
+            form.subject ? `Asunto: ${form.subject}.` : null,
+            form.message,
+        ].filter(Boolean).join(' ');
+        window.open(`${props.whatsapp}${props.whatsapp.includes('?') ? '&' : '?'}text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+        success.value = 'Se ha abierto WhatsApp con tu mensaje listo para enviar. (Sitio de demostración: este formulario no guarda datos ni envía email; la versión con Laravel + MySQL sí lo hace.)';
+        return;
+    }
+
     loading.value = true;
     errors.value = {};
     generalError.value = null;
@@ -62,6 +88,9 @@ function err(field) {
         </div>
 
         <form v-else class="space-y-5" @submit.prevent="submit">
+            <p v-if="demoMode" class="rounded-xl border border-clay-400/30 bg-cream-100 px-4 py-3 text-xs leading-relaxed text-ink-soft">
+                <strong class="text-clay-500">Sitio de demostración:</strong> este formulario abre WhatsApp con tu mensaje. No guarda datos (la versión con Laravel + MySQL sí lo hace).
+            </p>
             <div class="grid gap-5 sm:grid-cols-2">
                 <div>
                     <label class="mb-1.5 block text-sm font-semibold text-sage-700">Nombre *</label>

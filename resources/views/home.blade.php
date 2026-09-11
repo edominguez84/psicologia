@@ -4,6 +4,10 @@
     $s = config('site');
     $wa = 'https://wa.me/'.$s['contact']['whatsapp'].'?text='.rawurlencode($s['whatsapp_prefill']);
 
+    // Modo demo: para exportar una versión estática (p. ej. Netlify) sin backend.
+    // Los formularios calculan/arman el mensaje en el navegador en vez de llamar a la API.
+    $demoMode = (bool) config('site.demo_mode');
+
     // Props para los componentes Vue (se serializan a JSON en el atributo data-props).
     $mythProps = ['items' => $s['myths']['items']];
     $faqProps = ['items' => $s['faq']['items']];
@@ -12,12 +16,16 @@
         'options'    => $s['checkup']['options'],
         'period'     => $s['checkup']['period'],
         'disclaimer' => $s['checkup']['disclaimer'],
-        'endpoint'   => route('checkup.store'),
+        'endpoint'   => $demoMode ? null : route('checkup.store'),
         'whatsapp'   => $wa,
+        'demoMode'   => $demoMode,
+        'results'    => $s['checkup']['results'],
     ];
     $contactProps = [
         'subjects' => $s['contact_section']['subjects'],
-        'endpoint' => route('contact.store'),
+        'endpoint' => $demoMode ? null : route('contact.store'),
+        'demoMode' => $demoMode,
+        'whatsapp' => $wa,
     ];
 @endphp
 
