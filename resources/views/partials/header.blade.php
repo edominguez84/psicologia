@@ -8,6 +8,7 @@
         ['href' => '/#faq', 'label' => 'Preguntas'],
     ];
     $wa = 'https://wa.me/'.config('site.contact.whatsapp').'?text='.rawurlencode(config('site.whatsapp_prefill'));
+    $ctaLabel = 'Hablar con '.\App\Support\NameHelper::firstName(config('site.name'));
 @endphp
 
 <header class="sticky top-0 z-50 border-b border-paper-200 bg-paper-50/90 backdrop-blur">
@@ -26,9 +27,9 @@
 
         <div class="flex items-center gap-3">
             <a href="{{ $wa }}" target="_blank" rel="noopener" class="btn btn-primary hidden sm:inline-flex">
-                Escríbeme
+                {{ $ctaLabel }}
             </a>
-            @php $mobileNavProps = ['links' => $navLinks, 'whatsapp' => $wa, 'cta' => 'Escríbeme por WhatsApp']; @endphp
+            @php $mobileNavProps = ['links' => $navLinks, 'whatsapp' => $wa, 'cta' => $ctaLabel]; @endphp
             <div
                 data-vue="MobileNav"
                 data-props="{{ json_encode($mobileNavProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"

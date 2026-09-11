@@ -27,6 +27,13 @@
         'demoMode' => $demoMode,
         'whatsapp' => $wa,
     ];
+    $scheduleCallProps = [
+        'subjects' => $s['contact_section']['subjects'],
+        'endpoint' => $demoMode ? null : route('contact.store'),
+        'demoMode' => $demoMode,
+        'whatsapp' => $wa,
+        'subject'  => $s['contact_section']['subjects'][0] ?? null,
+    ];
 @endphp
 
 @section('content')
@@ -50,7 +57,10 @@
                 <a href="{{ $wa }}" target="_blank" rel="noopener" class="btn btn-primary">
                     {{ $s['hero']['cta_primary'] }}
                 </a>
-                <a href="#contacto" class="btn btn-ghost">{{ $s['hero']['cta_secondary'] }}</a>
+                <div
+                    data-vue="ScheduleCallModal"
+                    data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => $s['hero']['cta_secondary']], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+                ></div>
             </div>
 
             <dl class="mt-12 grid gap-6 sm:grid-cols-3">
@@ -194,9 +204,11 @@
             </ol>
         </div>
 
-        <a href="{{ $wa }}" target="_blank" rel="noopener" class="btn mt-12 bg-paper-50 text-sky-800 hover:bg-white">
-            Reserva tu llamada gratuita
-        </a>
+        <div
+            class="mt-12"
+            data-vue="ScheduleCallModal"
+            data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => 'Reserva tu llamada gratuita', 'triggerClass' => 'btn bg-paper-50 text-sky-800 hover:bg-white'], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+        ></div>
     </div>
 </section>
 

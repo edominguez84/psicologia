@@ -7,6 +7,7 @@ import MythCards from './components/MythCards.vue';
 import EmotionalCheckup from './components/EmotionalCheckup.vue';
 import ContactForm from './components/ContactForm.vue';
 import MobileNav from './components/MobileNav.vue';
+import ScheduleCallModal from './components/ScheduleCallModal.vue';
 
 // Alpine.js se usa únicamente en el panel de administración (repetidores de
 // formularios dinámicos); el sitio público sigue usando Vue para sus islas
@@ -24,6 +25,7 @@ const registry = {
     EmotionalCheckup,
     ContactForm,
     MobileNav,
+    ScheduleCallModal,
 };
 
 document.querySelectorAll('[data-vue]').forEach((el) => {

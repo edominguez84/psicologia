@@ -8,13 +8,17 @@ const props = defineProps({
     // en vez de hacer POST, arma el mensaje y abre WhatsApp.
     demoMode: { type: Boolean, default: false },
     whatsapp: { type: String, default: '' },
+    // Permite preseleccionar el asunto (p.ej. desde el modal de "agendar llamada").
+    initialSubject: { type: String, default: null },
 });
+
+const emit = defineEmits(['sent']);
 
 const form = reactive({
     name: '',
     email: '',
     phone: '',
-    subject: props.subjects[0] || '',
+    subject: props.initialSubject || props.subjects[0] || '',
     message: '',
     preferred_contact: 'whatsapp',
     consent: false,
@@ -47,6 +51,7 @@ async function submit() {
         ].filter(Boolean).join(' ');
         window.open(`${props.whatsapp}${props.whatsapp.includes('?') ? '&' : '?'}text=${encodeURIComponent(text)}`, '_blank', 'noopener');
         success.value = 'Se ha abierto WhatsApp con tu mensaje listo para enviar. (Sitio de demostración: este formulario no guarda datos ni envía email; la versión con Laravel + MySQL sí lo hace.)';
+        emit('sent');
         return;
     }
 
@@ -57,6 +62,7 @@ async function submit() {
     try {
         const { data } = await window.axios.post(props.endpoint, { ...form });
         success.value = data.message;
+        emit('sent');
     } catch (e) {
         if (e.response?.status === 422) {
             errors.value = e.response.data.errors || {};
