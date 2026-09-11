@@ -57,8 +57,7 @@ return [
             'Colegiada J.V.P.P. 4615',
             'Atención 100% online en español',
         ],
-        // Coloca la foto real en public/images/aracely.jpg y cambia esta ruta.
-        'photo' => 'images/aracely.svg',
+        'photo' => 'images/aracely.jpg',
     ],
 
     'services' => [
