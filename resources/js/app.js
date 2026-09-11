@@ -1,11 +1,18 @@
 import './bootstrap';
 import { createApp } from 'vue';
+import Alpine from 'alpinejs';
 
 import FaqAccordion from './components/FaqAccordion.vue';
 import MythCards from './components/MythCards.vue';
 import EmotionalCheckup from './components/EmotionalCheckup.vue';
 import ContactForm from './components/ContactForm.vue';
 import MobileNav from './components/MobileNav.vue';
+
+// Alpine.js se usa únicamente en el panel de administración (repetidores de
+// formularios dinámicos); el sitio público sigue usando Vue para sus islas
+// interactivas.
+window.Alpine = Alpine;
+Alpine.start();
 
 /**
  * Monta un componente Vue en cada elemento que tenga el atributo

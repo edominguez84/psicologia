@@ -17,7 +17,7 @@
         <h2 class="mt-10 text-2xl">Responsable del tratamiento</h2>
         <p class="mt-3">
             {{ config('site.name') }} — {{ config('site.role') }} ({{ config('site.registration') }}).
-            Puedes contactar en <a class="text-sage-700 underline" href="mailto:{{ config('site.contact.email') }}">{{ config('site.contact.email') }}</a>.
+            Puedes contactar en <a class="text-sky-700 underline" href="mailto:{{ config('site.contact.email') }}">{{ config('site.contact.email') }}</a>.
         </p>
 
         <h2 class="mt-10 text-2xl">Qué datos se recogen y con qué finalidad</h2>
@@ -45,7 +45,7 @@
         <p class="mt-3">
             Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y
             portabilidad escribiendo a
-            <a class="text-sage-700 underline" href="mailto:{{ config('site.contact.email') }}">{{ config('site.contact.email') }}</a>.
+            <a class="text-sky-700 underline" href="mailto:{{ config('site.contact.email') }}">{{ config('site.contact.email') }}</a>.
         </p>
 
         <h2 class="mt-10 text-2xl">Aviso importante</h2>

@@ -16,3 +16,6 @@ Route::post('/contacto', [ContactController::class, 'store'])
 Route::post('/chequeo-emocional', [CheckupController::class, 'store'])
     ->middleware('throttle:12,1')
     ->name('checkup.store');
+
+require __DIR__.'/auth.php';
+require __DIR__.'/admin.php';

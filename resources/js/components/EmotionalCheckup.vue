@@ -26,9 +26,9 @@ const allAnswered = computed(() => answers.value.every((a) => a !== null));
 const bandStyle = computed(() => {
     if (!result.value) return '';
     return {
-        bajo: 'border-sage-200 bg-sage-50',
-        medio: 'border-clay-400/40 bg-cream-100',
-        alto: 'border-clay-500/50 bg-cream-100',
+        bajo: 'border-sky-200 bg-sky-50',
+        medio: 'border-clay-400/40 bg-paper-100',
+        alto: 'border-clay-500/50 bg-paper-100',
     }[result.value.band];
 });
 
@@ -73,21 +73,21 @@ function reset() {
 </script>
 
 <template>
-    <div class="rounded-3xl border border-cream-200 bg-white p-6 sm:p-9">
+    <div class="rounded-3xl border border-paper-200 bg-white p-6 sm:p-9">
         <template v-if="!result">
-            <p class="mb-6 text-sm font-semibold text-sage-500">{{ props.period }}</p>
+            <p class="mb-6 text-sm font-semibold text-sky-500">{{ props.period }}</p>
 
             <div class="space-y-7">
                 <fieldset v-for="(q, i) in props.questions" :key="i">
-                    <legend class="mb-3 font-serif text-lg text-sage-800">{{ i + 1 }}. {{ q }}</legend>
+                    <legend class="mb-3 font-serif text-lg text-sky-800">{{ i + 1 }}. {{ q }}</legend>
                     <div class="flex flex-wrap gap-2">
                         <label
                             v-for="(opt, oi) in props.options"
                             :key="oi"
                             class="cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
                             :class="answers[i] === oi
-                                ? 'border-sage-600 bg-sage-600 text-cream-50'
-                                : 'border-cream-200 bg-cream-50 text-ink-soft hover:border-sage-300'"
+                                ? 'border-sky-600 bg-sky-600 text-paper-50'
+                                : 'border-paper-200 bg-paper-50 text-ink-soft hover:border-sky-300'"
                         >
                             <input type="radio" class="sr-only" :name="`q${i}`" :value="oi" v-model="answers[i]" />
                             {{ opt }}
@@ -99,14 +99,14 @@ function reset() {
             <input v-model="website" type="text" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
 
             <div class="mt-8">
-                <label class="mb-1.5 block text-sm font-semibold text-sage-700">
+                <label class="mb-1.5 block text-sm font-semibold text-sky-700">
                     Email (opcional, solo si quieres que te escriba)
                 </label>
                 <input
                     v-model="email"
                     type="email"
                     placeholder="tu@email.com"
-                    class="w-full rounded-xl border border-cream-200 bg-cream-50 px-4 py-3 text-sm outline-none focus:border-sage-400"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-3 text-sm outline-none focus:border-sky-400"
                 />
             </div>
 
@@ -127,7 +127,7 @@ function reset() {
             <div class="rounded-2xl border p-6" :class="bandStyle">
                 <p class="eyebrow mb-2">Tu resultado orientativo</p>
                 <div class="mb-4 flex items-baseline gap-2">
-                    <span class="font-serif text-4xl text-sage-800">{{ result.score }}</span>
+                    <span class="font-serif text-4xl text-sky-800">{{ result.score }}</span>
                     <span class="text-sm text-ink-soft">de {{ result.max }}</span>
                 </div>
                 <h3 class="mb-2 text-xl">{{ result.result.title }}</h3>
@@ -148,7 +148,7 @@ function reset() {
             </div>
 
             <p class="mt-6 text-xs leading-relaxed text-ink-soft">{{ props.disclaimer }}</p>
-            <p v-if="demoMode" class="mt-3 rounded-xl border border-clay-400/30 bg-cream-100 px-4 py-3 text-xs leading-relaxed text-ink-soft">
+            <p v-if="demoMode" class="mt-3 rounded-xl border border-clay-400/30 bg-paper-100 px-4 py-3 text-xs leading-relaxed text-ink-soft">
                 <strong class="text-clay-500">Sitio de demostración:</strong> el resultado se calcula en tu navegador y no se guarda en ninguna base de datos.
             </p>
         </template>

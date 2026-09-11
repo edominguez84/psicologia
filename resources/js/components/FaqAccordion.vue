@@ -13,7 +13,7 @@ function toggle(i) {
 </script>
 
 <template>
-    <div class="divide-y divide-cream-200 rounded-2xl border border-cream-200 bg-white">
+    <div class="divide-y divide-paper-200 rounded-2xl border border-paper-200 bg-white">
         <div v-for="(item, i) in props.items" :key="i">
             <button
                 type="button"
@@ -21,9 +21,9 @@ function toggle(i) {
                 :aria-expanded="open === i"
                 @click="toggle(i)"
             >
-                <span class="font-serif text-lg text-sage-800">{{ item.q }}</span>
+                <span class="font-serif text-lg text-sky-800">{{ item.q }}</span>
                 <span
-                    class="grid size-7 shrink-0 place-items-center rounded-full bg-sage-100 text-sage-600 transition-transform"
+                    class="grid size-7 shrink-0 place-items-center rounded-full bg-sky-100 text-sky-600 transition-transform"
                     :class="{ 'rotate-45': open === i }"
                 >
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
