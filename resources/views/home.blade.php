@@ -34,6 +34,29 @@
         'whatsapp' => $wa,
         'subject'  => $s['contact_section']['subjects'][0] ?? null,
     ];
+
+    // Foto de "Sobre mí": la subida desde /admin/about-photo tiene prioridad
+    // sobre la de config/site.php (mismo orden de prioridad que el logo).
+    $aboutPhotoOverride = app(\App\Services\SiteSettingsService::class)->get('about_photo');
+    $aboutPhotoUrl = ! empty($aboutPhotoOverride['path'])
+        ? \Illuminate\Support\Facades\Storage::url($aboutPhotoOverride['path'])
+        : asset($s['about']['photo']);
+
+    // Galería del carrusel de inicio: overrides de /admin/gallery si existen,
+    // si no las imágenes de ejemplo de config/site.php. Cada ruta se resuelve
+    // con asset() (imágenes de fábrica en public/images/) o Storage::url()
+    // (imágenes subidas por la administradora).
+    $galleryOverride = app(\App\Services\SiteSettingsService::class)->get('gallery');
+    $galleryImages = collect($galleryOverride['images'] ?? $s['gallery']['images'])
+        ->map(fn ($img) => [
+            'url' => str_starts_with($img['path'], 'gallery/')
+                ? \Illuminate\Support\Facades\Storage::url($img['path'])
+                : asset($img['path']),
+            'alt' => $img['alt'] ?: $s['name'],
+        ])
+        ->values()
+        ->all();
+    $galleryProps = ['images' => $galleryImages];
 @endphp
 
 @section('content')
@@ -76,7 +99,7 @@
         <div class="relative">
             <div class="mx-auto max-w-sm overflow-hidden rounded-[2rem] border border-paper-200 bg-sky-100 shadow-xl">
                 <img
-                    src="{{ asset($s['about']['photo']) }}"
+                    src="{{ $aboutPhotoUrl }}"
                     alt="{{ $s['name'] }}, {{ $s['role'] }}"
                     class="aspect-[4/5] w-full object-cover"
                     onerror="this.style.display='none'; this.parentElement.classList.add('grid','place-items-center','aspect-[4/5]');"
@@ -88,6 +111,18 @@
         </div>
     </div>
 </section>
+
+{{-- ============ GALERÍA ============ --}}
+@if (!empty($galleryImages))
+    <section class="section !pt-0 bg-paper-50">
+        <div class="container-x">
+            <div
+                data-vue="Carousel"
+                data-props="{{ json_encode($galleryProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+            ></div>
+        </div>
+    </section>
+@endif
 
 {{-- ============ SOBRE MÍ ============ --}}
 <section id="sobre-mi" class="section bg-white">
@@ -315,8 +350,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <p class="mb-3 text-xs font-bold uppercase tracking-wider text-sky-500">Sígueme en redes</p>
-                    @include('partials.social-icons')
+                    @include('partials.social-icons', ['heading' => 'Sígueme en redes'])
                 </div>
             </div>
         </div>

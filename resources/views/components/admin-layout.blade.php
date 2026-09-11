@@ -39,6 +39,9 @@
                             ['route' => 'admin.dashboard', 'label' => 'Panel'],
                             ['route' => 'admin.theme.edit', 'label' => 'Colores'],
                             ['route' => 'admin.logo.edit', 'label' => 'Logo'],
+                            ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada'],
+                            ['route' => 'admin.gallery.edit', 'label' => 'Galería'],
+                            ['route' => 'admin.social.edit', 'label' => 'Redes sociales'],
                             ['route' => 'admin.contact.edit', 'label' => 'Contacto'],
                             ['route' => 'admin.messages.index', 'label' => 'Mensajes'],
                         ];

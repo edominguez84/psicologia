@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\AboutPhotoController;
 use App\Http\Controllers\Admin\ContactSettingsController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
+use App\Http\Controllers\Admin\SocialLinksController;
 use App\Http\Controllers\Admin\ThemeController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,4 +29,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/logo', [LogoController::class, 'edit'])->name('logo.edit');
     Route::post('/logo', [LogoController::class, 'update'])->name('logo.update');
     Route::delete('/logo', [LogoController::class, 'destroy'])->name('logo.destroy');
+
+    Route::get('/social', [SocialLinksController::class, 'edit'])->name('social.edit');
+    Route::put('/social', [SocialLinksController::class, 'update'])->name('social.update');
+
+    Route::get('/about-photo', [AboutPhotoController::class, 'edit'])->name('about-photo.edit');
+    Route::post('/about-photo', [AboutPhotoController::class, 'update'])->name('about-photo.update');
+    Route::delete('/about-photo', [AboutPhotoController::class, 'destroy'])->name('about-photo.destroy');
+
+    Route::get('/gallery', [GalleryController::class, 'edit'])->name('gallery.edit');
+    Route::post('/gallery', [GalleryController::class, 'store'])->name('gallery.store');
+    Route::put('/gallery', [GalleryController::class, 'update'])->name('gallery.update');
+    Route::delete('/gallery/{index}', [GalleryController::class, 'destroy'])->name('gallery.destroy');
 });
