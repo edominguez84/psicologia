@@ -3,15 +3,17 @@
 Sitio de una sola página para una consulta de psicología online (especialidad en trauma y
 EMDR), inspirado en la estructura de `aracelypenatepsicologa.com`. Incluye formulario de
 contacto y un "chequeo de bienestar emocional", ambos con persistencia en MySQL y aviso por
-email.
+email, además de un panel de administración (`/admin`) para editar colores, textos, contacto,
+logo y ver los mensajes recibidos sin tocar código.
 
 ## Stack
 
 | Capa       | Tecnología                                            |
 |------------|-------------------------------------------------------|
 | Backend    | Laravel 12 (PHP 8.3)                                  |
-| Frontend   | Blade + Vue 3 (componentes montados sobre Vite)       |
-| Estilos    | Tailwind CSS v4                                        |
+| Autenticación | Laravel Breeze (stack Blade)                       |
+| Frontend   | Blade + Vue 3 (componentes montados sobre Vite) + Alpine.js (panel admin) |
+| Estilos    | Tailwind CSS v4 — paleta celeste pastel + blanco       |
 | Base datos | MySQL 8 (`psicologia`)                                 |
 | Entorno    | Laragon (Apache + MySQL)                               |
 
@@ -23,15 +25,22 @@ se monta como un mini-app Vue vía el atributo `data-vue="Componente"` + `data-p
 ## Estructura relevante
 
 ```
-config/site.php                        ← TODO el contenido de la web (textos, servicios, FAQ…)
+config/site.php                        ← contenido por defecto de la web (textos, servicios, FAQ…)
 app/Http/Controllers/SiteController    ← home + página de privacidad
 app/Http/Controllers/Api/              ← ContactController, CheckupController
+app/Http/Controllers/Admin/            ← panel /admin (tema, contenido, contacto, mensajes, logo)
 app/Http/Requests/                     ← validación (StoreContactRequest, StoreCheckupRequest)
+app/Http/Middleware/EnsureUserIsAdmin  ← restringe /admin a usuarios con role = admin
+app/Services/SiteSettingsService.php   ← overrides de tema/contenido guardados en BD
+app/Support/SiteContentSections.php    ← esquema de campos editables por sección
+app/Console/Commands/MakeAdminUser.php ← `php artisan make:admin`
 app/Mail/ContactReceived.php           ← email de aviso a la psicóloga
-app/Models/                            ← ContactMessage, EmotionalCheckup
-database/migrations/                   ← contact_messages, emotional_checkups
+app/Models/                            ← ContactMessage, EmotionalCheckup, SiteSetting, User (+role)
+database/migrations/                   ← contact_messages, emotional_checkups, role, site_settings
 resources/views/home.blade.php         ← la landing
-resources/views/partials/              ← header, footer, icon
+resources/views/partials/              ← header, footer, icon, logo
+resources/views/admin/                 ← vistas del panel de administración
+resources/views/auth/                  ← login / recuperar contraseña (Breeze, en español)
 resources/js/components/*.vue          ← FaqAccordion, MythCards, EmotionalCheckup, ContactForm, MobileNav
 lang/es/                               ← mensajes de validación en español
 ```
@@ -115,14 +124,45 @@ php artisan tinker
 
 ## Editar el contenido
 
-Casi todo (títulos, textos, servicios, testimonios, FAQ, mitos, datos de contacto) vive en
-`config/site.php`. Tras editarlo:
+Casi todo (títulos, textos, servicios, testimonios, FAQ, mitos, datos de contacto) vive por
+defecto en `config/site.php`. Tras editar ese archivo directamente:
 ```bash
 php artisan config:clear
 ```
 
 La foto de cabecera: coloca `public/images/aracely.jpg` y cambia `about.photo` en
-`config/site.php` (ahora usa un SVG de marcador de posición).
+`config/site.php`.
+
+La forma recomendada de editar contenido, colores, contacto y logo **sin tocar código** es
+el panel de administración (ver siguiente sección) — los cambios ahí se guardan en MySQL y
+tienen prioridad sobre `config/site.php`, sin necesidad de limpiar caché ni recompilar nada.
+
+## Panel de administración (`/admin`)
+
+Un único rol de administradora, sin autorregistro público. Incluye:
+
+- **Colores** (`/admin/theme`) — 4 colores (principal, fondo, acento, texto) que sobrescriben
+  la paleta pastel en vivo, mediante variables CSS inyectadas en `<head>`. No requiere
+  recompilar assets.
+- **Logo** (`/admin/logo`) — sube una imagen (PNG/JPG, máx. 1 MB, hasta 800×800 px) para
+  reemplazar el icono SVG por defecto en el header y el footer.
+- **Contenido** (`/admin/content/{sección}`) — un formulario por sección de `config/site.php`
+  (hero, sobre mí, servicios, beneficios, EMDR, testimonios, mitos, FAQ, contacto, footer),
+  con repetidores (Alpine.js) para listas de tarjetas/preguntas.
+- **Contacto** (`/admin/contact`) — WhatsApp, email, zona de atención y tiempo de respuesta.
+- **Mensajes** (`/admin/messages`) — bandeja de `contact_messages` y `emotional_checkups`
+  guardados en MySQL, con acción para marcar un mensaje de contacto como atendido.
+
+**Crear la cuenta de administradora** (no se commitea ninguna contraseña):
+```bash
+php artisan make:admin
+```
+Pide el email y la contraseña de forma interactiva (mínimo 8 caracteres). Para scripts de
+despliegue no interactivos, puedes definir `ADMIN_EMAIL`/`ADMIN_PASSWORD` en `.env` antes de
+ejecutar el comando (ver `.env.example`).
+
+El acceso está en `/login` (hay un enlace discreto "Acceso administración" al pie del sitio).
+Un usuario autenticado que no sea administradora recibe **403** al visitar `/admin`.
 
 ## Demo estática en Netlify (sin backend)
 
@@ -133,13 +173,18 @@ en base de datos ni enviar email**). Ver [`static-demo/README.md`](static-demo/R
 para el detalle y cómo desplegarla. El `netlify.toml` de la raíz ya la configura como
 `publish directory`, así que basta con conectar el repo en Netlify sin tocar nada más.
 
-Para el sitio 100% funcional (formularios reales) hay que desplegar el proyecto Laravel
-completo en un hosting con PHP + MySQL — Netlify no sirve para eso.
+Para el sitio 100% funcional (formularios reales, panel admin) hay que desplegar el proyecto
+Laravel completo en un hosting con PHP + MySQL — Netlify no sirve para eso. `static-demo/`
+tampoco recibe automáticamente los cambios de logo/colores/contenido hechos desde `/admin`;
+para reflejarlos hay que regenerar esa carpeta siguiendo los pasos de su propio README.
 
 ## Tests
 
 ```bash
 php artisan test
 ```
-Cubre el envío válido/ inválido del formulario de contacto (incluido honeypot y email) y el
-cálculo de puntuación/banda del chequeo emocional. Usan SQLite en memoria.
+29 tests: envío válido/inválido del formulario de contacto (incluido honeypot y email), el
+cálculo de puntuación/banda del chequeo emocional, el flujo de autenticación de Breeze
+(login, recuperación de contraseña, verificación de email) y el control de acceso a `/admin`
+(invitado → redirect a login, usuario normal → 403, administradora → 200). Usan SQLite en
+memoria.

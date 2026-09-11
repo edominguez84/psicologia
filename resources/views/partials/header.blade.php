@@ -10,18 +10,15 @@
     $wa = 'https://wa.me/'.config('site.contact.whatsapp').'?text='.rawurlencode(config('site.whatsapp_prefill'));
 @endphp
 
-<header class="sticky top-0 z-50 border-b border-cream-200 bg-cream-50/90 backdrop-blur">
+<header class="sticky top-0 z-50 border-b border-paper-200 bg-paper-50/90 backdrop-blur">
     <div class="container-x flex h-16 items-center justify-between gap-4">
-        <a href="/" class="flex items-center gap-2.5">
-            <span class="grid size-9 place-items-center rounded-full bg-sage-600 font-serif text-lg text-cream-50">
-                {{ mb_substr(config('site.name'), 0, 1) }}
-            </span>
-            <span class="font-serif text-lg leading-none text-sage-800">{{ config('site.name') }}</span>
+        <a href="/" class="flex min-w-0 shrink items-center">
+            @include('partials.logo')
         </a>
 
         <nav class="hidden items-center gap-7 md:flex">
             @foreach ($navLinks as $link)
-                <a href="{{ $link['href'] }}" class="text-sm font-semibold text-ink-soft transition-colors hover:text-sage-700">
+                <a href="{{ $link['href'] }}" class="text-sm font-semibold text-ink-soft transition-colors hover:text-sky-700">
                     {{ $link['label'] }}
                 </a>
             @endforeach

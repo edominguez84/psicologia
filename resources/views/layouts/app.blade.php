@@ -13,6 +13,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @php $colors = app(\App\Services\SiteSettingsService::class)->get('colors'); @endphp
+    @if ($colors)
+        <style>
+            :root {
+                @if (!empty($colors['primary']))
+                    --color-sky-600: {{ $colors['primary'] }};
+                    --color-sky-700: {{ \App\Support\ColorHelper::darken($colors['primary'], 0.15) }};
+                @endif
+                @if (!empty($colors['background']))
+                    --color-paper-50: {{ $colors['background'] }};
+                @endif
+                @if (!empty($colors['accent']))
+                    --color-clay-400: {{ $colors['accent'] }};
+                    --color-clay-500: {{ \App\Support\ColorHelper::darken($colors['accent'], 0.1) }};
+                @endif
+                @if (!empty($colors['text']))
+                    --color-ink: {{ $colors['text'] }};
+                @endif
+            }
+        </style>
+    @endif
 </head>
 <body class="antialiased">
     @include('partials.header')

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@plugin '@tailwindcss/forms';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -10,23 +11,23 @@
     --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
     --font-serif: 'Fraunces', 'Georgia', ui-serif, serif;
 
-    /* Paleta: verde salvia calmado + crema cálida + tinta profunda */
-    --color-cream-50: #faf7f2;
-    --color-cream-100: #f4eee3;
-    --color-cream-200: #e9dfcd;
+    /* Paleta: celeste pastel + blanco, con acento cálido para contraste */
+    --color-paper-50: #ffffff;
+    --color-paper-100: #f4f8fc;
+    --color-paper-200: #e3edf7;
 
-    --color-sage-50: #f1f5f2;
-    --color-sage-100: #dde8e0;
-    --color-sage-200: #bcd0c2;
-    --color-sage-300: #93b39d;
-    --color-sage-400: #6b9179;
-    --color-sage-500: #4f7360;
-    --color-sage-600: #3e5b4c;
-    --color-sage-700: #33493e;
-    --color-sage-800: #2a3c34;
+    --color-sky-50: #f0f6fc;
+    --color-sky-100: #dbe9f7;
+    --color-sky-200: #b9d7ef;
+    --color-sky-300: #8fbde3;
+    --color-sky-400: #649fd1;
+    --color-sky-500: #4784b8;
+    --color-sky-600: #386a97;
+    --color-sky-700: #2f567a;
+    --color-sky-800: #294a68;
 
-    --color-ink: #26312c;
-    --color-ink-soft: #55605a;
+    --color-ink: #1f2a37;
+    --color-ink-soft: #4b5a6b;
 
     --color-clay-400: #c98a63;
     --color-clay-500: #b9744c;
@@ -39,7 +40,7 @@
     }
 
     body {
-        background-color: var(--color-cream-50);
+        background-color: var(--color-paper-50);
         color: var(--color-ink);
         -webkit-font-smoothing: antialiased;
     }
@@ -48,11 +49,11 @@
         font-family: var(--font-serif);
         font-weight: 500;
         letter-spacing: -0.01em;
-        color: var(--color-sage-800);
+        color: var(--color-sky-800);
     }
 
     ::selection {
-        background-color: var(--color-sage-200);
+        background-color: var(--color-sky-200);
     }
 }
 
@@ -80,18 +81,18 @@
     .btn:active { transform: translateY(1px); }
 
     .btn-primary {
-        background-color: var(--color-sage-600);
-        color: var(--color-cream-50);
-        box-shadow: 0 10px 25px -12px rgba(51, 73, 62, .7);
+        background-color: var(--color-sky-600);
+        color: var(--color-paper-50);
+        box-shadow: 0 10px 25px -12px rgba(41, 74, 104, .5);
     }
-    .btn-primary:hover { background-color: var(--color-sage-700); }
+    .btn-primary:hover { background-color: var(--color-sky-700); }
 
     .btn-ghost {
         background-color: transparent;
-        color: var(--color-sage-700);
-        border: 1.5px solid var(--color-sage-300);
+        color: var(--color-sky-700);
+        border: 1.5px solid var(--color-sky-300);
     }
-    .btn-ghost:hover { background-color: var(--color-sage-50); }
+    .btn-ghost:hover { background-color: var(--color-sky-50); }
 
     .section {
         padding-block: 5rem;
@@ -106,12 +107,12 @@
         letter-spacing: 0.14em;
         font-size: 0.75rem;
         font-weight: 800;
-        color: var(--color-sage-500);
+        color: var(--color-sky-500);
     }
 
     .card {
         background-color: #fff;
-        border: 1px solid var(--color-cream-200);
+        border: 1px solid var(--color-paper-200);
         border-radius: 1.25rem;
         padding: 1.75rem;
     }
