@@ -60,6 +60,16 @@ return [
         'photo' => 'images/aracely.jpg',
     ],
 
+    // Imágenes del carrusel de inicio. Editable desde /admin/gallery (se guarda
+    // en site_settings, estas son solo las de ejemplo de fábrica).
+    'gallery' => [
+        'images' => [
+            ['path' => 'images/gallery/therapy-1.jpg', 'alt' => 'Espacio cómodo y acogedor para la terapia'],
+            ['path' => 'images/gallery/therapy-2.jpg', 'alt' => 'Un momento de calma y bienestar'],
+            ['path' => 'images/gallery/therapy-3.jpg', 'alt' => 'Sesión de terapia online desde casa'],
+        ],
+    ],
+
     'services' => [
         'title'    => 'Cómo te ayudo',
         'subtitle' => 'Estas son algunas de las dificultades que trabajamos en terapia. Si lo tuyo no aparece aquí, escríbeme y lo vemos.',

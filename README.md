@@ -146,6 +146,15 @@ Un único rol de administradora, sin autorregistro público. Incluye:
   recompilar assets.
 - **Logo** (`/admin/logo`) — sube una imagen (PNG/JPG, máx. 1 MB, hasta 800×800 px) para
   reemplazar el icono SVG por defecto en el header y el footer.
+- **Foto de portada** (`/admin/about-photo`) — reemplaza la foto de la sección "Sobre mí"
+  (PNG/JPG, máx. 2 MB, hasta 2000×2000 px).
+- **Galería** (`/admin/gallery`) — administra las imágenes del carrusel de inicio: subir,
+  eliminar y reordenar (botones ↑/↓) con hasta el número de imágenes que quieras. Trae 3
+  fotos de ejemplo relacionadas con psicología/bienestar; al quitar una "de fábrica" solo se
+  quita del listado, al quitar una que subiste también se borra el archivo.
+- **Redes sociales** (`/admin/social`) — un campo de URL por red (Facebook, Instagram,
+  TikTok, LinkedIn, YouTube, X). Dejar el campo vacío oculta ese icono en el sitio; los
+  iconos aparecen en el footer y en la sección de contacto.
 - **Contenido** (`/admin/content/{sección}`) — un formulario por sección de `config/site.php`
   (hero, sobre mí, servicios, beneficios, EMDR, testimonios, mitos, FAQ, contacto, footer),
   con repetidores (Alpine.js) para listas de tarjetas/preguntas.
@@ -183,8 +192,9 @@ para reflejarlos hay que regenerar esa carpeta siguiendo los pasos de su propio 
 ```bash
 php artisan test
 ```
-29 tests: envío válido/inválido del formulario de contacto (incluido honeypot y email), el
+45 tests: envío válido/inválido del formulario de contacto (incluido honeypot y email), el
 cálculo de puntuación/banda del chequeo emocional, el flujo de autenticación de Breeze
-(login, recuperación de contraseña, verificación de email) y el control de acceso a `/admin`
-(invitado → redirect a login, usuario normal → 403, administradora → 200). Usan SQLite en
-memoria.
+(login, recuperación de contraseña, verificación de email), el control de acceso a `/admin`
+(invitado → redirect a login, usuario normal → 403, administradora → 200), y el CRUD de
+redes sociales, foto de portada y galería (subir/reordenar/eliminar, con `Storage::fake`).
+Usan SQLite en memoria.
