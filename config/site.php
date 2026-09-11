@@ -15,7 +15,7 @@ return [
     // p. ej. para Netlify): los formularios funcionan en el navegador sin llamar a la API.
     'demo_mode'   => env('SITE_DEMO_MODE', false),
 
-    'name'        => env('SITE_NAME', 'Aracely Peñate'),
+    'name'        => env('SITE_NAME', 'Lic. Erika Magaña'),
     'role'        => 'Psicóloga · Especialista en trauma y EMDR',
     'tagline'     => 'Terapia online en español',
     'registration'=> env('SITE_REGISTRATION', 'Colegiada J.V.P.P. 4615'),
@@ -28,7 +28,7 @@ return [
         'response'      => 'Suelo responder el mismo día',
     ],
 
-    'whatsapp_prefill' => 'Hola Aracely, me gustaría reservar una llamada gratuita de 15 minutos para conocer cómo funciona la terapia.',
+    'whatsapp_prefill' => 'Hola, me gustaría reservar una llamada gratuita de 15 minutos para conocer cómo funciona la terapia.',
 
     'hero' => [
         'kicker'   => 'Terapia especializada en trauma · EMDR · Online',
