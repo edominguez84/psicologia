@@ -48,6 +48,9 @@
                             ['route' => 'admin.security.edit', 'label' => 'Seguridad'],
                             ['route' => 'two-factor.edit', 'label' => 'Mi seguridad'],
                         ];
+                        if (auth()->user()?->isSuperAdmin()) {
+                            $links[] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot'];
+                        }
                     @endphp
                     @foreach ($links as $link)
                         <a

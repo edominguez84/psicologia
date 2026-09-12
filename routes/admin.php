@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AboutPhotoController;
+use App\Http\Controllers\Admin\ChatbotFaqController;
 use App\Http\Controllers\Admin\ContactSettingsController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -52,4 +53,14 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
 
     Route::get('/security', [SecurityController::class, 'edit'])->name('security.edit');
     Route::put('/security', [SecurityController::class, 'update'])->name('security.update');
+
+    // Preguntas del chatbot: reservado a la super administradora.
+    Route::middleware('super_admin')->group(function () {
+        Route::get('/chatbot-faqs', [ChatbotFaqController::class, 'index'])->name('chatbot-faqs.index');
+        Route::post('/chatbot-faqs', [ChatbotFaqController::class, 'store'])->name('chatbot-faqs.store');
+        Route::put('/chatbot-faqs/{chatbotFaq}', [ChatbotFaqController::class, 'update'])->name('chatbot-faqs.update');
+        Route::patch('/chatbot-faqs/{chatbotFaq}/toggle', [ChatbotFaqController::class, 'toggle'])->name('chatbot-faqs.toggle');
+        Route::put('/chatbot-faqs-reorder', [ChatbotFaqController::class, 'reorder'])->name('chatbot-faqs.reorder');
+        Route::delete('/chatbot-faqs/{chatbotFaq}', [ChatbotFaqController::class, 'destroy'])->name('chatbot-faqs.destroy');
+    });
 });
