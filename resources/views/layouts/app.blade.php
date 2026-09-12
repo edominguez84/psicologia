@@ -54,6 +54,9 @@
             : asset(config('site.about.photo'));
         $chatbotNameParts = explode(' ', (string) config('site.name'));
         $chatbotOwnerFirstName = $chatbotNameParts[1] ?? ($chatbotNameParts[0] ?? config('site.name'));
+        $chatbotFaqs = $chatbotDemoMode
+            ? []
+            : \App\Models\ChatbotFaq::active()->ordered()->get(['id', 'question', 'answer'])->toArray();
         $chatbotProps = [
             'botName'    => 'Rebecca',
             'botTagline' => 'Asistente virtual de '.$chatbotOwnerFirstName,
@@ -61,6 +64,7 @@
             'endpoint'   => $chatbotDemoMode ? null : route('chatbot-lead.store'),
             'demoMode'   => $chatbotDemoMode,
             'whatsapp'   => $chatbotWhatsapp,
+            'faqs'       => $chatbotFaqs,
         ];
     @endphp
     <div data-vue="ChatbotWidget" data-props="{{ json_encode($chatbotProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>

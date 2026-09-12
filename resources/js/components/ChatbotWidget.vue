@@ -9,6 +9,9 @@ const props = defineProps({
     // Modo demo (sin backend, p.ej. Netlify): no guarda el lead, solo simula.
     demoMode: { type: Boolean, default: false },
     whatsapp: { type: String, default: '' },
+    // Preguntas frecuentes administrables desde /admin/chatbot-faqs
+    // (super_admin), en el orden que ella definió. Cada una: {id, question, answer}.
+    faqs: { type: Array, default: () => [] },
 });
 
 // Pasos del flujo: recoger datos de contacto antes de dejar conversar.
@@ -22,12 +25,6 @@ const lead = reactive({ name: '', email: '', phone: '' });
 const draft = ref('');
 const messages = ref([]);
 const scrollEl = ref(null);
-
-const quickReplies = [
-    { key: 'como-funciona', label: '¿Cómo funciona la terapia?', reply: 'Trabajamos por videollamada, en sesiones de 50 minutos, con un plan adaptado a lo que necesitas trabajar (ansiedad, trauma, EMDR y más). La primera llamada de 15 minutos es gratuita para conocernos.' },
-    { key: 'duracion', label: '¿Cuánto dura una sesión?', reply: 'Cada sesión dura 50 minutos. La frecuencia habitual es semanal, aunque se ajusta según tu proceso.' },
-    { key: 'paises', label: '¿Atienden en mi país?', reply: 'Sí, atiendo por videollamada a personas en Estados Unidos, Europa y Latinoamérica. Solo necesitas conexión a internet.' },
-];
 
 function pushMessage(from, text) {
     messages.value.push({ from, text });
@@ -96,9 +93,9 @@ async function saveLead() {
     }
 }
 
-function useQuickReply(qr) {
-    pushMessage('user', qr.label);
-    pushMessage('bot', qr.reply);
+function useFaq(faq) {
+    pushMessage('user', faq.question);
+    pushMessage('bot', faq.answer);
 }
 
 function sendDraft() {
@@ -146,11 +143,11 @@ function sendDraft() {
 
                     <div v-if="step === 'chat'" class="flex flex-wrap gap-2 pt-1">
                         <button
-                            v-for="qr in quickReplies" :key="qr.key" type="button"
+                            v-for="faq in faqs" :key="faq.id" type="button"
                             class="rounded-full border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 hover:border-sky-400"
-                            @click="useQuickReply(qr)"
+                            @click="useFaq(faq)"
                         >
-                            {{ qr.label }}
+                            {{ faq.question }}
                         </button>
                         <a
                             :href="whatsapp" target="_blank" rel="noopener"
