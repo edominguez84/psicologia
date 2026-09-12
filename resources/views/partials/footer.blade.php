@@ -42,10 +42,12 @@
     </div>
 
     <div class="border-t border-white/10">
-        <div class="container-x flex flex-col gap-2 py-6 text-xs text-paper-200/70 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {{ date('Y') }} {{ config('site.name') }}. Todos los derechos reservados.</p>
-            <p>{{ config('site.footer.privacy_note') }}</p>
-            <a href="{{ route('login') }}" class="text-paper-200/50 hover:text-paper-50">Acceso administración</a>
+        <div class="container-x flex flex-col gap-3 py-6 text-xs leading-relaxed text-paper-200/70 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-x-6 md:gap-y-2">
+            <p class="shrink-0">© {{ date('Y') }} {{ config('site.name') }}. Todos los derechos reservados.</p>
+            <p class="md:flex-1 md:text-center">{{ config('site.footer.privacy_note') }}</p>
+            <a href="{{ route('login') }}" class="shrink-0 text-paper-200/50 underline-offset-2 hover:text-paper-50 hover:underline">
+                Acceso administración
+            </a>
         </div>
     </div>
 </footer>

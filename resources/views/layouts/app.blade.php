@@ -44,5 +44,25 @@
     </main>
 
     @include('partials.footer')
+
+    @php
+        $chatbotDemoMode = (bool) config('site.demo_mode');
+        $chatbotWhatsapp = 'https://wa.me/'.config('site.contact.whatsapp').'?text='.rawurlencode(config('site.whatsapp_prefill'));
+        $chatbotAboutPhoto = app(\App\Services\SiteSettingsService::class)->get('about_photo');
+        $chatbotAvatar = ! empty($chatbotAboutPhoto['path'])
+            ? \Illuminate\Support\Facades\Storage::url($chatbotAboutPhoto['path'])
+            : asset(config('site.about.photo'));
+        $chatbotNameParts = explode(' ', (string) config('site.name'));
+        $chatbotOwnerFirstName = $chatbotNameParts[1] ?? ($chatbotNameParts[0] ?? config('site.name'));
+        $chatbotProps = [
+            'botName'    => 'Rebecca',
+            'botTagline' => 'Asistente virtual de '.$chatbotOwnerFirstName,
+            'avatar'     => $chatbotAvatar,
+            'endpoint'   => $chatbotDemoMode ? null : route('chatbot-lead.store'),
+            'demoMode'   => $chatbotDemoMode,
+            'whatsapp'   => $chatbotWhatsapp,
+        ];
+    @endphp
+    <div data-vue="ChatbotWidget" data-props="{{ json_encode($chatbotProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>
 </body>
 </html>
