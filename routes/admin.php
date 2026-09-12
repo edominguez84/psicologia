@@ -7,11 +7,13 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
+use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
 use App\Http\Controllers\Admin\ThemeController;
+use App\Http\Controllers\Admin\UsersController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/theme', [ThemeController::class, 'edit'])->name('theme.edit');
@@ -41,4 +43,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/gallery', [GalleryController::class, 'store'])->name('gallery.store');
     Route::put('/gallery', [GalleryController::class, 'update'])->name('gallery.update');
     Route::delete('/gallery/{index}', [GalleryController::class, 'destroy'])->name('gallery.destroy');
+
+    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/ban', [UsersController::class, 'ban'])->name('users.ban');
+    Route::patch('/users/{user}/unban', [UsersController::class, 'unban'])->name('users.unban');
+    Route::patch('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.role');
+
+    Route::get('/security', [SecurityController::class, 'edit'])->name('security.edit');
+    Route::put('/security', [SecurityController::class, 'update'])->name('security.update');
 });

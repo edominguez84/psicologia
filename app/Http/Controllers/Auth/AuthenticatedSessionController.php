@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\TrustedDeviceService;
+use App\Services\TwoFactorChallengeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,13 +24,35 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
+    public function store(
+        LoginRequest $request,
+        TrustedDeviceService $trustedDevices,
+        TwoFactorChallengeService $twoFactor,
+    ): RedirectResponse {
+        $user = $request->authenticate();
 
+        // Regenerar la sesión en cuanto las credenciales son válidas (antes
+        // de decidir el siguiente paso) mitiga la fijación de sesión.
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.dashboard', absolute: false));
+        if ($trustedDevices->isTrusted($user, $request)) {
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
+
+        // Todavía NO se llama a Auth::login(): el usuario pasó la contraseña
+        // pero falta el segundo factor. Se guarda el estado "pendiente" en
+        // sesión para que el reto 2FA sepa a quién verificar.
+        $request->session()->put('pending_2fa', [
+            'user_id' => $user->id,
+            'remember' => $request->boolean('remember'),
+        ]);
+
+        $twoFactor->issueChallenge($user);
+
+        return redirect()->route('2fa.challenge');
     }
 
     /**

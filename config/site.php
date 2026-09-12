@@ -192,4 +192,15 @@ return [
         'disclaimer' => 'Esta web tiene carácter informativo y no sustituye la atención psicológica ni médica. En caso de emergencia, contacta con los servicios de emergencia de tu país.',
         'privacy_note' => 'Los datos que envíes a través de los formularios se utilizan únicamente para responderte y gestionar una posible cita. No se ceden a terceros.',
     ],
+
+    // Seguridad del login: valores por defecto de instalación. El admin puede
+    // ajustar los canales/proveedores activos desde /admin/security (se
+    // guarda en site_settings); esto solo son los valores de fábrica.
+    'security' => [
+        'default_channels' => ['email' => true, 'sms' => false, 'whatsapp' => false],
+        'default_oauth' => ['google' => false, 'facebook' => false, 'microsoft' => false],
+        'totp_enabled' => true,
+        'trusted_device_days' => 30,
+        'totp_issuer' => env('SITE_NAME', 'Lic. Erika Magaña'),
+    ],
 ];

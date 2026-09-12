@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Services\SiteSettingsService;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
+use SocialiteProviders\Microsoft\MicrosoftExtendSocialite;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->mergeSiteContentOverrides();
+
+        // Microsoft no viene en Socialite core; el paquete comunitario se
+        // registra vía este listener de evento.
+        Event::listen(SocialiteWasCalled::class, [MicrosoftExtendSocialite::class, 'handle']);
     }
 
     /**
