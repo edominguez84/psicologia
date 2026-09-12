@@ -27,6 +27,7 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
 
     Route::get('/messages', [MessagesController::class, 'index'])->name('messages.index');
     Route::patch('/messages/contact/{contactMessage}/handle', [MessagesController::class, 'handleContact'])->name('messages.contact.handle');
+    Route::patch('/messages/chatbot/{chatbotLead}/handle', [MessagesController::class, 'handleChatbotLead'])->name('messages.chatbot.handle');
 
     Route::get('/logo', [LogoController::class, 'edit'])->name('logo.edit');
     Route::post('/logo', [LogoController::class, 'update'])->name('logo.update');

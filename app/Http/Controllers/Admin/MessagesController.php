@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ChatbotLead;
 use App\Models\ContactMessage;
 use App\Models\EmotionalCheckup;
 
@@ -13,6 +14,7 @@ class MessagesController extends Controller
         return view('admin.messages.index', [
             'contactMessages' => ContactMessage::latest()->paginate(15, ['*'], 'contactos'),
             'checkups' => EmotionalCheckup::latest()->paginate(15, ['*'], 'chequeos'),
+            'chatbotLeads' => ChatbotLead::latest()->paginate(15, ['*'], 'chatbot'),
         ]);
     }
 
@@ -23,5 +25,14 @@ class MessagesController extends Controller
         ]);
 
         return back()->with('status', $contactMessage->handled_at ? 'Marcado como atendido.' : 'Marcado como pendiente.');
+    }
+
+    public function handleChatbotLead(ChatbotLead $chatbotLead)
+    {
+        $chatbotLead->update([
+            'handled_at' => $chatbotLead->handled_at ? null : now(),
+        ]);
+
+        return back()->with('status', $chatbotLead->handled_at ? 'Marcado como atendido.' : 'Marcado como pendiente.');
     }
 }

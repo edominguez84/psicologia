@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ChatbotLeadController;
 use App\Http\Controllers\Api\CheckupController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\SiteController;
@@ -16,6 +17,10 @@ Route::post('/contacto', [ContactController::class, 'store'])
 Route::post('/chequeo-emocional', [CheckupController::class, 'store'])
     ->middleware('throttle:12,1')
     ->name('checkup.store');
+
+Route::post('/chatbot-lead', [ChatbotLeadController::class, 'store'])
+    ->middleware('throttle:12,1')
+    ->name('chatbot-lead.store');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
