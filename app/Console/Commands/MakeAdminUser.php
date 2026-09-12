@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -15,7 +16,7 @@ class MakeAdminUser extends Command
      * interactiva (o se toma de ADMIN_EMAIL/ADMIN_PASSWORD si están en .env,
      * útil para scripts de despliegue no interactivos).
      */
-    protected $signature = 'make:admin {--email=} {--name=}';
+    protected $signature = 'make:admin {--email=} {--name=} {--role=super_admin}';
 
     protected $description = 'Crea o convierte en administradora una cuenta del panel /admin';
 
@@ -49,17 +50,24 @@ class MakeAdminUser extends Command
             return self::FAILURE;
         }
 
+        $role = UserRole::tryFrom($this->option('role'));
+        if (! $role) {
+            $this->error('Rol no válido. Usa: '.implode(', ', array_column(UserRole::cases(), 'value')));
+
+            return self::FAILURE;
+        }
+
         $user = User::updateOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
                 'password' => Hash::make($password),
-                'role' => 'admin',
+                'role' => $role,
                 'email_verified_at' => now(),
             ]
         );
 
-        $this->info("Cuenta admin lista: {$user->email}");
+        $this->info("Cuenta {$role->label()} lista: {$user->email}");
 
         return self::SUCCESS;
     }

@@ -3,8 +3,10 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -23,6 +25,12 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'banned_at',
+        'banned_reason',
+        'two_factor_method',
+        'phone_number',
+        // two_factor_secret NUNCA por mass-assignment: se setea explícitamente
+        // en el controlador de configuración de TOTP, tras confirmar el código.
     ];
 
     /**
@@ -33,6 +41,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
     ];
 
     /**
@@ -45,11 +54,57 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
+            'banned_at' => 'datetime',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function loginCodes(): HasMany
+    {
+        return $this->hasMany(LoginCode::class);
+    }
+
+    public function trustedDevices(): HasMany
+    {
+        return $this->hasMany(TrustedDevice::class);
+    }
+
+    public function oauthConnections(): HasMany
+    {
+        return $this->hasMany(OauthConnection::class);
     }
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, [UserRole::SuperAdmin, UserRole::Admin], true);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === UserRole::SuperAdmin;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null;
+    }
+
+    /**
+     * Método de 2FA efectivo: la preferencia del usuario si ya confirmó TOTP,
+     * o si eligió sms/whatsapp; si no hay nada confirmado, cae siempre a email.
+     */
+    public function effectiveTwoFactorMethod(): string
+    {
+        if ($this->two_factor_method === 'totp' && $this->two_factor_confirmed_at !== null) {
+            return 'totp';
+        }
+
+        if (in_array($this->two_factor_method, ['sms', 'whatsapp'], true)) {
+            return $this->two_factor_method;
+        }
+
+        return 'email';
     }
 }

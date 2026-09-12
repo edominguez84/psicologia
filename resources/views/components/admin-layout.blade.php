@@ -44,6 +44,9 @@
                             ['route' => 'admin.social.edit', 'label' => 'Redes sociales'],
                             ['route' => 'admin.contact.edit', 'label' => 'Contacto'],
                             ['route' => 'admin.messages.index', 'label' => 'Mensajes'],
+                            ['route' => 'admin.users.index', 'label' => 'Usuarios'],
+                            ['route' => 'admin.security.edit', 'label' => 'Seguridad'],
+                            ['route' => 'two-factor.edit', 'label' => 'Mi seguridad'],
                         ];
                     @endphp
                     @foreach ($links as $link)

@@ -7,8 +7,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "bacon/bacon-qr-code": "*",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/socialite": "*",
+        "laravel/tinker": "^2.10.1",
+        "pragmarx/google2fa": "*",
+        "socialiteproviders/microsoft": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

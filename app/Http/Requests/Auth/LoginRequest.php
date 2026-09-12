@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -34,15 +35,21 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Valida las credenciales SIN loguear al usuario todavía — el login real
+     * ocurre solo tras superar el reto de 2FA (o si el dispositivo es de
+     * confianza). Devuelve el usuario autenticable para que el controlador
+     * decida el siguiente paso.
      *
      * @throws ValidationException
      */
-    public function authenticate(): void
+    public function authenticate(): User
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        /** @var User|null $user */
+        $user = Auth::getProvider()->retrieveByCredentials($this->only('email', 'password'));
+
+        if (! $user || ! Auth::getProvider()->validateCredentials($user, $this->only('email', 'password'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -50,7 +57,18 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if ($user->isBanned()) {
+            // La contraseña ya fue verificada correcta arriba, así que revelar
+            // que la cuenta está suspendida no es una fuga de información: la
+            // persona ya demostró ser dueña de esas credenciales.
+            throw ValidationException::withMessages([
+                'email' => 'Tu cuenta ha sido suspendida.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
+
+        return $user;
     }
 
     /**

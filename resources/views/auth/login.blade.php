@@ -31,4 +31,23 @@
             <x-primary-button>Entrar</x-primary-button>
         </div>
     </form>
+
+    @php $oauth = app(\App\Services\SecurityAvailability::class)->oauth(); @endphp
+    @if (in_array(true, $oauth, true))
+        <div class="mt-6 border-t border-paper-200 pt-6">
+            <p class="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-ink-soft">O entra con</p>
+            <div class="flex flex-col gap-2">
+                @foreach (['google' => 'Google', 'facebook' => 'Facebook', 'microsoft' => 'Microsoft'] as $provider => $label)
+                    @if ($oauth[$provider])
+                        <a
+                            href="{{ route('oauth.redirect', $provider) }}"
+                            class="btn btn-ghost w-full"
+                        >
+                            {{ $label }}
+                        </a>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    @endif
 </x-guest-layout>

@@ -17,7 +17,7 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    public function test_login_correcto_lleva_al_reto_de_2fa_sin_autenticar_todavia(): void
     {
         $user = User::factory()->create();
 
@@ -26,8 +26,11 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('admin.dashboard', absolute: false));
+        // El segundo factor es obligatorio: la contraseña correcta por sí
+        // sola ya no autentica — ver Tests\Feature\Auth\TwoFactorChallengeTest
+        // para el flujo completo hasta quedar autenticado.
+        $this->assertGuest();
+        $response->assertRedirect(route('2fa.challenge'));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

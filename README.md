@@ -139,7 +139,8 @@ tienen prioridad sobre `config/site.php`, sin necesidad de limpiar caché ni rec
 
 ## Panel de administración (`/admin`)
 
-Un único rol de administradora, sin autorregistro público. Incluye:
+Roles `super_admin`/`admin`/`editor`/`user` (sin autorregistro público — las cuentas las crea
+un `super_admin`/`admin` desde `/admin/users` o vía `php artisan make:admin`). Incluye:
 
 - **Colores** (`/admin/theme`) — 4 colores (principal, fondo, acento, texto) que sobrescriben
   la paleta pastel en vivo, mediante variables CSS inyectadas en `<head>`. No requiere
@@ -161,17 +162,52 @@ Un único rol de administradora, sin autorregistro público. Incluye:
 - **Contacto** (`/admin/contact`) — WhatsApp, email, zona de atención y tiempo de respuesta.
 - **Mensajes** (`/admin/messages`) — bandeja de `contact_messages` y `emotional_checkups`
   guardados en MySQL, con acción para marcar un mensaje de contacto como atendido.
+- **Usuarios** (`/admin/users`) — lista de cuentas con su rol y estado; banear/reactivar y
+  cambiar de rol. Nadie puede banearse a sí misma ni dejar el sitio sin ningún `super_admin`
+  activo (esas acciones se bloquean con un aviso).
+- **Seguridad** (`/admin/security`) — activa qué canales de 2FA (SMS/WhatsApp) y proveedores de
+  login social (Google/Facebook/Microsoft) están disponibles para que cada usuario elija su
+  propio método en "Mi seguridad". Un canal marcado sin credenciales de `.env` queda "pendiente
+  de configuración" y el sistema sigue usando email de respaldo.
 
 **Crear la cuenta de administradora** (no se commitea ninguna contraseña):
 ```bash
 php artisan make:admin
 ```
-Pide el email y la contraseña de forma interactiva (mínimo 8 caracteres). Para scripts de
+Pide el email y la contraseña de forma interactiva (mínimo 8 caracteres), con rol
+`super_admin` por defecto (`--role=admin` para uno con menos privilegios). Para scripts de
 despliegue no interactivos, puedes definir `ADMIN_EMAIL`/`ADMIN_PASSWORD` en `.env` antes de
 ejecutar el comando (ver `.env.example`).
 
 El acceso está en `/login` (hay un enlace discreto "Acceso administración" al pie del sitio).
-Un usuario autenticado que no sea administradora recibe **403** al visitar `/admin`.
+Un usuario autenticado que no sea `admin`/`super_admin` recibe **403** al visitar `/admin`.
+
+## Seguridad del login (2FA, dispositivos de confianza, login social)
+
+Tras la contraseña correcta, **el login no se completa hasta pasar un segundo factor** — nunca
+se autentica la sesión con solo la contraseña. Cada persona elige su propio método en
+`/perfil/seguridad` (accesible a cualquier usuario logueado, no solo admins):
+
+- **Email** (método por defecto) — código de 6 dígitos enviado por correo, válido **2 horas**.
+  Si se intenta usar un código ya expirado, el sistema invalida ese código y **envía uno nuevo
+  automáticamente**, sin que haga falta pedirlo a mano.
+- **SMS / WhatsApp** — estructura completa lista (columnas, UI, selector de canal), pero
+  requiere una cuenta de Twilio: hasta que `.env` tenga `TWILIO_SID`/`TWILIO_TOKEN` reales, el
+  sistema cae automáticamente a enviar por email en su lugar, para que nadie quede bloqueado
+  por elegir un canal aún no conectado a un proveedor real.
+- **Autenticador (TOTP)** — Google Authenticator, Authy o similar; se activa generando un QR
+  desde `/perfil/seguridad` y confirmando con un código válido.
+- **Recordar este dispositivo** — checkbox en la pantalla de verificación; salta el 2FA en ese
+  navegador durante el número de días configurado en `/admin/security` (30 por defecto). Se
+  invalida automáticamente al cambiar la contraseña.
+- **Login social (Google/Facebook/Microsoft)** — vía `laravel/socialite`, listo pero inactivo
+  hasta configurar `GOOGLE_CLIENT_ID`/`FACEBOOK_CLIENT_ID`/`MICROSOFT_CLIENT_ID` (y sus
+  `_SECRET`) en `.env`, más activarlo desde `/admin/security`. Solo funciona para cuentas ya
+  existentes que compartan el mismo email (no crea cuentas nuevas, igual que el resto del
+  sitio); un login social exitoso **omite el reto 2FA propio** — el proveedor ya es una
+  autenticación fuerte por sí mismo.
+- **Baneo** — una cuenta baneada (`/admin/users`) no puede iniciar sesión, y si ya tenía una
+  sesión activa, se le cierra en su siguiente petición a cualquier página que requiera login.
 
 ## Demo estática en Netlify (sin backend)
 
@@ -192,9 +228,13 @@ para reflejarlos hay que regenerar esa carpeta siguiendo los pasos de su propio 
 ```bash
 php artisan test
 ```
-45 tests: envío válido/inválido del formulario de contacto (incluido honeypot y email), el
+73 tests: envío válido/inválido del formulario de contacto (incluido honeypot y email), el
 cálculo de puntuación/banda del chequeo emocional, el flujo de autenticación de Breeze
 (login, recuperación de contraseña, verificación de email), el control de acceso a `/admin`
-(invitado → redirect a login, usuario normal → 403, administradora → 200), y el CRUD de
-redes sociales, foto de portada y galería (subir/reordenar/eliminar, con `Storage::fake`).
-Usan SQLite en memoria.
+(invitado → redirect a login, usuario normal → 403, administradora → 200), el CRUD de redes
+sociales, foto de portada y galería (subir/reordenar/eliminar, con `Storage::fake`), y todo el
+sistema de seguridad del login: reto 2FA por email/TOTP (código correcto/incorrecto/expirado
+con reenvío automático), dispositivos de confianza (crear, saltar 2FA, expiración), baneo
+(bloquea login y mata sesiones activas), login social (mock de Socialite: cuenta existente,
+sin cuenta, conexión recurrente, omite 2FA) y gestión de usuarios/roles (banear, guardas
+anti-autobaneo y anti-último-`super_admin`). Usan SQLite en memoria.
