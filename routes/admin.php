@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AboutPhotoController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
 use App\Http\Controllers\Admin\ContactSettingsController;
 use App\Http\Controllers\Admin\ContentController;
+use App\Http\Controllers\Admin\CustomSectionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\LogoController;
@@ -57,6 +58,14 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
 
     Route::get('/section-visibility', [SectionVisibilityController::class, 'edit'])->name('section-visibility.edit');
     Route::put('/section-visibility', [SectionVisibilityController::class, 'update'])->name('section-visibility.update');
+
+    Route::get('/custom-sections', [CustomSectionController::class, 'index'])->name('custom-sections.index');
+    Route::post('/custom-sections', [CustomSectionController::class, 'store'])->name('custom-sections.store');
+    Route::get('/custom-sections/{customSection}/edit', [CustomSectionController::class, 'edit'])->name('custom-sections.edit');
+    Route::put('/custom-sections/{customSection}', [CustomSectionController::class, 'update'])->name('custom-sections.update');
+    Route::patch('/custom-sections/{customSection}/toggle', [CustomSectionController::class, 'toggle'])->name('custom-sections.toggle');
+    Route::put('/custom-sections-reorder', [CustomSectionController::class, 'reorder'])->name('custom-sections.reorder');
+    Route::delete('/custom-sections/{customSection}', [CustomSectionController::class, 'destroy'])->name('custom-sections.destroy');
 
     // Preguntas del chatbot: reservado a la super administradora.
     Route::middleware('super_admin')->group(function () {

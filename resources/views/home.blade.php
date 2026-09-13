@@ -339,6 +339,11 @@
 </section>
 @endif
 
+{{-- ============ SECCIONES PERSONALIZADAS ============ --}}
+@foreach ($customSections ?? [] as $customSection)
+    @include('partials.custom-section', ['section' => $customSection])
+@endforeach
+
 {{-- ============ CONTACTO ============ --}}
 <section id="contacto" class="section bg-paper-50">
     <div class="container-x grid gap-12 md:grid-cols-[0.85fr_1.15fr] md:items-start">
