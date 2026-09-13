@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UsersController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,11 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
 
     Route::get('/section-visibility', [SectionVisibilityController::class, 'edit'])->name('section-visibility.edit');
     Route::put('/section-visibility', [SectionVisibilityController::class, 'update'])->name('section-visibility.update');
+
+    Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
+    Route::patch('/testimonials/{testimonial}/approve', [TestimonialController::class, 'approve'])->name('testimonials.approve');
+    Route::patch('/testimonials/{testimonial}/unapprove', [TestimonialController::class, 'unapprove'])->name('testimonials.unapprove');
+    Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
 
     Route::get('/custom-sections', [CustomSectionController::class, 'index'])->name('custom-sections.index');
     Route::post('/custom-sections', [CustomSectionController::class, 'store'])->name('custom-sections.store');

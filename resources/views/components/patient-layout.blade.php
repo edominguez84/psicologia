@@ -34,11 +34,11 @@
 
                 <nav class="flex flex-col gap-1">
                     @php
-                        // 'Mis citas' y 'Mi testimonio' se añaden aquí cuando esas
-                        // fases se implementen (sistema de citas y testimonios de
-                        // paciente) — por ahora el menú solo enlaza lo que ya existe.
+                        // 'Mis citas' se añade aquí cuando se implemente el sistema
+                        // de citas — por ahora el menú solo enlaza lo que ya existe.
                         $links = [
                             ['route' => 'patient.profile.edit', 'label' => 'Mi perfil'],
+                            ['route' => 'patient.testimonial.edit', 'label' => 'Mi testimonio'],
                             ['route' => 'two-factor.edit', 'label' => 'Mi seguridad'],
                         ];
                     @endphp

@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\PatientProfileController;
+use App\Http\Controllers\PatientTestimonialController;
 use App\Http\Controllers\TwoFactorSettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -105,4 +106,8 @@ Route::middleware(['auth', 'banned'])->group(function () {
     Route::put('perfil', [PatientProfileController::class, 'update'])->name('patient.profile.update');
     Route::post('perfil/foto', [PatientProfileController::class, 'updatePhoto'])->name('patient.profile.photo.update');
     Route::delete('perfil/foto', [PatientProfileController::class, 'destroyPhoto'])->name('patient.profile.photo.destroy');
+
+    // Testimonio propio del paciente: un testimonio activo por cuenta.
+    Route::get('perfil/testimonio', [PatientTestimonialController::class, 'edit'])->name('patient.testimonial.edit');
+    Route::put('perfil/testimonio', [PatientTestimonialController::class, 'update'])->name('patient.testimonial.update');
 });

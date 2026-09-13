@@ -271,7 +271,7 @@
         </div>
 
         <div class="mt-12 grid gap-5 md:grid-cols-3">
-            @foreach ($s['testimonials']['items'] as $t)
+            @foreach (array_merge($s['testimonials']['items'], ($patientTestimonials ?? collect())->toArray()) as $t)
                 <figure class="card flex flex-col">
                     <div class="mb-4 flex gap-1 text-clay-400">
                         @for ($i = 0; $i < 5; $i++)
@@ -282,7 +282,10 @@
                         &ldquo;{{ $t['text'] }}&rdquo;
                     </blockquote>
                     <figcaption class="mt-5 text-sm font-bold text-ink-soft">
-                        {{ $t['name'] }} · <span class="font-semibold">{{ $t['place'] }}</span>
+                        {{ $t['name'] }}
+                        @if (!empty($t['place']))
+                            · <span class="font-semibold">{{ $t['place'] }}</span>
+                        @endif
                     </figcaption>
                 </figure>
             @endforeach
