@@ -9,7 +9,11 @@
 
     <title>{{ $title }} · {{ config('site.name') }}</title>
 
-    @php $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults()); @endphp
+    @php
+        $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults());
+        $favicon = app(\App\Services\SiteSettingsService::class)->get('favicon');
+    @endphp
+    <link rel="icon" href="{{ ! empty($favicon['path']) ? \Illuminate\Support\Facades\Storage::url($favicon['path']) : asset('favicon.ico') }}">
     @include('partials.google-fonts-link', ['fonts' => $fonts])
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -35,27 +39,32 @@
                 <nav class="flex flex-col gap-1">
                     @php
                         $links = [
-                            ['route' => 'patient.profile.edit', 'label' => 'Mi perfil'],
-                            ['route' => 'patient.appointments.index', 'label' => 'Mis citas'],
-                            ['route' => 'patient.testimonial.edit', 'label' => 'Mi testimonio'],
-                            ['route' => 'two-factor.edit', 'label' => 'Mi seguridad'],
+                            ['route' => 'patient.profile.edit', 'label' => 'Mi perfil', 'icon' => 'home'],
+                            ['route' => 'patient.appointments.index', 'label' => 'Mis citas', 'icon' => 'calendar'],
+                            ['route' => 'patient.testimonial.edit', 'label' => 'Mi testimonio', 'icon' => 'star'],
+                            ['route' => 'two-factor.edit', 'label' => 'Mi seguridad', 'icon' => 'shield-lock'],
                         ];
                     @endphp
                     @foreach ($links as $link)
                         <a
                             href="{{ route($link['route']) }}"
-                            class="rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs($link['route']) ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
+                            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs($link['route']) ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
                         >
+                            @include('partials.admin-nav-icon', ['name' => $link['icon']])
                             {{ $link['label'] }}
                         </a>
                     @endforeach
 
                     <div class="my-3 border-t border-paper-200"></div>
 
-                    <a href="/" class="rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-sky-50">← Ver el sitio</a>
+                    <a href="/" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-sky-50">
+                        @include('partials.admin-nav-icon', ['name' => 'globe'])
+                        Ver el sitio
+                    </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-clay-500 hover:bg-paper-100">
+                        <button type="submit" class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-clay-500 hover:bg-paper-100">
+                            @include('partials.admin-nav-icon', ['name' => 'lock'])
                             Cerrar sesión
                         </button>
                     </form>

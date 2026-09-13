@@ -70,7 +70,7 @@ class TwoFactorChallengeController extends Controller
                 RateLimiter::hit($rateLimitKey);
 
                 return back()->withErrors([
-                    'code' => 'Tu código había expirado, te enviamos uno nuevo. Revisa tu correo.',
+                    'code' => 'Tu código había expirado. Pulsa "Reenviar código" para pedir uno nuevo.',
                 ]);
             }
 

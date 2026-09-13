@@ -8,6 +8,9 @@
     <title>@yield('title', config('site.name').' · '.config('site.role'))</title>
     <meta name="description" content="@yield('meta_description', 'Terapia psicológica online en español, especializada en trauma y EMDR. Sesiones por videollamada para personas en Estados Unidos y Europa.')">
 
+    @php $favicon = app(\App\Services\SiteSettingsService::class)->get('favicon'); @endphp
+    <link rel="icon" href="{{ ! empty($favicon['path']) ? \Illuminate\Support\Facades\Storage::url($favicon['path']) : asset('favicon.ico') }}">
+
     @php
         $colors = app(\App\Services\SiteSettingsService::class)->get('colors');
         $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults());
@@ -51,17 +54,26 @@
     @php
         $chatbotDemoMode = (bool) config('site.demo_mode');
         $chatbotWhatsapp = 'https://wa.me/'.config('site.contact.whatsapp').'?text='.rawurlencode(config('site.whatsapp_prefill'));
-        $chatbotAboutPhoto = app(\App\Services\SiteSettingsService::class)->get('about_photo');
-        $chatbotAvatar = ! empty($chatbotAboutPhoto['path'])
-            ? \Illuminate\Support\Facades\Storage::url($chatbotAboutPhoto['path'])
-            : asset(config('site.about.photo'));
+        $chatbotSettings = app(\App\Services\SiteSettingsService::class)->get('chatbot', ['name' => 'Rebecca']);
+        $chatbotName = $chatbotSettings['name'] ?? 'Rebecca';
+        // Si no se subió una imagen propia del bot, se usa la foto de "Sobre
+        // mí" como respaldo (comportamiento anterior), nunca una imagen rota.
+        $chatbotAvatar = ! empty($chatbotSettings['avatar_path'])
+            ? \Illuminate\Support\Facades\Storage::url($chatbotSettings['avatar_path'])
+            : null;
+        if (! $chatbotAvatar) {
+            $chatbotAboutPhoto = app(\App\Services\SiteSettingsService::class)->get('about_photo');
+            $chatbotAvatar = ! empty($chatbotAboutPhoto['path'])
+                ? \Illuminate\Support\Facades\Storage::url($chatbotAboutPhoto['path'])
+                : asset(config('site.about.photo'));
+        }
         $chatbotNameParts = explode(' ', (string) config('site.name'));
         $chatbotOwnerFirstName = $chatbotNameParts[1] ?? ($chatbotNameParts[0] ?? config('site.name'));
         $chatbotFaqs = $chatbotDemoMode
             ? []
             : \App\Models\ChatbotFaq::active()->ordered()->get(['id', 'question', 'answer'])->toArray();
         $chatbotProps = [
-            'botName'    => 'Rebecca',
+            'botName'    => $chatbotName,
             'botTagline' => 'Asistente virtual de '.$chatbotOwnerFirstName,
             'avatar'     => $chatbotAvatar,
             'endpoint'   => $chatbotDemoMode ? null : route('chatbot-lead.store'),

@@ -23,6 +23,7 @@
                         class="block text-sm file:mr-3 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700">
                     <button type="submit" class="btn btn-primary !px-4 !py-2 text-sm">Subir</button>
                 </form>
+                <p class="text-xs text-ink-soft">Formato PNG o JPG, máximo 2&nbsp;MB, hasta 2000×2000&nbsp;px.</p>
                 @error('photo')<p class="text-xs font-semibold text-clay-500">{{ $message }}</p>@enderror
 
                 @if ($user->avatar_path)

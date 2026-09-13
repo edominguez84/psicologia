@@ -7,8 +7,8 @@ Usa este código para completar tu inicio de sesión:
 {{ $code }}
 </div>
 
-Caduca el {{ $expiresAt->format('d/m/Y H:i') }} (en 2 horas). Si expira, se enviará uno nuevo
-automáticamente al intentar iniciar sesión de nuevo.
+Caduca el {{ $expiresAt->format('d/m/Y H:i') }} (en 2 horas). Si expira o no te llegó, pulsa
+"Reenviar código" en la pantalla de verificación para pedir uno nuevo.
 
 Si no solicitaste este código, ignora este correo — tu cuenta sigue segura.
 @endcomponent

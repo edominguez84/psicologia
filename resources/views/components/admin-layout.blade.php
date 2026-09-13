@@ -9,7 +9,11 @@
 
     <title>{{ $title }} · Admin · {{ config('site.name') }}</title>
 
-    @php $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults()); @endphp
+    @php
+        $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults());
+        $favicon = app(\App\Services\SiteSettingsService::class)->get('favicon');
+    @endphp
+    <link rel="icon" href="{{ ! empty($favicon['path']) ? \Illuminate\Support\Facades\Storage::url($favicon['path']) : asset('favicon.ico') }}">
     @include('partials.google-fonts-link', ['fonts' => $fonts])
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -35,33 +39,35 @@
                 <nav class="flex flex-col gap-1">
                     @php
                         $links = [
-                            ['route' => 'admin.dashboard', 'label' => 'Panel'],
-                            ['route' => 'admin.theme.edit', 'label' => 'Apariencia'],
-                            ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones'],
-                            ['route' => 'admin.custom-sections.index', 'label' => 'Secciones personalizadas'],
-                            ['route' => 'admin.logo.edit', 'label' => 'Logo'],
-                            ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada'],
-                            ['route' => 'admin.gallery.edit', 'label' => 'Galería'],
-                            ['route' => 'admin.social.edit', 'label' => 'Redes sociales'],
-                            ['route' => 'admin.contact.edit', 'label' => 'Contacto'],
-                            ['route' => 'admin.messages.index', 'label' => 'Mensajes'],
-                            ['route' => 'admin.testimonials.index', 'label' => 'Testimonios'],
-                            ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas'],
-                            ['route' => 'admin.appointments.index', 'label' => 'Citas'],
-                            ['route' => 'admin.users.index', 'label' => 'Usuarios'],
-                            ['route' => 'admin.security.edit', 'label' => 'Seguridad'],
-                            ['route' => 'two-factor.edit', 'label' => 'Mi seguridad'],
+                            ['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => 'home'],
+                            ['route' => 'admin.theme.edit', 'label' => 'Apariencia', 'icon' => 'palette'],
+                            ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones', 'icon' => 'eye'],
+                            ['route' => 'admin.custom-sections.index', 'label' => 'Secciones personalizadas', 'icon' => 'layout'],
+                            ['route' => 'admin.logo.edit', 'label' => 'Logo', 'icon' => 'image'],
+                            ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada', 'icon' => 'photo'],
+                            ['route' => 'admin.gallery.edit', 'label' => 'Galería', 'icon' => 'grid'],
+                            ['route' => 'admin.social.edit', 'label' => 'Redes sociales', 'icon' => 'share'],
+                            ['route' => 'admin.contact.edit', 'label' => 'Contacto', 'icon' => 'mail'],
+                            ['route' => 'admin.messages.index', 'label' => 'Mensajes', 'icon' => 'inbox'],
+                            ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'],
+                            ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas', 'icon' => 'clock'],
+                            ['route' => 'admin.appointments.index', 'label' => 'Citas', 'icon' => 'calendar'],
+                            ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'people'],
+                            ['route' => 'admin.security.edit', 'label' => 'Seguridad', 'icon' => 'lock'],
+                            ['route' => 'two-factor.edit', 'label' => 'Mi seguridad', 'icon' => 'shield-lock'],
                         ];
                         if (auth()->user()?->isSuperAdmin()) {
-                            $links[] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot'];
-                            $links[] = ['route' => 'admin.staff.create', 'label' => 'Crear cuenta'];
+                            $links[] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot', 'icon' => 'chat'];
+                            $links[] = ['route' => 'admin.staff.create', 'label' => 'Crear cuenta', 'icon' => 'user-plus'];
+                            $links[] = ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'];
                         }
                     @endphp
                     @foreach ($links as $link)
                         <a
                             href="{{ route($link['route']) }}"
-                            class="rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs($link['route']) ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
+                            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs($link['route']) ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
                         >
+                            @include('partials.admin-nav-icon', ['name' => $link['icon']])
                             {{ $link['label'] }}
                         </a>
                     @endforeach
@@ -72,18 +78,23 @@
                     @foreach (\App\Support\SiteContentSections::all() as $key => $section)
                         <a
                             href="{{ route('admin.content.edit', $key) }}"
-                            class="rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs('admin.content.edit') && request()->route('section') === $key ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
+                            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs('admin.content.edit') && request()->route('section') === $key ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
                         >
+                            @include('partials.admin-nav-icon', ['name' => 'layout'])
                             {{ $section['label'] }}
                         </a>
                     @endforeach
 
                     <div class="my-3 border-t border-paper-200"></div>
 
-                    <a href="/" class="rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-sky-50">← Ver el sitio</a>
+                    <a href="/" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-sky-50">
+                        @include('partials.admin-nav-icon', ['name' => 'globe'])
+                        Ver el sitio
+                    </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-clay-500 hover:bg-paper-100">
+                        <button type="submit" class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-clay-500 hover:bg-paper-100">
+                            @include('partials.admin-nav-icon', ['name' => 'lock'])
                             Cerrar sesión
                         </button>
                     </form>

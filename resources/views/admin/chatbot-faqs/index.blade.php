@@ -1,15 +1,55 @@
 <x-admin-layout title="Preguntas del chatbot">
-    <h1 class="text-2xl font-serif text-sky-800">Preguntas del chatbot (Rebecca)</h1>
+    <h1 class="text-2xl font-serif text-sky-800">Chatbot del sitio</h1>
     <p class="mt-2 text-sm text-ink-soft">
-        Estas son las preguntas que el visitante puede elegir como botones dentro del chat, con la
-        respuesta fija que verá al seleccionarlas. Usa las flechas para reordenarlas, oculta las
-        que no quieras mostrar sin borrarlas, y edita el texto cuando quieras. Solo la super
-        administradora puede gestionar esta sección.
+        Configura el nombre y la imagen del asistente, y las preguntas que el visitante puede
+        elegir como botones dentro del chat. Solo la super administradora puede gestionar esta
+        sección.
+    </p>
+
+    <div class="mt-8 max-w-lg rounded-2xl border border-paper-200 bg-white p-5">
+        <h2 class="mb-3 font-serif text-lg text-sky-800">Nombre e imagen del bot</h2>
+
+        <div class="flex items-center gap-4">
+            <div class="grid size-16 shrink-0 place-items-center overflow-hidden rounded-full border border-paper-200 bg-paper-100">
+                @if (! empty($chatbotSettings['avatar_path']))
+                    <img src="{{ \Illuminate\Support\Facades\Storage::url($chatbotSettings['avatar_path']) }}" alt="" class="size-full object-cover">
+                @else
+                    <span class="text-xl font-bold text-sky-700">{{ mb_strtoupper(mb_substr($chatbotSettings['name'] ?? 'R', 0, 1)) }}</span>
+                @endif
+            </div>
+
+            <form method="POST" action="{{ route('admin.chatbot-faqs.settings.update') }}" enctype="multipart/form-data" class="flex-1 space-y-3">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label for="chatbot_name" class="mb-1 block text-xs font-semibold text-sky-700">Nombre del bot</label>
+                    <input type="text" name="name" id="chatbot_name" maxlength="60" required
+                        value="{{ old('name', $chatbotSettings['name'] ?? 'Rebecca') }}"
+                        class="w-full rounded-lg border border-paper-200 bg-paper-50 px-3 py-2 text-sm outline-none focus:border-sky-400">
+                    @error('name')<p class="mt-1 text-xs font-semibold text-clay-500">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="chatbot_avatar" class="mb-1 block text-xs font-semibold text-sky-700">Imagen del bot (opcional)</label>
+                    <input type="file" name="avatar" id="chatbot_avatar" accept="image/*"
+                        class="block w-full text-sm file:mr-3 file:rounded-full file:border-0 file:bg-sky-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-sky-700">
+                    <p class="mt-1 text-xs text-ink-soft">Formato PNG o JPG, máximo 2&nbsp;MB, hasta 1000×1000&nbsp;px. Se recorta en un círculo.</p>
+                    @error('avatar')<p class="mt-1 text-xs font-semibold text-clay-500">{{ $message }}</p>@enderror
+                </div>
+                <button type="submit" class="btn btn-primary !px-4 !py-2 text-sm">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="mb-3 mt-10 font-serif text-lg text-sky-800">Preguntas del chat</h2>
+    <p class="text-sm text-ink-soft">
+        Usa las flechas para reordenarlas, oculta las que no quieras mostrar sin borrarlas, y edita
+        el texto cuando quieras.
     </p>
 
     <div
         x-data="{
             faqs: {{ json_encode($faqs->map(fn ($f) => ['id' => $f->id, 'question' => $f->question, 'answer' => $f->answer, 'is_active' => $f->is_active])) }},
+            base: '{{ url('/admin/chatbot-faqs') }}',
             editing: null,
             moveUp(i) { if (i === 0) return; [this.faqs[i-1], this.faqs[i]] = [this.faqs[i], this.faqs[i-1]]; this.saveOrder(); },
             moveDown(i) { if (i === this.faqs.length - 1) return; [this.faqs[i+1], this.faqs[i]] = [this.faqs[i], this.faqs[i+1]]; this.saveOrder(); },
@@ -22,7 +62,7 @@
                 });
             },
         }"
-        class="mt-8 space-y-4"
+        class="mt-6 space-y-4"
     >
         <template x-for="(faq, i) in faqs" :key="faq.id">
             <div class="rounded-2xl border border-paper-200 bg-white p-5" :class="{ 'opacity-50': !faq.is_active }">
@@ -47,7 +87,7 @@
                         <form
                             x-show="editing === faq.id"
                             method="POST"
-                            :action="`/admin/chatbot-faqs/${faq.id}`"
+                            :action="`${base}/${faq.id}`"
                             class="space-y-3"
                         >
                             @csrf
@@ -74,7 +114,7 @@
                             Editar
                         </button>
 
-                        <form method="POST" :action="`/admin/chatbot-faqs/${faq.id}/toggle`">
+                        <form method="POST" :action="`${base}/${faq.id}/toggle`">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="font-semibold hover:underline" :class="faq.is_active ? 'text-clay-500' : 'text-sky-700'">
@@ -82,7 +122,7 @@
                             </button>
                         </form>
 
-                        <form method="POST" :action="`/admin/chatbot-faqs/${faq.id}`" onsubmit="return confirm('¿Eliminar esta pregunta definitivamente?')">
+                        <form method="POST" :action="`${base}/${faq.id}`" onsubmit="return confirm('¿Eliminar esta pregunta definitivamente?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="font-semibold text-clay-500 hover:underline">Eliminar</button>

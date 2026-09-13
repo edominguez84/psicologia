@@ -3,19 +3,69 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\ChatbotFaq;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ChatbotFaqControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('public');
+    }
+
     public function test_admin_normal_no_puede_gestionar_preguntas(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
         $this->actingAs($admin)->get('/admin/chatbot-faqs')->assertForbidden();
+    }
+
+    public function test_super_admin_puede_actualizar_el_nombre_del_bot(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+        $response = $this->actingAs($superAdmin)->put('/admin/chatbot-faqs-settings', [
+            'name' => 'Sofía',
+        ]);
+
+        $response->assertRedirect();
+        $settings = SiteSetting::where('key', 'chatbot')->first()->value;
+        $this->assertSame('Sofía', $settings['name']);
+    }
+
+    public function test_super_admin_puede_subir_una_imagen_para_el_bot(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        $file = UploadedFile::fake()->image('bot.jpg', 500, 500);
+
+        $response = $this->actingAs($superAdmin)->put('/admin/chatbot-faqs-settings', [
+            'name' => 'Rebecca',
+            'avatar' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $settings = SiteSetting::where('key', 'chatbot')->first()->value;
+        Storage::disk('public')->assertExists($settings['avatar_path']);
+    }
+
+    public function test_rechaza_una_imagen_de_bot_demasiado_grande(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        $file = UploadedFile::fake()->image('bot.jpg', 2000, 2000);
+
+        $response = $this->actingAs($superAdmin)->put('/admin/chatbot-faqs-settings', [
+            'name' => 'Rebecca',
+            'avatar' => $file,
+        ]);
+
+        $response->assertSessionHasErrors('avatar');
     }
 
     public function test_super_admin_puede_ver_el_listado(): void
