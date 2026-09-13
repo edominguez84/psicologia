@@ -38,6 +38,7 @@
                             ['route' => 'admin.dashboard', 'label' => 'Panel'],
                             ['route' => 'admin.theme.edit', 'label' => 'Apariencia'],
                             ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones'],
+                            ['route' => 'admin.custom-sections.index', 'label' => 'Secciones personalizadas'],
                             ['route' => 'admin.logo.edit', 'label' => 'Logo'],
                             ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada'],
                             ['route' => 'admin.gallery.edit', 'label' => 'Galería'],
