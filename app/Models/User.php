@@ -106,6 +106,11 @@ class User extends Authenticatable
         return $this->hasOne(Testimonial::class);
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
     public function isAdmin(): bool
     {
         return in_array($this->role, [UserRole::SuperAdmin, UserRole::Admin], true);

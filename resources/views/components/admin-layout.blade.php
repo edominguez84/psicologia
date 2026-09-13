@@ -46,6 +46,8 @@
                             ['route' => 'admin.contact.edit', 'label' => 'Contacto'],
                             ['route' => 'admin.messages.index', 'label' => 'Mensajes'],
                             ['route' => 'admin.testimonials.index', 'label' => 'Testimonios'],
+                            ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas'],
+                            ['route' => 'admin.appointments.index', 'label' => 'Citas'],
                             ['route' => 'admin.users.index', 'label' => 'Usuarios'],
                             ['route' => 'admin.security.edit', 'label' => 'Seguridad'],
                             ['route' => 'two-factor.edit', 'label' => 'Mi seguridad'],
