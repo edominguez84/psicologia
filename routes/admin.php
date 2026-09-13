@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ContactSettingsController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\CustomSectionController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FaviconController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
@@ -88,6 +89,7 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
     // Preguntas del chatbot: reservado a la super administradora.
     Route::middleware('super_admin')->group(function () {
         Route::get('/chatbot-faqs', [ChatbotFaqController::class, 'index'])->name('chatbot-faqs.index');
+        Route::put('/chatbot-faqs-settings', [ChatbotFaqController::class, 'updateSettings'])->name('chatbot-faqs.settings.update');
         Route::post('/chatbot-faqs', [ChatbotFaqController::class, 'store'])->name('chatbot-faqs.store');
         Route::put('/chatbot-faqs/{chatbotFaq}', [ChatbotFaqController::class, 'update'])->name('chatbot-faqs.update');
         Route::patch('/chatbot-faqs/{chatbotFaq}/toggle', [ChatbotFaqController::class, 'toggle'])->name('chatbot-faqs.toggle');
@@ -98,5 +100,10 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
         // super administradora.
         Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+
+        // Icono del sitio (favicon) — reservado a la super administradora.
+        Route::get('/favicon', [FaviconController::class, 'edit'])->name('favicon.edit');
+        Route::post('/favicon', [FaviconController::class, 'update'])->name('favicon.update');
+        Route::delete('/favicon', [FaviconController::class, 'destroy'])->name('favicon.destroy');
     });
 });

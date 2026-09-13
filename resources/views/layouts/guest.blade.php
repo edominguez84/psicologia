@@ -7,9 +7,12 @@
 
     <title>Acceso administración · {{ config('site.name') }}</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    @php
+        $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults());
+        $favicon = app(\App\Services\SiteSettingsService::class)->get('favicon');
+    @endphp
+    <link rel="icon" href="{{ ! empty($favicon['path']) ? \Illuminate\Support\Facades\Storage::url($favicon['path']) : asset('favicon.ico') }}">
+    @include('partials.google-fonts-link', ['fonts' => $fonts])
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

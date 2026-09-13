@@ -4,17 +4,51 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChatbotFaq;
+use App\Services\SiteSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ChatbotFaqController extends Controller
 {
+    public function __construct(private SiteSettingsService $settings)
+    {
+    }
+
     public function index(): View
     {
         return view('admin.chatbot-faqs.index', [
             'faqs' => ChatbotFaq::ordered()->get(),
+            'chatbotSettings' => $this->settings->get('chatbot', ['name' => 'Rebecca']),
         ]);
+    }
+
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:60'],
+            'avatar' => ['nullable', 'image', 'max:2048', 'dimensions:max_width=1000,max_height=1000'],
+        ], [
+            'avatar.image' => 'Debe ser una imagen (PNG, JPG o similar).',
+            'avatar.max' => 'La imagen no debe superar 2 MB.',
+            'avatar.dimensions' => 'La imagen no debe superar 1000×1000 píxeles.',
+        ]);
+
+        $settings = $this->settings->get('chatbot', ['name' => 'Rebecca']);
+
+        if ($request->hasFile('avatar')) {
+            if (! empty($settings['avatar_path'])) {
+                Storage::disk('public')->delete($settings['avatar_path']);
+            }
+            $settings['avatar_path'] = $request->file('avatar')->store('chatbot', 'public');
+        }
+
+        $settings['name'] = $data['name'];
+
+        $this->settings->set('chatbot', $settings);
+
+        return back()->with('status', 'Configuración del chatbot actualizada.');
     }
 
     public function store(Request $request): RedirectResponse

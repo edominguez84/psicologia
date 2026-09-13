@@ -8,8 +8,8 @@
         </p>
     @else
         <p class="mb-5 text-sm text-ink-soft">
-            Te enviamos un código de 6 dígitos por email. Caduca en 2 horas; si expira, te
-            enviaremos uno nuevo automáticamente.
+            Te enviamos un código de 6 dígitos por email. Caduca en 2 horas; si expira o no te
+            llegó, pulsa "Reenviar código".
         </p>
     @endif
 

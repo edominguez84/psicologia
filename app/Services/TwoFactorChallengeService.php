@@ -68,8 +68,8 @@ class TwoFactorChallengeService
     }
 
     /**
-     * Resultado de verificar un código: 'ok', 'expired' (ya se reenvió uno
-     * nuevo automáticamente) o 'invalid'.
+     * Resultado de verificar un código: 'ok', 'expired' (la persona debe
+     * pedir uno nuevo con el botón "Reenviar código") o 'invalid'.
      */
     public function verifyCode(User $user, string $submitted): string
     {
@@ -84,7 +84,6 @@ class TwoFactorChallengeService
 
         if ($loginCode->isExpired()) {
             $loginCode->update(['consumed_at' => now()]);
-            $this->sendCode($user, $loginCode->channel);
 
             return 'expired';
         }
