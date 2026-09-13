@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Enums\UserRole;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreStaffRequest;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
+
+class StaffController extends Controller
+{
+    /**
+     * Alta manual de cuentas por la super administradora — a diferencia de
+     * UsersController (que gestiona transiciones sobre usuarios ya
+     * existentes: banear, cambiar rol), este controlador crea cuentas desde
+     * cero, con contraseña inicial. Reservado a 'super_admin' en las rutas.
+     */
+    public function create(): View
+    {
+        return view('admin.staff.create', [
+            'roles' => UserRole::cases(),
+        ]);
+    }
+
+    public function store(StoreStaffRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $user = new User([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'role' => UserRole::from($data['role']),
+        ]);
+        // email_verified_at no es mass-assignable; se setea explícitamente
+        // porque esta cuenta la da de alta la propia super administradora
+        // (cuenta de confianza inmediata, sin necesidad de verificar correo).
+        $user->email_verified_at = now();
+        $user->save();
+
+        return redirect()->route('admin.users.index')
+            ->with('status', "Cuenta {$user->role->label()} creada: {$user->email}");
+    }
+}

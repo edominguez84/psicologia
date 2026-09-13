@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
 
-            return redirect()->intended(route('admin.dashboard', absolute: false));
+            return redirect()->intended(route($user->defaultRedirectRouteName(), absolute: false));
         }
 
         // Todavía NO se llama a Auth::login(): el usuario pasó la contraseña

@@ -32,6 +32,11 @@
         </div>
     </form>
 
+    <p class="mt-6 text-center text-sm text-ink-soft">
+        ¿Eres paciente y no tienes cuenta?
+        <a class="font-semibold text-sky-700 underline" href="{{ route('register') }}">Regístrate</a>
+    </p>
+
     @php $oauth = app(\App\Services\SecurityAvailability::class)->oauth(); @endphp
     @if (in_array(true, $oauth, true))
         <div class="mt-6 border-t border-paper-200 pt-6">

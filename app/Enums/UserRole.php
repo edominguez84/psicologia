@@ -15,6 +15,10 @@ enum UserRole: string
     case Editor = 'editor';
     // Rol base sin acceso al panel admin (valor por defecto de la columna).
     case User = 'user';
+    // Cuenta de paciente: puede agendar citas, ver las propias, dejar su
+    // testimonio y gestionar su perfil. Se crea vía autoregistro público
+    // (routes/auth.php) o manualmente por el super_admin.
+    case Patient = 'patient';
 
     public function label(): string
     {
@@ -23,6 +27,7 @@ enum UserRole: string
             self::Admin => 'Administrador',
             self::Editor => 'Editor',
             self::User => 'Usuario',
+            self::Patient => 'Paciente',
         };
     }
 }

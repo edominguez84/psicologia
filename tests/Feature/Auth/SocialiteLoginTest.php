@@ -46,7 +46,7 @@ class SocialiteLoginTest extends TestCase
     public function test_usuario_existente_con_email_coincidente_se_autentica_y_crea_la_conexion(): void
     {
         $this->enableGoogleOauth();
-        $user = User::factory()->create(['email' => 'ana@example.com']);
+        $user = User::factory()->create(['role' => 'admin', 'email' => 'ana@example.com']);
         $this->mockSocialiteUser('google-123', 'ana@example.com');
 
         $response = $this->get('/auth/google/callback');

@@ -36,7 +36,7 @@ class TrustedDeviceTest extends TestCase
 
     public function test_dispositivo_de_confianza_salta_el_2fa_en_el_siguiente_login(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'admin']);
 
         // Se crea el dispositivo de confianza directamente vía el servicio
         // (en vez de descifrar la cookie real de una respuesta anterior, que

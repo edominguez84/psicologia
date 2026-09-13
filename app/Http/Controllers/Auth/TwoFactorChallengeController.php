@@ -87,7 +87,7 @@ class TwoFactorChallengeController extends Controller
         $request->session()->forget('pending_2fa');
         $request->session()->regenerate();
 
-        $response = redirect()->intended(route('admin.dashboard', absolute: false));
+        $response = redirect()->intended(route($user->defaultRedirectRouteName(), absolute: false));
 
         if ($request->boolean('remember_device')) {
             $response->withCookie($trustedDevices->remember($user, $request));

@@ -7,22 +7,32 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\PatientProfileController;
 use App\Http\Controllers\TwoFactorSettingsController;
 use Illuminate\Support\Facades\Route;
 
-// El registro público está desactivado a propósito: este sitio tiene un único
-// rol de administrador, creado con `php artisan make:admin` (ver
-// app/Console/Commands/MakeAdminUser.php), no mediante autorregistro. El
-// login social (más abajo) tampoco crea cuentas nuevas: solo enlaza un
-// proveedor a una cuenta ya existente con el mismo email.
+// El autoregistro público SOLO puede crear cuentas de paciente: el rol se
+// fuerza en RegisteredUserController y nunca se lee del request. Las cuentas
+// de staff (admin/editor/super_admin) se crean desde /admin/staff, exclusivo
+// del super_admin (ver Admin\StaffController), o con `php artisan make:admin`
+// para el primer arranque. El login social (más abajo) tampoco crea cuentas
+// nuevas: solo enlaza un proveedor a una cuenta ya existente con el mismo
+// email.
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('register', [RegisteredUserController::class, 'create'])
+        ->name('register');
+
+    Route::post('register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:6,1');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
@@ -88,4 +98,11 @@ Route::middleware(['auth', 'banned'])->group(function () {
     Route::post('perfil/seguridad/totp/confirm', [TwoFactorSettingsController::class, 'confirmTotp'])->name('two-factor.totp.confirm');
     Route::put('perfil/seguridad/method', [TwoFactorSettingsController::class, 'updateMethod'])->name('two-factor.method.update');
     Route::delete('perfil/seguridad/devices/{device}', [TwoFactorSettingsController::class, 'forgetDevice'])->name('two-factor.devices.forget');
+
+    // Perfil general del paciente: siempre sobre Auth::user(), sin
+    // route-model-binding de otro usuario (mismo criterio que arriba).
+    Route::get('perfil', [PatientProfileController::class, 'edit'])->name('patient.profile.edit');
+    Route::put('perfil', [PatientProfileController::class, 'update'])->name('patient.profile.update');
+    Route::post('perfil/foto', [PatientProfileController::class, 'updatePhoto'])->name('patient.profile.photo.update');
+    Route::delete('perfil/foto', [PatientProfileController::class, 'destroyPhoto'])->name('patient.profile.photo.destroy');
 });

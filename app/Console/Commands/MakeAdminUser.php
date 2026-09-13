@@ -63,9 +63,12 @@ class MakeAdminUser extends Command
                 'name' => $name,
                 'password' => Hash::make($password),
                 'role' => $role,
-                'email_verified_at' => now(),
             ]
         );
+        // email_verified_at no es mass-assignable (no está en $fillable), así
+        // que updateOrCreate() lo ignoraba silenciosamente pese a pasarlo
+        // arriba — se setea explícitamente para que de verdad quede marcado.
+        $user->forceFill(['email_verified_at' => now()])->save();
 
         $this->info("Cuenta {$role->label()} lista: {$user->email}");
 
