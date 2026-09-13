@@ -1,12 +1,17 @@
 @php
     $navLinks = [
-        ['href' => '/#sobre-mi', 'label' => 'Sobre mí'],
-        ['href' => '/#servicios', 'label' => 'Cómo te ayudo'],
-        ['href' => '/#beneficios', 'label' => 'Beneficios'],
-        ['href' => '/#emdr', 'label' => 'Terapia EMDR'],
-        ['href' => '/#chequeo', 'label' => 'Chequeo emocional'],
-        ['href' => '/#faq', 'label' => 'Preguntas'],
+        ['href' => '/#sobre-mi', 'label' => 'Sobre mí', 'section' => 'about'],
+        ['href' => '/#servicios', 'label' => 'Cómo te ayudo', 'section' => 'services'],
+        ['href' => '/#beneficios', 'label' => 'Beneficios', 'section' => 'benefits'],
+        ['href' => '/#emdr', 'label' => 'Terapia EMDR', 'section' => 'emdr'],
+        ['href' => '/#chequeo', 'label' => 'Chequeo emocional', 'section' => 'checkup'],
+        ['href' => '/#faq', 'label' => 'Preguntas', 'section' => 'faq'],
     ];
+    $navSectionVisibility = app(\App\Services\SiteSettingsService::class)->get('section_visibility', []);
+    $navLinks = array_values(array_filter(
+        $navLinks,
+        fn ($link) => $navSectionVisibility[$link['section']] ?? true
+    ));
     $wa = 'https://wa.me/'.config('site.contact.whatsapp').'?text='.rawurlencode(config('site.whatsapp_prefill'));
     $ctaLabel = 'Hablar con '.\App\Support\NameHelper::firstName(config('site.name'));
 @endphp

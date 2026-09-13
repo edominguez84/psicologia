@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\SiteSettingsService;
+use App\Support\FontOptions;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ThemeController extends Controller
 {
@@ -21,6 +23,9 @@ class ThemeController extends Controller
                 'accent' => '#b9744c',
                 'text' => '#1f2a37',
             ]),
+            'fonts' => $this->settings->get('fonts', FontOptions::defaults()),
+            'headingFonts' => FontOptions::headings(),
+            'bodyFonts' => FontOptions::body(),
         ]);
     }
 
@@ -31,12 +36,24 @@ class ThemeController extends Controller
             'background' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'accent' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'text' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'font_heading' => ['required', Rule::in(array_keys(FontOptions::headings()))],
+            'font_body' => ['required', Rule::in(array_keys(FontOptions::body()))],
         ], [
             'regex' => 'Debe ser un color hexadecimal válido, por ejemplo #386a97.',
         ]);
 
-        $this->settings->set('colors', $data);
+        $this->settings->set('colors', [
+            'primary' => $data['primary'],
+            'background' => $data['background'],
+            'accent' => $data['accent'],
+            'text' => $data['text'],
+        ]);
 
-        return back()->with('status', 'Colores actualizados. Ya se ven reflejados en el sitio.');
+        $this->settings->set('fonts', [
+            'heading' => $data['font_heading'],
+            'body' => $data['font_body'],
+        ]);
+
+        return back()->with('status', 'Apariencia actualizada. Ya se ve reflejada en el sitio.');
     }
 }

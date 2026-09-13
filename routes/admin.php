@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
+use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
 use App\Http\Controllers\Admin\ThemeController;
@@ -53,6 +54,9 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
 
     Route::get('/security', [SecurityController::class, 'edit'])->name('security.edit');
     Route::put('/security', [SecurityController::class, 'update'])->name('security.update');
+
+    Route::get('/section-visibility', [SectionVisibilityController::class, 'edit'])->name('section-visibility.edit');
+    Route::put('/section-visibility', [SectionVisibilityController::class, 'update'])->name('section-visibility.update');
 
     // Preguntas del chatbot: reservado a la super administradora.
     Route::middleware('super_admin')->group(function () {

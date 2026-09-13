@@ -9,9 +9,8 @@
 
     <title>{{ $title }} · Admin · {{ config('site.name') }}</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    @php $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults()); @endphp
+    @include('partials.google-fonts-link', ['fonts' => $fonts])
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -37,7 +36,8 @@
                     @php
                         $links = [
                             ['route' => 'admin.dashboard', 'label' => 'Panel'],
-                            ['route' => 'admin.theme.edit', 'label' => 'Colores'],
+                            ['route' => 'admin.theme.edit', 'label' => 'Apariencia'],
+                            ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones'],
                             ['route' => 'admin.logo.edit', 'label' => 'Logo'],
                             ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada'],
                             ['route' => 'admin.gallery.edit', 'label' => 'Galería'],

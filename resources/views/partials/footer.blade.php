@@ -1,5 +1,18 @@
 @php
     $wa = 'https://wa.me/'.config('site.contact.whatsapp').'?text='.rawurlencode(config('site.whatsapp_prefill'));
+
+    $footerSectionLinks = [
+        ['href' => '/#sobre-mi', 'label' => 'Sobre mí', 'section' => 'about'],
+        ['href' => '/#servicios', 'label' => 'Cómo te ayudo', 'section' => 'services'],
+        ['href' => '/#emdr', 'label' => 'Terapia EMDR', 'section' => 'emdr'],
+        ['href' => '/#chequeo', 'label' => 'Chequeo emocional', 'section' => 'checkup'],
+        ['href' => '/#faq', 'label' => 'Preguntas frecuentes', 'section' => 'faq'],
+    ];
+    $footerSectionVisibility = app(\App\Services\SiteSettingsService::class)->get('section_visibility', []);
+    $footerSectionLinks = array_values(array_filter(
+        $footerSectionLinks,
+        fn ($link) => $footerSectionVisibility[$link['section']] ?? true
+    ));
 @endphp
 
 <footer class="border-t border-paper-200 bg-sky-800 text-paper-100">
@@ -17,11 +30,9 @@
         <div>
             <h4 class="text-sm font-bold uppercase tracking-wider text-paper-50">Secciones</h4>
             <ul class="mt-4 space-y-2 text-sm text-paper-200">
-                <li><a href="/#sobre-mi" class="hover:text-paper-50">Sobre mí</a></li>
-                <li><a href="/#servicios" class="hover:text-paper-50">Cómo te ayudo</a></li>
-                <li><a href="/#emdr" class="hover:text-paper-50">Terapia EMDR</a></li>
-                <li><a href="/#chequeo" class="hover:text-paper-50">Chequeo emocional</a></li>
-                <li><a href="/#faq" class="hover:text-paper-50">Preguntas frecuentes</a></li>
+                @foreach ($footerSectionLinks as $link)
+                    <li><a href="{{ $link['href'] }}" class="hover:text-paper-50">{{ $link['label'] }}</a></li>
+                @endforeach
                 <li><a href="/privacidad" class="hover:text-paper-50">Política de privacidad</a></li>
             </ul>
         </div>

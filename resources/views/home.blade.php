@@ -57,6 +57,12 @@
         ->values()
         ->all();
     $galleryProps = ['images' => $galleryImages];
+
+    // Visibilidad de secciones: el admin puede ocultar (sin borrar) cualquier
+    // sección "hideable" desde /admin/section-visibility. Ausencia de key en
+    // lo guardado = visible (comportamiento de fábrica).
+    $sectionVisibility = app(\App\Services\SiteSettingsService::class)->get('section_visibility', []);
+    $isSectionVisible = fn (string $key) => $sectionVisibility[$key] ?? true;
 @endphp
 
 @section('content')
@@ -113,7 +119,7 @@
 </section>
 
 {{-- ============ GALERÍA ============ --}}
-@if (!empty($galleryImages))
+@if (!empty($galleryImages) && $isSectionVisible('gallery'))
     <section class="section !pt-0 bg-paper-50">
         <div class="container-x">
             <div
@@ -125,6 +131,7 @@
 @endif
 
 {{-- ============ SOBRE MÍ ============ --}}
+@if ($isSectionVisible('about'))
 <section id="sobre-mi" class="section bg-white">
     <div class="container-x grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:items-start">
         <div>
@@ -149,8 +156,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- ============ CÓMO TE AYUDO ============ --}}
+@if ($isSectionVisible('services'))
 <section id="servicios" class="section bg-paper-50">
     <div class="container-x">
         <div class="max-w-2xl">
@@ -185,8 +194,10 @@
         </div>
     </div>
 </section>
+@endif
 
 {{-- ============ BENEFICIOS ============ --}}
+@if ($isSectionVisible('benefits'))
 <section id="beneficios" class="section bg-white">
     <div class="container-x grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:items-start">
         <div>
@@ -207,8 +218,10 @@
         </ul>
     </div>
 </section>
+@endif
 
 {{-- ============ TERAPIA EMDR ============ --}}
+@if ($isSectionVisible('emdr'))
 <section id="emdr" class="section bg-sky-800 text-paper-100">
     <div class="container-x">
         <div class="max-w-2xl">
@@ -246,8 +259,10 @@
         ></div>
     </div>
 </section>
+@endif
 
 {{-- ============ TESTIMONIOS ============ --}}
+@if ($isSectionVisible('testimonials'))
 <section id="testimonios" class="section bg-paper-50">
     <div class="container-x">
         <div class="max-w-2xl">
@@ -275,8 +290,10 @@
         <p class="mt-6 text-xs text-ink-soft">{{ $s['testimonials']['note'] }}</p>
     </div>
 </section>
+@endif
 
 {{-- ============ MITOS ============ --}}
+@if ($isSectionVisible('myths'))
 <section id="mitos" class="section bg-white">
     <div class="container-x">
         <div class="max-w-2xl">
@@ -287,8 +304,10 @@
         <div class="mt-12" data-vue="MythCards" data-props="{{ json_encode($mythProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>
     </div>
 </section>
+@endif
 
 {{-- ============ CHEQUEO EMOCIONAL ============ --}}
+@if ($isSectionVisible('checkup'))
 <section id="chequeo" class="section bg-paper-50">
     <div class="container-x grid gap-12 md:grid-cols-[0.85fr_1.15fr] md:items-start">
         <div>
@@ -302,8 +321,10 @@
         ></div>
     </div>
 </section>
+@endif
 
 {{-- ============ FAQ ============ --}}
+@if ($isSectionVisible('faq'))
 <section id="faq" class="section bg-white">
     <div class="container-x grid gap-12 md:grid-cols-[0.7fr_1.3fr] md:items-start">
         <div>
@@ -316,6 +337,7 @@
         <div data-vue="FaqAccordion" data-props="{{ json_encode($faqProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>
     </div>
 </section>
+@endif
 
 {{-- ============ CONTACTO ============ --}}
 <section id="contacto" class="section bg-paper-50">
