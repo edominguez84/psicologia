@@ -34,10 +34,9 @@
 
                 <nav class="flex flex-col gap-1">
                     @php
-                        // 'Mis citas' se añade aquí cuando se implemente el sistema
-                        // de citas — por ahora el menú solo enlaza lo que ya existe.
                         $links = [
                             ['route' => 'patient.profile.edit', 'label' => 'Mi perfil'],
+                            ['route' => 'patient.appointments.index', 'label' => 'Mis citas'],
                             ['route' => 'patient.testimonial.edit', 'label' => 'Mi testimonio'],
                             ['route' => 'two-factor.edit', 'label' => 'Mi seguridad'],
                         ];

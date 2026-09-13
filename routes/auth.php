@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\AppointmentBookingController;
 use App\Http\Controllers\PatientProfileController;
 use App\Http\Controllers\PatientTestimonialController;
 use App\Http\Controllers\TwoFactorSettingsController;
@@ -110,4 +111,11 @@ Route::middleware(['auth', 'banned'])->group(function () {
     // Testimonio propio del paciente: un testimonio activo por cuenta.
     Route::get('perfil/testimonio', [PatientTestimonialController::class, 'edit'])->name('patient.testimonial.edit');
     Route::put('perfil/testimonio', [PatientTestimonialController::class, 'update'])->name('patient.testimonial.update');
+
+    // Citas del paciente: siempre sobre Auth::user(), sin route-model-binding
+    // de otro usuario (cancel() sí recibe {appointment} porque el paciente
+    // puede tener varias, pero verifica la propiedad explícitamente).
+    Route::get('perfil/citas', [AppointmentBookingController::class, 'index'])->name('patient.appointments.index');
+    Route::post('perfil/citas', [AppointmentBookingController::class, 'store'])->name('patient.appointments.store');
+    Route::delete('perfil/citas/{appointment}', [AppointmentBookingController::class, 'cancel'])->name('patient.appointments.cancel');
 });

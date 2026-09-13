@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AboutPhotoController;
+use App\Http\Controllers\Admin\AppointmentController;
+use App\Http\Controllers\Admin\AppointmentSlotController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
 use App\Http\Controllers\Admin\ContactSettingsController;
 use App\Http\Controllers\Admin\ContentController;
@@ -65,6 +67,15 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
     Route::patch('/testimonials/{testimonial}/approve', [TestimonialController::class, 'approve'])->name('testimonials.approve');
     Route::patch('/testimonials/{testimonial}/unapprove', [TestimonialController::class, 'unapprove'])->name('testimonials.unapprove');
     Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+
+    Route::get('/appointment-slots', [AppointmentSlotController::class, 'index'])->name('appointment-slots.index');
+    Route::post('/appointment-slots', [AppointmentSlotController::class, 'store'])->name('appointment-slots.store');
+    Route::patch('/appointment-slots/{appointmentSlot}/toggle', [AppointmentSlotController::class, 'toggle'])->name('appointment-slots.toggle');
+    Route::delete('/appointment-slots/{appointmentSlot}', [AppointmentSlotController::class, 'destroy'])->name('appointment-slots.destroy');
+
+    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+    Route::patch('/appointments/{appointment}/approve', [AppointmentController::class, 'approve'])->name('appointments.approve');
+    Route::patch('/appointments/{appointment}/reject', [AppointmentController::class, 'reject'])->name('appointments.reject');
 
     Route::get('/custom-sections', [CustomSectionController::class, 'index'])->name('custom-sections.index');
     Route::post('/custom-sections', [CustomSectionController::class, 'store'])->name('custom-sections.store');
