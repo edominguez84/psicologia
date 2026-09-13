@@ -38,6 +38,8 @@ class AdminAccessTest extends TestCase
             'background' => '#ffffff',
             'accent' => '#abcdef',
             'text' => '#111111',
+            'font_heading' => 'fraunces',
+            'font_body' => 'nunito-sans',
         ]);
 
         $response->assertRedirect();

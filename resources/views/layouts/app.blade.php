@@ -8,33 +8,36 @@
     <title>@yield('title', config('site.name').' · '.config('site.role'))</title>
     <meta name="description" content="@yield('meta_description', 'Terapia psicológica online en español, especializada en trauma y EMDR. Sesiones por videollamada para personas en Estados Unidos y Europa.')">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    @php
+        $colors = app(\App\Services\SiteSettingsService::class)->get('colors');
+        $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults());
+        $headingFont = \App\Support\FontOptions::findHeading($fonts['heading'] ?? '') ?? \App\Support\FontOptions::findHeading(\App\Support\FontOptions::defaults()['heading']);
+        $bodyFont = \App\Support\FontOptions::findBody($fonts['body'] ?? '') ?? \App\Support\FontOptions::findBody(\App\Support\FontOptions::defaults()['body']);
+    @endphp
+    @include('partials.google-fonts-link', ['fonts' => $fonts])
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    @php $colors = app(\App\Services\SiteSettingsService::class)->get('colors'); @endphp
-    @if ($colors)
-        <style>
-            :root {
-                @if (!empty($colors['primary']))
-                    --color-sky-600: {{ $colors['primary'] }};
-                    --color-sky-700: {{ \App\Support\ColorHelper::darken($colors['primary'], 0.15) }};
-                @endif
-                @if (!empty($colors['background']))
-                    --color-paper-50: {{ $colors['background'] }};
-                @endif
-                @if (!empty($colors['accent']))
-                    --color-clay-400: {{ $colors['accent'] }};
-                    --color-clay-500: {{ \App\Support\ColorHelper::darken($colors['accent'], 0.1) }};
-                @endif
-                @if (!empty($colors['text']))
-                    --color-ink: {{ $colors['text'] }};
-                @endif
-            }
-        </style>
-    @endif
+    <style>
+        :root {
+            @if ($colors && !empty($colors['primary']))
+                --color-sky-600: {{ $colors['primary'] }};
+                --color-sky-700: {{ \App\Support\ColorHelper::darken($colors['primary'], 0.15) }};
+            @endif
+            @if ($colors && !empty($colors['background']))
+                --color-paper-50: {{ $colors['background'] }};
+            @endif
+            @if ($colors && !empty($colors['accent']))
+                --color-clay-400: {{ $colors['accent'] }};
+                --color-clay-500: {{ \App\Support\ColorHelper::darken($colors['accent'], 0.1) }};
+            @endif
+            @if ($colors && !empty($colors['text']))
+                --color-ink: {{ $colors['text'] }};
+            @endif
+            --font-serif: {{ $headingFont['family'] }};
+            --font-sans: {{ $bodyFont['family'] }};
+        }
+    </style>
 </head>
 <body class="antialiased">
     @include('partials.header')
