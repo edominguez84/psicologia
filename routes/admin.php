@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\MessagesController;
 use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
+use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UsersController;
 use Illuminate\Support\Facades\Route;
@@ -75,5 +76,10 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
         Route::patch('/chatbot-faqs/{chatbotFaq}/toggle', [ChatbotFaqController::class, 'toggle'])->name('chatbot-faqs.toggle');
         Route::put('/chatbot-faqs-reorder', [ChatbotFaqController::class, 'reorder'])->name('chatbot-faqs.reorder');
         Route::delete('/chatbot-faqs/{chatbotFaq}', [ChatbotFaqController::class, 'destroy'])->name('chatbot-faqs.destroy');
+
+        // Alta manual de cuentas de staff (o pacientes) — reservado a la
+        // super administradora.
+        Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
+        Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     });
 });

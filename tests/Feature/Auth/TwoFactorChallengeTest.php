@@ -26,7 +26,7 @@ class TwoFactorChallengeTest extends TestCase
     public function test_codigo_correcto_autentica(): void
     {
         Mail::fake();
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'admin']);
         $this->post('/login', ['email' => $user->email, 'password' => 'password']);
 
         $sent = null;
@@ -75,6 +75,7 @@ class TwoFactorChallengeTest extends TestCase
         Mail::fake();
         $secret = (new Google2FA())->generateSecretKey();
         $user = User::factory()->create([
+            'role' => 'admin',
             'two_factor_method' => 'totp',
             'two_factor_secret' => $secret,
             'two_factor_confirmed_at' => now(),
@@ -96,5 +97,24 @@ class TwoFactorChallengeTest extends TestCase
         $response = $this->get('/2fa/challenge');
 
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_un_paciente_tras_verificar_va_a_su_perfil_no_al_panel_admin(): void
+    {
+        Mail::fake();
+        $patient = User::factory()->create(['role' => 'patient']);
+        $this->post('/login', ['email' => $patient->email, 'password' => 'password']);
+
+        $sent = null;
+        Mail::assertSent(LoginCode::class, function ($mail) use (&$sent) {
+            $sent = $mail->code;
+
+            return true;
+        });
+
+        $response = $this->post('/2fa/verify', ['code' => $sent]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('patient.profile.edit', absolute: false));
     }
 }
