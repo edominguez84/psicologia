@@ -85,6 +85,7 @@
                             $links[] = ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'];
                             $links[] = ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'];
                             $links[] = ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'];
+                            $links[] = ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'];
                         }
                     @endphp
                     @foreach ($links as $link)
