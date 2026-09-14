@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
 use App\Http\Controllers\Admin\PaymentSettingsController;
+use App\Http\Controllers\Admin\ProfanityFilterController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
@@ -76,11 +77,6 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
     Route::get('/section-visibility', [SectionVisibilityController::class, 'edit'])->name('section-visibility.edit');
     Route::put('/section-visibility', [SectionVisibilityController::class, 'update'])->name('section-visibility.update');
 
-    Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
-    Route::patch('/testimonials/{testimonial}/approve', [TestimonialController::class, 'approve'])->name('testimonials.approve');
-    Route::patch('/testimonials/{testimonial}/unapprove', [TestimonialController::class, 'unapprove'])->name('testimonials.unapprove');
-    Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
-
     Route::get('/appointment-slots', [AppointmentSlotController::class, 'index'])->name('appointment-slots.index');
     Route::post('/appointment-slots', [AppointmentSlotController::class, 'store'])->name('appointment-slots.store');
     Route::patch('/appointment-slots/{appointmentSlot}/toggle', [AppointmentSlotController::class, 'toggle'])->name('appointment-slots.toggle');
@@ -140,5 +136,15 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
         // super administradora.
         Route::get('/payment-settings', [PaymentSettingsController::class, 'edit'])->name('payment-settings.edit');
         Route::put('/payment-settings', [PaymentSettingsController::class, 'update'])->name('payment-settings.update');
+
+        // Aprobación de testimonios y filtro de contenido — reservado a la
+        // super administradora (antes cualquier admin podía aprobar).
+        Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
+        Route::patch('/testimonials/{testimonial}/approve', [TestimonialController::class, 'approve'])->name('testimonials.approve');
+        Route::patch('/testimonials/{testimonial}/unapprove', [TestimonialController::class, 'unapprove'])->name('testimonials.unapprove');
+        Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+
+        Route::get('/profanity-filter', [ProfanityFilterController::class, 'edit'])->name('profanity-filter.edit');
+        Route::put('/profanity-filter', [ProfanityFilterController::class, 'update'])->name('profanity-filter.update');
     });
 });

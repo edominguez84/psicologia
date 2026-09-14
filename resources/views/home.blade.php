@@ -338,9 +338,10 @@
 
         <div class="mt-12 grid gap-5 md:grid-cols-3">
             @foreach (array_merge($s['testimonials']['items'], ($patientTestimonials ?? collect())->toArray()) as $t)
+                @php $rating = $t['rating'] ?? 5; @endphp
                 <figure class="card reveal reveal-delay-{{ ($loop->index % 6) + 1 }} flex flex-col">
                     <div class="mb-4 flex gap-1 text-clay-400">
-                        @for ($i = 0; $i < 5; $i++)
+                        @for ($i = 0; $i < $rating; $i++)
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.9 7.5.6-5.7 5 1.8 7.4L12 17.8 5.4 21.9 7.2 14.5 1.5 9.5 9 8.9z"/></svg>
                         @endfor
                     </div>
