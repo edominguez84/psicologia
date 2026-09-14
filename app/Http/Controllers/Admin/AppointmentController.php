@@ -61,6 +61,18 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Confirma manualmente que el pago (transferencia bancaria avisada por
+     * WhatsApp, o Wompi cuando haya integración real) ya se verificó.
+     * payment_status no es mass-assignable — se setea explícitamente aquí.
+     */
+    public function confirmPayment(Appointment $appointment): RedirectResponse
+    {
+        $appointment->forceFill(['payment_status' => 'confirmed'])->save();
+
+        return back()->with('status', 'Pago confirmado.');
+    }
+
+    /**
      * Avisa al paciente de la decisión — no bloquea la respuesta si falla el
      * envío (mismo patrón que ContactController).
      */

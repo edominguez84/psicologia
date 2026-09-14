@@ -13,6 +13,7 @@
                     <th class="px-4 py-3">Horario</th>
                     <th class="px-4 py-3">Nota</th>
                     <th class="px-4 py-3">Estado</th>
+                    <th class="px-4 py-3">Pago</th>
                     <th class="px-4 py-3"></th>
                 </tr>
             </thead>
@@ -43,6 +44,27 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 align-top">
+                            @if ($appointment->payment_method)
+                                <p class="text-xs text-ink-soft">{{ $appointment->payment_method === 'wompi' ? 'Wompi' : 'Transferencia' }}</p>
+                                @if ($appointment->promotion)
+                                    <p class="text-xs text-ink-soft">{{ $appointment->promotion->title }} · ${{ number_format($appointment->amount, 2) }}</p>
+                                @endif
+                                @if ($appointment->payment_status === 'confirmed')
+                                    <span class="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">Confirmado</span>
+                                @elseif ($appointment->payment_status === 'reported')
+                                    <form method="POST" action="{{ route('admin.appointments.confirm-payment', $appointment) }}" class="mt-1">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="text-xs font-semibold text-clay-500 hover:underline">Confirmar pago</button>
+                                    </form>
+                                @else
+                                    <span class="rounded-full bg-paper-100 px-2 py-0.5 text-xs font-semibold text-ink-soft">Sin pagar</span>
+                                @endif
+                            @else
+                                <span class="text-xs text-ink-soft">—</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 align-top">
                             @if ($appointment->status->value === 'pending')
                                 <div class="flex gap-3 text-xs">
                                     <form method="POST" action="{{ route('admin.appointments.approve', $appointment) }}">
@@ -67,7 +89,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="px-4 py-6 text-center text-ink-soft">Todavía no hay citas.</td></tr>
+                    <tr><td colspan="6" class="px-4 py-6 text-center text-ink-soft">Todavía no hay citas.</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -82,6 +82,7 @@
                             $links[] = ['route' => 'admin.legal.edit', 'params' => ['page' => 'privacy'], 'label' => 'Páginas legales', 'icon' => 'document'];
                             $links[] = ['route' => 'admin.activity-log.index', 'label' => 'Registro de auditoría', 'icon' => 'clipboard'];
                             $links[] = ['route' => 'admin.system-log.index', 'label' => 'Logs del sistema', 'icon' => 'terminal'];
+                            $links[] = ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'];
                         }
                     @endphp
                     @foreach ($links as $link)

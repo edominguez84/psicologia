@@ -105,6 +105,13 @@
                     data-vue="ScheduleCallModal"
                     data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => $s['hero']['cta_secondary']], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
                 ></div>
+                {{-- "Agendar cita" es un flujo distinto de la llamada gratis de
+                     arriba: exige cuenta de paciente y elegir método de pago,
+                     por eso lleva a /perfil/citas (que ya exige login) o, si
+                     no hay sesión, directo al registro. --}}
+                <a href="{{ Auth::check() ? route('patient.appointments.index') : route('register') }}" class="btn btn-ghost">
+                    Agendar una cita
+                </a>
             </div>
 
             <dl class="mt-12 grid gap-6 sm:grid-cols-3">

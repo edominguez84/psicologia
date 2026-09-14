@@ -56,6 +56,7 @@ class AppointmentBookingControllerTest extends TestCase
 
         $response = $this->actingAs($patient)->post('/perfil/citas', [
             'appointment_slot_id' => $slot->id,
+            'payment_method' => 'bank_transfer',
         ]);
 
         $response->assertRedirect();
@@ -77,6 +78,7 @@ class AppointmentBookingControllerTest extends TestCase
 
         $response = $this->actingAs($patient)->post('/perfil/citas', [
             'appointment_slot_id' => $slot->id,
+            'payment_method' => 'bank_transfer',
         ]);
 
         $response->assertSessionHasErrors('appointment_slot_id');
@@ -91,6 +93,7 @@ class AppointmentBookingControllerTest extends TestCase
 
         $this->actingAs($patient)->post('/perfil/citas', [
             'appointment_slot_id' => $slot->id,
+            'payment_method' => 'bank_transfer',
             'user_id' => $otherPatient->id,
         ]);
 
@@ -144,5 +147,77 @@ class AppointmentBookingControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('appointments', fn ($appointments) => $appointments->count() === 3);
+    }
+
+    public function test_pagar_por_transferencia_marca_la_cita_como_avisada(): void
+    {
+        $patient = User::factory()->create(['role' => 'patient']);
+        $slot = AppointmentSlot::factory()->create();
+
+        $this->actingAs($patient)->post('/perfil/citas', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'bank_transfer',
+        ]);
+
+        $this->assertDatabaseHas('appointments', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'bank_transfer',
+            'payment_status' => 'reported',
+        ]);
+    }
+
+    public function test_elegir_una_promocion_activa_refleja_su_precio_en_la_cita(): void
+    {
+        $patient = User::factory()->create(['role' => 'patient']);
+        $slot = AppointmentSlot::factory()->create();
+        $promotion = \App\Models\Promotion::create([
+            'title' => 'Paquete inicial', 'price' => 45, 'description' => 'x', 'is_active' => true,
+        ]);
+
+        $this->actingAs($patient)->post('/perfil/citas', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'bank_transfer',
+            'promotion_id' => $promotion->id,
+        ]);
+
+        $this->assertDatabaseHas('appointments', [
+            'appointment_slot_id' => $slot->id,
+            'promotion_id' => $promotion->id,
+            'amount' => 45.00,
+        ]);
+    }
+
+    public function test_rechaza_una_promocion_inactiva(): void
+    {
+        $patient = User::factory()->create(['role' => 'patient']);
+        $slot = AppointmentSlot::factory()->create();
+        $promotion = \App\Models\Promotion::create([
+            'title' => 'Vieja', 'price' => 45, 'description' => 'x', 'is_active' => false,
+        ]);
+
+        $this->actingAs($patient)->post('/perfil/citas', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'bank_transfer',
+            'promotion_id' => $promotion->id,
+        ]);
+
+        $this->assertDatabaseHas('appointments', [
+            'appointment_slot_id' => $slot->id,
+            'promotion_id' => null,
+            'amount' => null,
+        ]);
+    }
+
+    public function test_requiere_un_metodo_de_pago(): void
+    {
+        $patient = User::factory()->create(['role' => 'patient']);
+        $slot = AppointmentSlot::factory()->create();
+
+        $response = $this->actingAs($patient)->post('/perfil/citas', [
+            'appointment_slot_id' => $slot->id,
+        ]);
+
+        $response->assertSessionHasErrors('payment_method');
+        $this->assertDatabaseCount('appointments', 0);
     }
 }
