@@ -31,6 +31,7 @@
         </nav>
 
         <div class="flex items-center gap-3">
+            @include('partials.language-switch')
             @include('partials.theme-switch')
             <a href="{{ $wa }}" target="_blank" rel="noopener" class="btn btn-primary hidden sm:inline-flex">
                 {{ $ctaLabel }}

@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'banned' => \App\Http\Middleware\EnsureUserIsNotBanned::class,
             'session.idle' => \App\Http\Middleware\EnsureSessionIsActive::class,
         ]);
+
+        // Resuelve el idioma del contenido de fábrica (config('site')) en
+        // toda request web, antes de que cualquier controlador/vista lo lea.
+        $middleware->web(append: [
+            \App\Http\Middleware\ResolveSiteLocale::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
