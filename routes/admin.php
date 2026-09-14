@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
 use App\Http\Controllers\Admin\PaymentSettingsController;
+use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
@@ -97,6 +98,13 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
     Route::patch('/custom-sections/{customSection}/toggle', [CustomSectionController::class, 'toggle'])->name('custom-sections.toggle');
     Route::put('/custom-sections-reorder', [CustomSectionController::class, 'reorder'])->name('custom-sections.reorder');
     Route::delete('/custom-sections/{customSection}', [CustomSectionController::class, 'destroy'])->name('custom-sections.destroy');
+
+    Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
+    Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
+    Route::put('/promotions/{promotion}', [PromotionController::class, 'update'])->name('promotions.update');
+    Route::patch('/promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
+    Route::put('/promotions-reorder', [PromotionController::class, 'reorder'])->name('promotions.reorder');
+    Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
 
     // Preguntas del chatbot: reservado a la super administradora.
     Route::middleware('super_admin')->group(function () {

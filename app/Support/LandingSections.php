@@ -22,6 +22,7 @@ class LandingSections
             'about' => ['label' => 'Sobre mí', 'hideable' => true],
             'services' => ['label' => 'Cómo te ayudo', 'hideable' => true],
             'benefits' => ['label' => 'Beneficios', 'hideable' => true],
+            'promotions' => ['label' => 'Promociones y planes', 'hideable' => true],
             'emdr' => ['label' => 'Terapia EMDR', 'hideable' => true],
             'testimonials' => ['label' => 'Testimonios', 'hideable' => true],
             'myths' => ['label' => 'Mitos sobre la terapia', 'hideable' => true],

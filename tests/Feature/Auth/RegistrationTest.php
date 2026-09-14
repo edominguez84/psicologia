@@ -147,4 +147,25 @@ class RegistrationTest extends TestCase
         $response->assertSessionHasErrors('municipality');
         $this->assertDatabaseMissing('users', ['email' => 'ana@example.com']);
     }
+
+    public function test_registrarse_desde_una_promocion_lleva_a_agendar_esa_promocion_tras_el_2fa(): void
+    {
+        Mail::fake();
+        $promotion = \App\Models\Promotion::create([
+            'title' => 'Paquete inicial', 'price' => 45, 'description' => 'x', 'is_active' => true,
+        ]);
+
+        $this->post('/register', [...$this->validPayload, 'promotion' => $promotion->id]);
+
+        $sent = null;
+        Mail::assertSent(\App\Mail\LoginCode::class, function ($mail) use (&$sent) {
+            $sent = $mail->code;
+
+            return true;
+        });
+
+        $response = $this->post('/2fa/verify', ['code' => $sent]);
+
+        $response->assertRedirect(route('patient.appointments.index', ['promotion' => $promotion->id]));
+    }
 }

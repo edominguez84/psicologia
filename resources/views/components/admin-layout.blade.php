@@ -61,6 +61,7 @@
                             ['route' => 'admin.theme.edit', 'label' => 'Apariencia', 'icon' => 'palette'],
                             ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones', 'icon' => 'eye'],
                             ['route' => 'admin.custom-sections.index', 'label' => 'Secciones personalizadas', 'icon' => 'layout'],
+                            ['route' => 'admin.promotions.index', 'label' => 'Promociones y planes', 'icon' => 'card'],
                             ['route' => 'admin.logo.edit', 'label' => 'Logo', 'icon' => 'image'],
                             ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada', 'icon' => 'photo'],
                             ['route' => 'admin.gallery.edit', 'label' => 'Galería', 'icon' => 'grid'],
