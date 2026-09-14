@@ -34,6 +34,7 @@
                     <li><a href="{{ $link['href'] }}" class="hover:text-paper-50">{{ $link['label'] }}</a></li>
                 @endforeach
                 <li><a href="/privacidad" class="hover:text-paper-50">Política de privacidad</a></li>
+                <li><a href="/condiciones-de-uso" class="hover:text-paper-50">Condiciones de uso</a></li>
             </ul>
         </div>
 

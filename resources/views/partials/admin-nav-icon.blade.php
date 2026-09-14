@@ -25,6 +25,7 @@
         'shield-lock' => '<path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z"/><path d="M10 12.5V11a2 2 0 114 0v1.5M9.3 12.5h5.4a.8.8 0 01.8.8v2a.8.8 0 01-.8.8H9.3a.8.8 0 01-.8-.8v-2a.8.8 0 01.8-.8z"/>',
         'browser'     => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18"/><circle cx="6" cy="6" r=".6" fill="currentColor" stroke="none"/><circle cx="8.2" cy="6" r=".6" fill="currentColor" stroke="none"/>',
         'globe'       => '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18M12 3c-3 3.5-3 14 0 18"/>',
+        'document'    => '<path d="M7 3h7l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v4h4M9 12h6M9 15.5h6M9 8.5h2"/>',
     ];
 @endphp
 

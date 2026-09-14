@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CustomSectionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaviconController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
 use App\Http\Controllers\Admin\SectionVisibilityController;
@@ -112,5 +113,10 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
         Route::get('/favicon', [FaviconController::class, 'edit'])->name('favicon.edit');
         Route::post('/favicon', [FaviconController::class, 'update'])->name('favicon.update');
         Route::delete('/favicon', [FaviconController::class, 'destroy'])->name('favicon.destroy');
+
+        // Páginas legales (privacidad, condiciones de uso) — reservado a la
+        // super administradora.
+        Route::get('/legal/{page}', [LegalPageController::class, 'edit'])->name('legal.edit');
+        Route::put('/legal/{page}', [LegalPageController::class, 'update'])->name('legal.update');
     });
 });
