@@ -12,6 +12,9 @@
                     <div class="min-w-0">
                         <p class="font-semibold text-ink">{{ $testimonial->user->name }}</p>
                         <p class="text-xs text-ink-soft">{{ $testimonial->user->email }} · {{ $testimonial->created_at->format('d/m/Y H:i') }}</p>
+                        @if ($testimonial->rating)
+                            <p class="mt-1 text-clay-400" aria-label="{{ $testimonial->rating }} de 5 estrellas">{{ str_repeat('★', $testimonial->rating) }}{{ str_repeat('☆', 5 - $testimonial->rating) }}</p>
+                        @endif
                         <p class="mt-2 text-sm leading-relaxed text-ink-soft">{{ $testimonial->text }}</p>
                     </div>
                     <div class="flex shrink-0 flex-col items-end gap-2 text-xs">

@@ -30,6 +30,7 @@ class SiteController extends Controller
                 'name' => $t->user->name,
                 'place' => null,
                 'text' => $t->text,
+                'rating' => $t->rating,
             ]);
 
         return view('home', [

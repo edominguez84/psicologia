@@ -69,7 +69,6 @@
                             ['route' => 'admin.contact.edit', 'label' => 'Contacto', 'icon' => 'mail'],
                             ['route' => 'admin.contact-form.edit', 'label' => 'Formulario de contacto', 'icon' => 'inbox'],
                             ['route' => 'admin.messages.index', 'label' => 'Mensajes', 'icon' => 'inbox'],
-                            ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'],
                             ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas', 'icon' => 'clock'],
                             ['route' => 'admin.appointments.index', 'label' => 'Citas', 'icon' => 'calendar'],
                             ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'people'],
@@ -84,6 +83,8 @@
                             $links[] = ['route' => 'admin.activity-log.index', 'label' => 'Registro de auditoría', 'icon' => 'clipboard'];
                             $links[] = ['route' => 'admin.system-log.index', 'label' => 'Logs del sistema', 'icon' => 'terminal'];
                             $links[] = ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'];
+                            $links[] = ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'];
+                            $links[] = ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'];
                         }
                     @endphp
                     @foreach ($links as $link)

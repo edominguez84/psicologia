@@ -13,7 +13,7 @@ class Testimonial extends Model
     use HasFactory, LogsActivity;
 
     protected $fillable = [
-        'user_id', 'text',
+        'user_id', 'text', 'rating',
         // is_approved/approved_at/approved_by NUNCA por mass-assignment: se
         // setean explícitamente en Admin\TestimonialController tras revisar
         // el contenido, nunca desde el propio formulario del paciente.
@@ -22,6 +22,7 @@ class Testimonial extends Model
     protected $casts = [
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',
+        'rating' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -42,7 +43,7 @@ class Testimonial extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['text', 'is_approved', 'approved_at', 'approved_by'])
+            ->logOnly(['text', 'rating', 'is_approved', 'approved_at', 'approved_by'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

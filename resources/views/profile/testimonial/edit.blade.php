@@ -15,9 +15,33 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('patient.testimonial.update') }}" class="mt-6 max-w-lg space-y-5">
+    <form
+        method="POST"
+        action="{{ route('patient.testimonial.update') }}"
+        class="mt-6 max-w-lg space-y-5"
+        x-data="{ rating: {{ old('rating', $testimonial->rating ?? 0) }}, hover: 0 }"
+    >
         @csrf
         @method('PUT')
+
+        <div>
+            <span class="mb-1.5 block text-sm font-semibold text-sky-700">¿Cómo calificarías la atención recibida?</span>
+            <div class="flex gap-1">
+                @for ($i = 1; $i <= 5; $i++)
+                    <button
+                        type="button"
+                        @click="rating = {{ $i }}"
+                        @mouseenter="hover = {{ $i }}"
+                        @mouseleave="hover = 0"
+                        class="text-3xl leading-none transition-colors"
+                        :class="(hover || rating) >= {{ $i }} ? 'text-clay-400' : 'text-paper-200'"
+                        aria-label="{{ $i }} estrella{{ $i > 1 ? 's' : '' }}"
+                    >★</button>
+                @endfor
+            </div>
+            <input type="hidden" name="rating" x-bind:value="rating" required>
+            <x-input-error :messages="$errors->get('rating')" class="mt-1" />
+        </div>
 
         <div>
             <x-input-label for="text" value="Tu testimonio" />
