@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\MessagesController;
 use App\Http\Controllers\Admin\PaymentSettingsController;
 use App\Http\Controllers\Admin\ProfanityFilterController;
 use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
@@ -146,5 +147,8 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
 
         Route::get('/profanity-filter', [ProfanityFilterController::class, 'edit'])->name('profanity-filter.edit');
         Route::put('/profanity-filter', [ProfanityFilterController::class, 'update'])->name('profanity-filter.update');
+
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/download', [ReportController::class, 'downloadPdf'])->name('reports.download');
     });
 });
