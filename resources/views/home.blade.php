@@ -67,7 +67,10 @@
         ])
         ->values()
         ->all();
-    $galleryProps = ['images' => $galleryImages];
+    // Antes ocupaba todo el ancho de la página en 16:9 (se veía
+    // desproporcionadamente grande); ahora usa una proporción más compacta,
+    // a juego con el contenedor angosto en el que se muestra.
+    $galleryProps = ['images' => $galleryImages, 'aspectClass' => 'aspect-[4/3]'];
 
     // Visibilidad de secciones: el admin puede ocultar (sin borrar) cualquier
     // sección "hideable" desde /admin/section-visibility. Ausencia de key en
@@ -132,12 +135,18 @@
 
 {{-- ============ GALERÍA ============ --}}
 @if (!empty($galleryImages) && $isSectionVisible('gallery'))
-    <section class="section !pt-0 bg-paper-50">
+    <section class="section !py-12 bg-paper-50 sm:!py-16">
         <div class="container-x">
-            <div
-                data-vue="Carousel"
-                data-props="{{ json_encode($galleryProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"
-            ></div>
+            <div class="mx-auto max-w-xl text-center">
+                <p class="eyebrow">Espacio de trabajo</p>
+                <h2 class="mt-3 text-2xl sm:text-3xl">Un espacio pensado para ti</h2>
+            </div>
+            <div class="mx-auto mt-8 max-w-xl overflow-hidden rounded-[2rem] border border-paper-200 shadow-xl">
+                <div
+                    data-vue="Carousel"
+                    data-props="{{ json_encode($galleryProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+                ></div>
+            </div>
         </div>
     </section>
 @endif

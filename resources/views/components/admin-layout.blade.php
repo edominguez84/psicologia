@@ -61,11 +61,12 @@
                             $links[] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot', 'icon' => 'chat'];
                             $links[] = ['route' => 'admin.staff.create', 'label' => 'Crear cuenta', 'icon' => 'user-plus'];
                             $links[] = ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'];
+                            $links[] = ['route' => 'admin.legal.edit', 'params' => ['page' => 'privacy'], 'label' => 'Páginas legales', 'icon' => 'document'];
                         }
                     @endphp
                     @foreach ($links as $link)
                         <a
-                            href="{{ route($link['route']) }}"
+                            href="{{ route($link['route'], $link['params'] ?? []) }}"
                             class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs($link['route']) ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
                         >
                             @include('partials.admin-nav-icon', ['name' => $link['icon']])

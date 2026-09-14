@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SiteController::class, 'home'])->name('home');
 Route::get('/privacidad', [SiteController::class, 'privacy'])->name('privacy');
+Route::get('/condiciones-de-uso', [SiteController::class, 'terms'])->name('terms');
 
 // Endpoints de los formularios (usados por los componentes Vue).
 Route::post('/contacto', [ContactController::class, 'store'])

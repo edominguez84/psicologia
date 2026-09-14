@@ -2,6 +2,13 @@ import './bootstrap';
 import { createApp } from 'vue';
 import Alpine from 'alpinejs';
 
+// Editor de texto enriquecido para las páginas legales del panel de admin
+// (Política de privacidad, Condiciones de uso). Es un web component nativo
+// (<trix-editor>), no requiere montarse manualmente: se activa solo si
+// encuentra un <trix-editor> en la página.
+import 'trix';
+import 'trix/dist/trix.css';
+
 import FaqAccordion from './components/FaqAccordion.vue';
 import MythCards from './components/MythCards.vue';
 import EmotionalCheckup from './components/EmotionalCheckup.vue';

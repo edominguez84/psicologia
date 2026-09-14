@@ -4,6 +4,10 @@ import { ref, onMounted, onUnmounted } from 'vue';
 const props = defineProps({
     images: { type: Array, default: () => [] }, // [{ url, alt }]
     intervalMs: { type: Number, default: 6000 },
+    // Proporción de cada imagen, como clase de Tailwind (p. ej. "aspect-[4/3]").
+    // Se deja configurable para que quien use el carrusel decida cuánto
+    // espacio ocupa, en vez de imponer un panorámico 16:9 fijo siempre.
+    aspectClass: { type: String, default: 'aspect-[16/9]' },
 });
 
 const track = ref(null);
@@ -70,7 +74,8 @@ onUnmounted(stopAutoplay);
             <div
                 v-for="(image, i) in images"
                 :key="image.url + i"
-                class="aspect-[16/9] w-full shrink-0 snap-center"
+                class="w-full shrink-0 snap-center"
+                :class="aspectClass"
             >
                 <img :src="image.url" :alt="image.alt" class="h-full w-full object-cover" loading="lazy">
             </div>
