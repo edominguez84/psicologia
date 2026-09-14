@@ -80,7 +80,7 @@ class SectionVisibilityControllerTest extends TestCase
         $home->assertDontSee('/#beneficios', false);
     }
 
-    public function test_hero_y_contacto_no_se_pueden_ocultar_porque_no_estan_en_el_formulario(): void
+    public function test_hero_no_se_puede_ocultar_porque_no_esta_en_el_formulario(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
@@ -88,14 +88,25 @@ class SectionVisibilityControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('sections', function ($sections) {
-            return ! array_key_exists('hero', $sections) && ! array_key_exists('contact_section', $sections);
+            return ! array_key_exists('hero', $sections) && array_key_exists('contact_section', $sections);
         });
 
-        // Aunque alguien manipulara el request para intentar enviar esas keys,
-        // la validación las rechaza por no estar en la lista permitida.
+        // Aunque alguien manipulara el request para intentar enviar esa key,
+        // la validación la rechaza por no estar en la lista permitida.
         $invalid = $this->actingAs($admin)->put('/admin/section-visibility', [
             'visible' => ['hero'],
         ]);
         $invalid->assertSessionHasErrors('visible.0');
+    }
+
+    public function test_el_formulario_de_contacto_se_puede_ocultar(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)->put('/admin/section-visibility', [
+            'visible' => ['about', 'services', 'benefits', 'emdr', 'testimonials', 'myths', 'checkup', 'faq'],
+        ]);
+
+        $this->get('/')->assertDontSee('id="contacto"', false);
     }
 }

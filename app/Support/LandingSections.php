@@ -9,7 +9,9 @@ namespace App\Support;
  * editables): aquí solo importa "esta <section> se ve o no se ve".
  *
  * 'hideable' => false marca las secciones que nunca deben poder ocultarse
- * (sin portada no hay landing; sin contacto no hay forma de escribir).
+ * (sin portada no hay landing). El contacto SÍ es ocultable a petición
+ * explícita del usuario — al ocultarlo, el visitante sigue teniendo el
+ * botón de WhatsApp del header y del hero para escribir.
  */
 class LandingSections
 {
@@ -25,6 +27,7 @@ class LandingSections
             'myths' => ['label' => 'Mitos sobre la terapia', 'hideable' => true],
             'checkup' => ['label' => 'Chequeo emocional', 'hideable' => true],
             'faq' => ['label' => 'Preguntas frecuentes', 'hideable' => true],
+            'contact_section' => ['label' => 'Formulario de contacto', 'hideable' => true],
         ];
     }
 

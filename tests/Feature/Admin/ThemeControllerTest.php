@@ -18,6 +18,7 @@ class ThemeControllerTest extends TestCase
         'text' => '#111111',
         'font_heading' => 'lora',
         'font_body' => 'inter',
+        'font_button' => 'karla',
     ];
 
     public function test_invitado_no_puede_ver_el_formulario(): void
@@ -43,6 +44,7 @@ class ThemeControllerTest extends TestCase
         $fonts = SiteSetting::where('key', 'fonts')->first()->value;
         $this->assertSame('lora', $fonts['heading']);
         $this->assertSame('inter', $fonts['body']);
+        $this->assertSame('karla', $fonts['button']);
     }
 
     public function test_rechaza_una_fuente_que_no_existe_en_el_catalogo(): void

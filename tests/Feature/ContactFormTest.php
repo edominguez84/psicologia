@@ -60,4 +60,47 @@ class ContactFormTest extends TestCase
         $response->assertStatus(422)->assertJsonValidationErrors('website');
         $this->assertDatabaseCount('contact_messages', 0);
     }
+
+    public function test_guarda_los_campos_personalizados_enviados(): void
+    {
+        Mail::fake();
+
+        $response = $this->postJson('/contacto', [
+            'name' => 'Ana López',
+            'email' => 'ana@example.com',
+            'message' => 'Me gustaría saber más sobre las sesiones online.',
+            'consent' => true,
+            'custom_fields' => [
+                ['label' => '¿Cómo nos conociste?', 'value' => 'Instagram'],
+            ],
+        ]);
+
+        $response->assertOk();
+        $saved = ContactMessage::first();
+        $this->assertSame('¿Cómo nos conociste?', $saved->custom_fields[0]['label']);
+        $this->assertSame('Instagram', $saved->custom_fields[0]['value']);
+    }
+
+    public function test_rechaza_si_falta_un_campo_personalizado_obligatorio(): void
+    {
+        app(\App\Services\SiteSettingsService::class)->set('contact_form', [
+            'fields' => [],
+            'custom_fields' => [
+                ['key' => 'abc', 'label' => '¿Cómo nos conociste?', 'required' => true],
+            ],
+        ]);
+
+        $response = $this->postJson('/contacto', [
+            'name' => 'Ana López',
+            'email' => 'ana@example.com',
+            'message' => 'Me gustaría saber más sobre las sesiones online.',
+            'consent' => true,
+            'custom_fields' => [
+                ['label' => '¿Cómo nos conociste?', 'value' => ''],
+            ],
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('custom_fields');
+        $this->assertDatabaseCount('contact_messages', 0);
+    }
 }

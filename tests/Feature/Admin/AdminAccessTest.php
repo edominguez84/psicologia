@@ -40,6 +40,7 @@ class AdminAccessTest extends TestCase
             'text' => '#111111',
             'font_heading' => 'fraunces',
             'font_body' => 'nunito-sans',
+            'font_button' => 'nunito-sans',
         ]);
 
         $response->assertRedirect();

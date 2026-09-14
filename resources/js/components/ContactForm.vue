@@ -10,9 +10,18 @@ const props = defineProps({
     whatsapp: { type: String, default: '' },
     // Permite preseleccionar el asunto (p.ej. desde el modal de "agendar llamada").
     initialSubject: { type: String, default: null },
+    // Qué campos fijos opcionales mostrar (phone/subject/preferred_contact),
+    // configurado desde /admin/contact-form. Ausencia de key = visible.
+    visibleFields: { type: Object, default: () => ({}) },
+    // Campos personalizados definidos por el admin: [{key, label, required}].
+    customFields: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['sent']);
+
+function isVisible(field) {
+    return props.visibleFields[field] ?? true;
+}
 
 const form = reactive({
     name: '',
@@ -23,6 +32,7 @@ const form = reactive({
     preferred_contact: 'whatsapp',
     consent: false,
     website: '', // honeypot
+    custom: Object.fromEntries(props.customFields.map((f) => [f.key, ''])),
 });
 
 const loading = ref(false);
@@ -33,12 +43,15 @@ const generalError = ref(null);
 async function submit() {
     if (loading.value) return;
 
-    if (!form.name || !form.email || form.message.length < 10 || !form.consent) {
+    const missingCustom = props.customFields.find((f) => f.required && !form.custom[f.key]);
+
+    if (!form.name || !form.email || form.message.length < 10 || !form.consent || missingCustom) {
         errors.value = {
             ...(!form.name ? { name: ['El campo nombre es obligatorio.'] } : {}),
             ...(!form.email ? { email: ['El campo email es obligatorio.'] } : {}),
             ...(form.message.length < 10 ? { message: ['Cuéntame un poco más para poder ayudarte (mínimo 10 caracteres).'] } : {}),
             ...(!form.consent ? { consent: ['Debes aceptar la política de privacidad para continuar.'] } : {}),
+            ...(missingCustom ? { [`custom_${missingCustom.key}`]: ['Este campo es obligatorio.'] } : {}),
         };
         return;
     }
@@ -59,8 +72,18 @@ async function submit() {
     errors.value = {};
     generalError.value = null;
 
+    // custom_fields se envía como array de {label, value} para que el
+    // backend los guarde legibles sin tener que conocer las keys internas.
+    const customFieldsPayload = props.customFields.map((f) => ({
+        label: f.label,
+        value: form.custom[f.key] || '',
+    }));
+
     try {
-        const { data } = await window.axios.post(props.endpoint, { ...form });
+        const { data } = await window.axios.post(props.endpoint, {
+            ...form,
+            custom_fields: customFieldsPayload,
+        });
         success.value = data.message;
         emit('sent');
     } catch (e) {
@@ -112,14 +135,14 @@ function err(field) {
                 </div>
             </div>
 
-            <div class="grid gap-5 sm:grid-cols-2">
-                <div>
+            <div v-if="isVisible('phone') || isVisible('subject')" class="grid gap-5 sm:grid-cols-2">
+                <div v-if="isVisible('phone')">
                     <label class="mb-1.5 block text-sm font-semibold text-sky-700">Teléfono / WhatsApp</label>
                     <input v-model="form.phone" type="tel"
                         class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-3 text-sm outline-none focus:border-sky-400" />
                     <p v-if="err('phone')" class="mt-1 text-xs font-semibold text-clay-500">{{ err('phone') }}</p>
                 </div>
-                <div>
+                <div v-if="isVisible('subject')">
                     <label class="mb-1.5 block text-sm font-semibold text-sky-700">Asunto</label>
                     <select v-model="form.subject"
                         class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-3 text-sm outline-none focus:border-sky-400">
@@ -135,7 +158,16 @@ function err(field) {
                 <p v-if="err('message')" class="mt-1 text-xs font-semibold text-clay-500">{{ err('message') }}</p>
             </div>
 
-            <div>
+            <div v-for="field in customFields" :key="field.key">
+                <label class="mb-1.5 block text-sm font-semibold text-sky-700">
+                    {{ field.label }}<span v-if="field.required"> *</span>
+                </label>
+                <input v-model="form.custom[field.key]" type="text" :required="field.required"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-3 text-sm outline-none focus:border-sky-400" />
+                <p v-if="err(`custom_${field.key}`)" class="mt-1 text-xs font-semibold text-clay-500">{{ err(`custom_${field.key}`) }}</p>
+            </div>
+
+            <div v-if="isVisible('preferred_contact')">
                 <span class="mb-2 block text-sm font-semibold text-sky-700">¿Cómo prefieres que te responda?</span>
                 <div class="flex flex-wrap gap-2">
                     <label v-for="opt in [['whatsapp','WhatsApp'],['email','Email'],['llamada','Llamada']]" :key="opt[0]"

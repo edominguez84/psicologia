@@ -12,6 +12,8 @@ const props = defineProps({
     subject: { type: String, default: null },
     triggerLabel: { type: String, default: 'Reserva una llamada gratis de 15 min' },
     triggerClass: { type: String, default: 'btn btn-ghost' },
+    visibleFields: { type: Object, default: () => ({}) },
+    customFields: { type: Array, default: () => [] },
 });
 
 const open = ref(false);
@@ -71,6 +73,8 @@ onUnmounted(() => {
                             :demo-mode="demoMode"
                             :whatsapp="whatsapp"
                             :initial-subject="subject"
+                            :visible-fields="visibleFields"
+                            :custom-fields="customFields"
                         />
                     </div>
                 </div>

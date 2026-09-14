@@ -26,6 +26,9 @@ class ThemeController extends Controller
             'fonts' => $this->settings->get('fonts', FontOptions::defaults()),
             'headingFonts' => FontOptions::headings(),
             'bodyFonts' => FontOptions::body(),
+            // Botones reutiliza el mismo catálogo de fuentes sans que el
+            // texto general — no se justifica un tercer catálogo separado.
+            'buttonFonts' => FontOptions::body(),
         ]);
     }
 
@@ -38,6 +41,7 @@ class ThemeController extends Controller
             'text' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'font_heading' => ['required', Rule::in(array_keys(FontOptions::headings()))],
             'font_body' => ['required', Rule::in(array_keys(FontOptions::body()))],
+            'font_button' => ['required', Rule::in(array_keys(FontOptions::body()))],
         ], [
             'regex' => 'Debe ser un color hexadecimal válido, por ejemplo #386a97.',
         ]);
@@ -52,6 +56,7 @@ class ThemeController extends Controller
         $this->settings->set('fonts', [
             'heading' => $data['font_heading'],
             'body' => $data['font_body'],
+            'button' => $data['font_button'],
         ]);
 
         return back()->with('status', 'Apariencia actualizada. Ya se ve reflejada en el sitio.');
