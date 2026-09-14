@@ -4,7 +4,23 @@
         testimonio.
     </p>
 
-    <form method="POST" action="{{ route('register') }}" class="space-y-5">
+    @php
+        $locations = \App\Support\ElSalvadorLocations::all();
+    @endphp
+
+    <form
+        method="POST"
+        action="{{ route('register') }}"
+        class="space-y-5"
+        x-data="{
+            locations: {{ Illuminate\Support\Js::from($locations) }},
+            department: '{{ old('department') }}',
+            municipality: '{{ old('municipality') }}',
+            get municipalities() {
+                return this.locations[this.department]?.municipalities ?? [];
+            },
+        }"
+    >
         @csrf
 
         <div>
@@ -29,6 +45,53 @@
             <x-input-label for="birth_date" value="Fecha de nacimiento" />
             <x-text-input id="birth_date" type="date" name="birth_date" :value="old('birth_date')" required />
             <x-input-error :messages="$errors->get('birth_date')" class="mt-1" />
+        </div>
+
+        <div>
+            <x-input-label for="sex" value="Sexo" />
+            <select id="sex" name="sex" required class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+                <option value="" disabled @selected(old('sex') === null)>Selecciona una opción</option>
+                <option value="female" @selected(old('sex') === 'female')>Femenino</option>
+                <option value="male" @selected(old('sex') === 'male')>Masculino</option>
+                <option value="other" @selected(old('sex') === 'other')>Otro</option>
+            </select>
+            <x-input-error :messages="$errors->get('sex')" class="mt-1" />
+        </div>
+
+        <div>
+            <x-input-label for="department" value="Departamento" />
+            <select
+                id="department"
+                name="department"
+                required
+                x-model="department"
+                @change="municipality = ''"
+                class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400"
+            >
+                <option value="" disabled>Selecciona un departamento</option>
+                @foreach ($locations as $key => $department)
+                    <option value="{{ $key }}">{{ $department['label'] }}</option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('department')" class="mt-1" />
+        </div>
+
+        <div>
+            <x-input-label for="municipality" value="Municipio" />
+            <select
+                id="municipality"
+                name="municipality"
+                required
+                x-model="municipality"
+                :disabled="!department"
+                class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+                <option value="" disabled>{{ old('department') ? 'Selecciona un municipio' : 'Primero elige un departamento' }}</option>
+                <template x-for="m in municipalities" :key="m">
+                    <option :value="m" x-text="m" :selected="m === municipality"></option>
+                </template>
+            </select>
+            <x-input-error :messages="$errors->get('municipality')" class="mt-1" />
         </div>
 
         <div>

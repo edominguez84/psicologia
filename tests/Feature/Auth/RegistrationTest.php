@@ -18,6 +18,9 @@ class RegistrationTest extends TestCase
         'email' => 'ana@example.com',
         'phone_number' => '555-1234',
         'birth_date' => '1990-05-15',
+        'sex' => 'female',
+        'department' => 'san-salvador',
+        'municipality' => 'San Salvador',
         'password' => 'password123',
         'password_confirmation' => 'password123',
     ];
@@ -95,5 +98,53 @@ class RegistrationTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('password');
+    }
+
+    public function test_guarda_sexo_departamento_y_municipio(): void
+    {
+        Mail::fake();
+
+        $this->post('/register', $this->validPayload);
+
+        $user = User::where('email', 'ana@example.com')->first();
+        $this->assertSame('female', $user->sex);
+        $this->assertSame('san-salvador', $user->department);
+        $this->assertSame('San Salvador', $user->municipality);
+    }
+
+    public function test_requiere_sexo_departamento_y_municipio(): void
+    {
+        $response = $this->post('/register', [
+            ...$this->validPayload,
+            'sex' => '',
+            'department' => '',
+            'municipality' => '',
+        ]);
+
+        $response->assertSessionHasErrors(['sex', 'department', 'municipality']);
+        $this->assertDatabaseMissing('users', ['email' => 'ana@example.com']);
+    }
+
+    public function test_rechaza_un_departamento_que_no_existe(): void
+    {
+        $response = $this->post('/register', [
+            ...$this->validPayload,
+            'department' => 'departamento-inventado',
+        ]);
+
+        $response->assertSessionHasErrors('department');
+    }
+
+    public function test_rechaza_un_municipio_que_no_pertenece_al_departamento(): void
+    {
+        // 'Santa Ana' pertenece al departamento de Santa Ana, no a San Salvador.
+        $response = $this->post('/register', [
+            ...$this->validPayload,
+            'department' => 'san-salvador',
+            'municipality' => 'Santa Ana',
+        ]);
+
+        $response->assertSessionHasErrors('municipality');
+        $this->assertDatabaseMissing('users', ['email' => 'ana@example.com']);
     }
 }

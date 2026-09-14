@@ -74,6 +74,10 @@
 
         <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 md:px-10 md:py-10">
             <div class="mx-auto max-w-4xl">
+                @auth
+                    <p class="mb-4 text-sm font-semibold text-ink-soft">Bienvenido/a, {{ Auth::user()->name }}</p>
+                @endauth
+
                 @if (session('status'))
                     <div class="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-800">
                         {{ session('status') }}
