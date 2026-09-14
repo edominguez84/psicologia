@@ -76,4 +76,42 @@ class UsersControllerTest extends TestCase
 
         $this->assertSame('admin', $superAdmin2->fresh()->role->value);
     }
+
+    public function test_no_se_puede_banear_a_un_usuario_con_sesion_activa(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        $target = User::factory()->create(['role' => 'patient']);
+        \Illuminate\Support\Facades\DB::table('sessions')->insert([
+            'id' => 'session-activa-de-prueba',
+            'user_id' => $target->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'test',
+            'payload' => base64_encode(serialize([])),
+            'last_activity' => now()->getTimestamp(),
+        ]);
+
+        $response = $this->actingAs($admin)->patch("/admin/users/{$target->id}/ban");
+
+        $response->assertRedirect();
+        $this->assertNull($target->fresh()->banned_at);
+    }
+
+    public function test_se_puede_banear_a_un_usuario_con_sesion_expirada_por_inactividad(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        $target = User::factory()->create(['role' => 'patient']);
+        \Illuminate\Support\Facades\DB::table('sessions')->insert([
+            'id' => 'session-vieja-de-prueba',
+            'user_id' => $target->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'test',
+            'payload' => base64_encode(serialize([])),
+            'last_activity' => now()->subHours(2)->getTimestamp(),
+        ]);
+
+        $response = $this->actingAs($admin)->patch("/admin/users/{$target->id}/ban");
+
+        $response->assertRedirect();
+        $this->assertNotNull($target->fresh()->banned_at);
+    }
 }
