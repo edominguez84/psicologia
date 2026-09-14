@@ -80,4 +80,16 @@ class AppointmentControllerTest extends TestCase
         $response->assertOk();
         $response->assertViewHas('appointments', fn ($appointments) => $appointments->count() === 3);
     }
+
+    public function test_admin_puede_confirmar_el_pago_de_una_cita_avisada(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $appointment = Appointment::factory()->create(['payment_method' => 'bank_transfer']);
+        $appointment->forceFill(['payment_status' => 'reported'])->save();
+
+        $response = $this->actingAs($admin)->patch("/admin/appointments/{$appointment->id}/confirm-payment");
+
+        $response->assertRedirect();
+        $this->assertSame('confirmed', $appointment->fresh()->payment_status);
+    }
 }

@@ -7,30 +7,51 @@ use App\Enums\UserRole;
 use App\Mail\AppointmentRequested;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
+use App\Models\Promotion;
 use App\Models\User;
+use App\Services\SiteSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AppointmentBookingController extends Controller
 {
+    public function __construct(private SiteSettingsService $settings)
+    {
+    }
+
     /**
      * Slots disponibles + todas las citas propias del paciente autenticado,
      * en cualquier estado (pendiente, aprobada, rechazada, cancelada) —
-     * siempre sobre Auth::user(), nunca un {user} de la URL.
+     * siempre sobre Auth::user(), nunca un {user} de la URL. Si llega
+     * ?promotion=ID (desde una tarjeta de promoción en la landing), se
+     * precarga esa promoción para reflejar su precio en el formulario.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $payment = array_replace_recursive(
+            ['method' => 'bank_transfer', 'wompi' => [], 'bank_transfer' => []],
+            $this->settings->get('payment', [])
+        );
+
+        $selectedPromotion = null;
+        if ($request->filled('promotion')) {
+            $selectedPromotion = Promotion::active()->find($request->integer('promotion'));
+        }
+
         return view('profile.appointments.index', [
             'availableSlots' => AppointmentSlot::available()->ordered()->get(),
             'appointments' => Auth::user()->appointments()
-                ->with('appointmentSlot')
+                ->with(['appointmentSlot', 'promotion'])
                 ->latest()
                 ->get(),
+            'payment' => $payment,
+            'selectedPromotion' => $selectedPromotion,
         ]);
     }
 
@@ -39,9 +60,13 @@ class AppointmentBookingController extends Controller
         $data = $request->validate([
             'appointment_slot_id' => ['required', 'integer', 'exists:appointment_slots,id'],
             'patient_note' => ['nullable', 'string', 'max:1000'],
+            'payment_method' => ['required', Rule::in(['bank_transfer', 'wompi'])],
+            'promotion_id' => ['nullable', 'integer', 'exists:promotions,id'],
         ]);
 
-        $appointment = DB::transaction(function () use ($data) {
+        $promotion = ! empty($data['promotion_id']) ? Promotion::active()->find($data['promotion_id']) : null;
+
+        $appointment = DB::transaction(function () use ($data, $promotion) {
             // lockForUpdate evita la condición de carrera de dos pacientes
             // reservando el mismo slot casi simultáneamente — la validación
             // de scopeAvailable() en el listado no es suficiente por sí sola
@@ -55,11 +80,25 @@ class AppointmentBookingController extends Controller
                 return null;
             }
 
-            return Appointment::create([
+            $appointment = Appointment::create([
                 'user_id' => Auth::id(),
                 'appointment_slot_id' => $slot->id,
                 'patient_note' => $data['patient_note'] ?? null,
+                'payment_method' => $data['payment_method'],
+                'amount' => $promotion?->price,
+                'promotion_id' => $promotion?->id,
             ]);
+
+            // payment_status no es mass-assignable (ver Appointment::$fillable):
+            // con transferencia se asume "avisada" — el paciente confirma el
+            // pago por WhatsApp y el super_admin lo valida manualmente desde
+            // Admin\AppointmentController. Con Wompi queda "unpaid" hasta que
+            // exista integración real de cobro.
+            if ($data['payment_method'] === 'bank_transfer') {
+                $appointment->forceFill(['payment_status' => 'reported'])->save();
+            }
+
+            return $appointment;
         });
 
         if (! $appointment) {

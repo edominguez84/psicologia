@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
+use App\Http\Controllers\Admin\PaymentSettingsController;
 use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
@@ -87,6 +88,7 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::patch('/appointments/{appointment}/approve', [AppointmentController::class, 'approve'])->name('appointments.approve');
     Route::patch('/appointments/{appointment}/reject', [AppointmentController::class, 'reject'])->name('appointments.reject');
+    Route::patch('/appointments/{appointment}/confirm-payment', [AppointmentController::class, 'confirmPayment'])->name('appointments.confirm-payment');
 
     Route::get('/custom-sections', [CustomSectionController::class, 'index'])->name('custom-sections.index');
     Route::post('/custom-sections', [CustomSectionController::class, 'store'])->name('custom-sections.store');
@@ -125,5 +127,10 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
         // administradora.
         Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
         Route::get('/system-log', [SystemLogController::class, 'index'])->name('system-log.index');
+
+        // Métodos de pago (Wompi/transferencia bancaria) — reservado a la
+        // super administradora.
+        Route::get('/payment-settings', [PaymentSettingsController::class, 'edit'])->name('payment-settings.edit');
+        Route::put('/payment-settings', [PaymentSettingsController::class, 'update'])->name('payment-settings.update');
     });
 });
