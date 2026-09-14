@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\SiteSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,10 @@ use Illuminate\View\View;
 
 class UsersController extends Controller
 {
+    public function __construct(private SiteSettingsService $settings)
+    {
+    }
+
     public function index(): View
     {
         return view('admin.users.index', [
@@ -29,6 +34,10 @@ class UsersController extends Controller
 
         if ($this->wouldRemoveLastSuperAdmin($user)) {
             return back()->with('status', 'No puedes banear al único super administrador activo.');
+        }
+
+        if ($this->hasActiveSession($user)) {
+            return back()->with('status', "No puedes suspender a {$user->name} mientras tiene una sesión activa. Espera a que se desconecte o a que su sesión expire por inactividad.");
         }
 
         $user->update([
@@ -67,6 +76,27 @@ class UsersController extends Controller
         $user->update(['role' => $newRole]);
 
         return back()->with('status', "Rol de {$user->name} actualizado a {$newRole->label()}.");
+    }
+
+    /**
+     * ¿Tiene $user una sesión con actividad dentro del tiempo de inactividad
+     * configurado ahora mismo? Mismo criterio que
+     * App\Http\Middleware\EnsureSessionIsActive usa para cerrar sesiones
+     * inactivas, pero consultado desde fuera (aquí se evalúa a otro
+     * usuario, no al de la request actual) — se usa la columna
+     * 'last_activity' nativa de la tabla 'sessions' del driver de sesión en
+     * base de datos, que Laravel actualiza automáticamente en cada request
+     * de esa sesión, en vez del payload interno de sesión de ese usuario.
+     */
+    private function hasActiveSession(User $user): bool
+    {
+        $timeoutMinutes = (int) ($this->settings->get('security')['inactivity_timeout_minutes'] ?? 30);
+        $cutoff = now()->subMinutes($timeoutMinutes)->getTimestamp();
+
+        return DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->where('last_activity', '>=', $cutoff)
+            ->exists();
     }
 
     /**
