@@ -5,12 +5,54 @@
         instante, sin necesidad de recompilar nada.
     </p>
 
-    <form method="POST" action="{{ route('admin.theme.update') }}" class="mt-8 max-w-lg space-y-8">
+    <div class="mt-8 max-w-lg space-y-6">
+        <h2 class="text-lg font-serif text-sky-800">Temas predeterminados</h2>
+        <p class="text-sm text-ink-soft">
+            Elige un tema listo para usar como punto de partida, o sigue personalizando los
+            colores manualmente debajo. Aplicar un tema no bloquea nada: puedes seguir ajustando
+            cualquier color después.
+        </p>
+
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            @foreach ($presets as $key => $preset)
+                <form method="POST" action="{{ route('admin.theme.preset') }}">
+                    @csrf
+                    <input type="hidden" name="preset" value="{{ $key }}">
+                    <button
+                        type="submit"
+                        class="w-full rounded-2xl border bg-white p-3 text-left transition-colors hover:border-sky-300 {{ $activePreset === $key ? 'border-sky-500 ring-2 ring-sky-500' : 'border-paper-200' }}"
+                    >
+                        <span class="flex -space-x-1.5">
+                            @foreach (['primary', 'accent', 'background', 'text'] as $swatch)
+                                <span
+                                    class="size-5 rounded-full border-2 border-white shadow-sm"
+                                    style="background-color: {{ $preset['colors'][$swatch] }};"
+                                ></span>
+                            @endforeach
+                        </span>
+                        <span class="mt-2 block text-sm font-semibold text-ink">{{ $preset['label'] }}</span>
+                        @if ($activePreset === $key)
+                            <span class="mt-0.5 block text-xs font-semibold text-sky-600">En uso</span>
+                        @endif
+                    </button>
+                </form>
+            @endforeach
+        </div>
+
+        @if ($activePreset === false)
+            <p class="text-xs text-ink-soft">Estás usando colores personalizados (no coinciden con ningún tema de la lista).</p>
+        @endif
+    </div>
+
+    <form method="POST" action="{{ route('admin.theme.update') }}" class="mt-10 max-w-lg space-y-8">
         @csrf
         @method('PUT')
 
-        <div class="space-y-6">
+        <div class="space-y-6 border-t border-paper-200 pt-8">
             <h2 class="text-lg font-serif text-sky-800">Colores</h2>
+            <p class="text-sm text-ink-soft">
+                Personaliza cada color sobre la base del tema elegido, o desde cero.
+            </p>
 
             @php
                 $fields = [
