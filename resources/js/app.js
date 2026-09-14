@@ -48,3 +48,30 @@ document.querySelectorAll('[data-vue]').forEach((el) => {
 
     createApp(component, props).mount(el);
 });
+
+/**
+ * Animación de aparición al hacer scroll (progressive enhancement): cualquier
+ * elemento con clase "reveal" empieza oculto/desplazado vía CSS y gana
+ * "is-visible" cuando entra en el viewport. Si el navegador no soporta
+ * IntersectionObserver, se revela todo de inmediato para no esconder
+ * contenido de forma permanente.
+ */
+const revealTargets = document.querySelectorAll('.reveal');
+if (revealTargets.length) {
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+        );
+        revealTargets.forEach((el) => observer.observe(el));
+    } else {
+        revealTargets.forEach((el) => el.classList.add('is-visible'));
+    }
+}

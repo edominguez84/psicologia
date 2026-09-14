@@ -27,6 +27,7 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
 
     Route::get('/theme', [ThemeController::class, 'edit'])->name('theme.edit');
     Route::put('/theme', [ThemeController::class, 'update'])->name('theme.update');
+    Route::post('/theme/preset', [ThemeController::class, 'applyPreset'])->name('theme.preset');
 
     Route::get('/content/{section}', [ContentController::class, 'edit'])->name('content.edit');
     Route::put('/content/{section}', [ContentController::class, 'update'])->name('content.update');

@@ -79,9 +79,10 @@
 @section('content')
 
 {{-- ============ HERO ============ --}}
-<section class="relative overflow-hidden bg-paper-50">
-    <div class="pointer-events-none absolute -right-32 -top-32 size-96 rounded-full bg-sky-100 blur-3xl"></div>
-    <div class="pointer-events-none absolute -bottom-40 -left-32 size-96 rounded-full bg-paper-200 blur-3xl"></div>
+<section class="relative overflow-hidden bg-gradient-to-b from-paper-50 to-sky-50">
+    <div class="section-glow -right-32 -top-32 size-96 bg-sky-100"></div>
+    <div class="section-glow -bottom-40 -left-32 size-96 bg-paper-200"></div>
+    <div class="section-glow right-1/4 top-1/3 size-56 bg-clay-400/20"></div>
 
     <div class="container-x relative grid gap-12 py-20 md:grid-cols-[1.1fr_0.9fr] md:items-center md:py-28">
         <div>
@@ -114,7 +115,7 @@
         </div>
 
         <div class="relative">
-            <div class="mx-auto max-w-sm overflow-hidden rounded-[2rem] border border-paper-200 bg-sky-100 shadow-xl">
+            <div class="mx-auto max-w-sm overflow-hidden rounded-[2rem] border border-paper-200 bg-sky-100 shadow-xl transition-transform duration-500 hover:-translate-y-1">
                 <img
                     src="{{ $aboutPhotoUrl }}"
                     alt="{{ $s['name'] }}, {{ $s['role'] }}"
@@ -181,7 +182,7 @@
 
         <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($s['services']['items'] as $item)
-                <div class="card">
+                <div class="card reveal reveal-delay-{{ ($loop->index % 6) + 1 }}">
                     <span class="grid size-11 place-items-center rounded-xl bg-sky-100 text-sky-600">
                         @include('partials.icon', ['name' => $item['icon']])
                     </span>
@@ -219,7 +220,7 @@
         </div>
         <ul class="grid gap-4 sm:grid-cols-2">
             @foreach ($s['benefits']['items'] as $item)
-                <li class="flex gap-3 rounded-2xl border border-paper-200 bg-paper-50 p-4">
+                <li class="reveal reveal-delay-{{ ($loop->index % 6) + 1 }} flex gap-3 rounded-2xl border border-paper-200 bg-paper-50 p-4 transition-colors hover:border-sky-300">
                     <span class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-sky-600 text-paper-50">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </span>
@@ -233,8 +234,11 @@
 
 {{-- ============ TERAPIA EMDR ============ --}}
 @if ($isSectionVisible('emdr'))
-<section id="emdr" class="section bg-sky-800 text-paper-100">
-    <div class="container-x">
+<section id="emdr" class="section relative overflow-hidden bg-sky-800 text-paper-100">
+    <div class="section-glow -right-24 -top-24 size-80 bg-sky-600/40"></div>
+    <div class="section-glow -bottom-32 left-1/4 size-96 bg-clay-400/10"></div>
+
+    <div class="container-x relative">
         <div class="max-w-2xl">
             <p class="eyebrow text-paper-200">Método</p>
             <h2 class="mt-3 text-3xl text-paper-50 sm:text-4xl">{{ $s['emdr']['title'] }}</h2>
@@ -243,7 +247,7 @@
 
         <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             @foreach ($s['emdr']['advantages'] as $adv)
-                <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+                <div class="reveal reveal-delay-{{ ($loop->index % 6) + 1 }} rounded-2xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/10">
                     <h3 class="text-base text-paper-50">{{ $adv['title'] }}</h3>
                     <p class="mt-2 text-sm leading-relaxed text-paper-200">{{ $adv['text'] }}</p>
                 </div>
@@ -254,7 +258,7 @@
             <h3 class="text-xl text-paper-50">Cómo funciona el proceso</h3>
             <ol class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ($s['emdr']['steps'] as $step)
-                    <li class="relative rounded-2xl border border-white/10 p-6">
+                    <li class="reveal reveal-delay-{{ ($loop->index % 6) + 1 }} relative rounded-2xl border border-white/10 p-6 transition-colors hover:bg-white/5">
                         <span class="font-serif text-3xl text-sky-300">{{ $step['n'] }}</span>
                         <h4 class="mt-2 text-base text-paper-50">{{ $step['title'] }}</h4>
                         <p class="mt-1 text-sm leading-relaxed text-paper-200">{{ $step['text'] }}</p>
@@ -283,7 +287,7 @@
 
         <div class="mt-12 grid gap-5 md:grid-cols-3">
             @foreach (array_merge($s['testimonials']['items'], ($patientTestimonials ?? collect())->toArray()) as $t)
-                <figure class="card flex flex-col">
+                <figure class="card reveal reveal-delay-{{ ($loop->index % 6) + 1 }} flex flex-col">
                     <div class="mb-4 flex gap-1 text-clay-400">
                         @for ($i = 0; $i < 5; $i++)
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.9 7.5.6-5.7 5 1.8 7.4L12 17.8 5.4 21.9 7.2 14.5 1.5 9.5 9 8.9z"/></svg>
