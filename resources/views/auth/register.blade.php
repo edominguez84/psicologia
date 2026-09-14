@@ -23,6 +23,10 @@
     >
         @csrf
 
+        @if ($promotionId)
+            <input type="hidden" name="promotion" value="{{ $promotionId }}">
+        @endif
+
         <div>
             <x-input-label for="name" value="Nombre completo" />
             <x-text-input id="name" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />

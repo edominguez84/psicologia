@@ -77,6 +77,10 @@
     // lo guardado = visible (comportamiento de fábrica).
     $sectionVisibility = app(\App\Services\SiteSettingsService::class)->get('section_visibility', []);
     $isSectionVisible = fn (string $key) => $sectionVisibility[$key] ?? true;
+
+    // Promociones activas y todavía vigentes (scopeActive ya filtra por
+    // is_active y valid_until), en el orden definido por el admin.
+    $activePromotions = $demoMode ? collect() : \App\Models\Promotion::active()->ordered()->get();
 @endphp
 
 @section('content')
@@ -244,6 +248,37 @@
                 </li>
             @endforeach
         </ul>
+    </div>
+</section>
+@endif
+
+{{-- ============ PROMOCIONES Y PLANES ============ --}}
+@if ($activePromotions->isNotEmpty() && $isSectionVisible('promotions'))
+<section id="promociones" class="section bg-paper-50">
+    <div class="container-x">
+        <div class="max-w-2xl">
+            <p class="eyebrow">Promociones</p>
+            <h2 class="mt-3 text-3xl sm:text-4xl">Planes pensados para ti</h2>
+        </div>
+
+        <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            @foreach ($activePromotions as $promotion)
+                <div class="card reveal reveal-delay-{{ ($loop->index % 6) + 1 }} flex flex-col">
+                    <h3 class="text-lg">{{ $promotion->title }}</h3>
+                    <p class="mt-2 font-serif text-3xl text-sky-700">${{ number_format($promotion->price, 2) }}</p>
+                    <p class="mt-3 grow text-sm leading-relaxed text-ink-soft">{{ $promotion->description }}</p>
+                    @if ($promotion->valid_until)
+                        <p class="mt-3 text-xs text-ink-soft">Vigente hasta {{ $promotion->valid_until->format('d/m/Y') }}</p>
+                    @endif
+                    <a
+                        href="{{ Auth::check() ? route('patient.appointments.index', ['promotion' => $promotion->id]) : route('register', ['promotion' => $promotion->id]) }}"
+                        class="btn btn-primary mt-5"
+                    >
+                        Elegir este plan
+                    </a>
+                </div>
+            @endforeach
+        </div>
     </div>
 </section>
 @endif
