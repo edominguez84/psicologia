@@ -33,6 +33,9 @@ class User extends Authenticatable
         'two_factor_method',
         'phone_number',
         'birth_date',
+        'sex',
+        'department',
+        'municipality',
         // two_factor_secret NUNCA por mass-assignment: se setea explícitamente
         // en el controlador de configuración de TOTP, tras confirmar el código.
         // avatar_path NUNCA por mass-assignment: se setea explícitamente en

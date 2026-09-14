@@ -33,6 +33,9 @@ class RegisteredUserController extends Controller
             'email' => $data['email'],
             'phone_number' => $data['phone_number'],
             'birth_date' => $data['birth_date'],
+            'sex' => $data['sex'],
+            'department' => $data['department'],
+            'municipality' => $data['municipality'],
             'password' => Hash::make($data['password']),
             'role' => UserRole::Patient,
         ]);
