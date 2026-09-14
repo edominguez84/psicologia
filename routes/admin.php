@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AboutPhotoController;
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\AppointmentSlotController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
@@ -18,12 +19,13 @@ use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UsersController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/theme', [ThemeController::class, 'edit'])->name('theme.edit');
@@ -118,5 +120,10 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
         // super administradora.
         Route::get('/legal/{page}', [LegalPageController::class, 'edit'])->name('legal.edit');
         Route::put('/legal/{page}', [LegalPageController::class, 'update'])->name('legal.update');
+
+        // Registro de auditoría y logs del sistema — reservado a la super
+        // administradora.
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+        Route::get('/system-log', [SystemLogController::class, 'index'])->name('system-log.index');
     });
 });

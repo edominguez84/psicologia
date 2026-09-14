@@ -19,7 +19,7 @@
             @method('PUT')
 
             <template x-for="(image, i) in images" :key="image.path">
-                <div class="flex flex-col gap-4 rounded-2xl border border-paper-200 bg-white p-4 sm:flex-row sm:items-center">
+                <div class="flex flex-col gap-4 rounded-2xl border border-paper-200 bg-paper-alt p-4 sm:flex-row sm:items-center">
                     <img
                         :src="image.url"
                         :alt="image.alt"
@@ -79,7 +79,7 @@
         <h2 class="mb-3 mt-10 font-serif text-lg text-sky-800">Eliminar una imagen</h2>
         <div class="max-w-lg space-y-2">
             @foreach ($images as $i => $image)
-                <form method="POST" action="{{ route('admin.gallery.destroy', $i) }}" class="flex items-center justify-between gap-3 rounded-xl border border-paper-200 bg-white px-4 py-2.5">
+                <form method="POST" action="{{ route('admin.gallery.destroy', $i) }}" class="flex items-center justify-between gap-3 rounded-xl border border-paper-200 bg-paper-alt px-4 py-2.5">
                     @csrf
                     @method('DELETE')
                     <span class="truncate text-sm text-ink-soft">{{ $image['alt'] ?: $image['path'] }}</span>

@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -64,6 +66,20 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'birth_date' => 'date',
         ];
+    }
+
+    /**
+     * Solo campos no sensibles y relevantes para auditoría (nunca password,
+     * two_factor_secret, remember_token). logOnly() en vez de logAll() para
+     * que un cambio futuro de columna no empiece a filtrarse al log sin que
+     * alguien lo decida explícitamente aquí.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'role', 'banned_at', 'banned_reason'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     public function isPatient(): bool

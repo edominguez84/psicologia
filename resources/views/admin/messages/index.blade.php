@@ -3,7 +3,7 @@
     <p class="mt-2 text-sm text-ink-soft">Formularios de contacto y chequeos de bienestar emocional guardados en la base de datos.</p>
 
     <h2 class="mb-3 mt-8 font-serif text-lg text-sky-800">Formulario de contacto</h2>
-    <div class="overflow-x-auto rounded-2xl border border-paper-200 bg-white">
+    <div class="overflow-x-auto rounded-2xl border border-paper-200 bg-paper-alt">
         <table class="w-full min-w-[640px] text-left text-sm">
             <thead class="border-b border-paper-200 text-xs font-bold uppercase tracking-wider text-sky-500">
                 <tr>
@@ -63,7 +63,7 @@
     <div class="mt-3">{{ $contactMessages->links() }}</div>
 
     <h2 class="mb-3 mt-10 font-serif text-lg text-sky-800">Chequeos de bienestar emocional</h2>
-    <div class="overflow-x-auto rounded-2xl border border-paper-200 bg-white">
+    <div class="overflow-x-auto rounded-2xl border border-paper-200 bg-paper-alt">
         <table class="w-full min-w-[480px] text-left text-sm">
             <thead class="border-b border-paper-200 text-xs font-bold uppercase tracking-wider text-sky-500">
                 <tr>
@@ -90,7 +90,7 @@
     <div class="mt-3">{{ $checkups->links() }}</div>
 
     <h2 class="mb-3 mt-10 font-serif text-lg text-sky-800">Contactos del chatbot (Rebecca)</h2>
-    <div class="overflow-x-auto rounded-2xl border border-paper-200 bg-white">
+    <div class="overflow-x-auto rounded-2xl border border-paper-200 bg-paper-alt">
         <table class="w-full min-w-[640px] text-left text-sm">
             <thead class="border-b border-paper-200 text-xs font-bold uppercase tracking-wider text-sky-500">
                 <tr>

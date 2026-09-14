@@ -7,7 +7,7 @@
 
     <div class="mt-8 max-w-lg">
         <p class="mb-2 text-sm font-semibold text-sky-700">Vista previa actual</p>
-        <div class="rounded-2xl border border-paper-200 bg-white p-6">
+        <div class="rounded-2xl border border-paper-200 bg-paper-alt p-6">
             @include('partials.logo', ['class' => 'h-12 w-auto'])
         </div>
     </div>

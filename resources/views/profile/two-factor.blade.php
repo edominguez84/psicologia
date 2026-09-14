@@ -17,7 +17,7 @@
             <div class="flex flex-wrap gap-2">
                 @foreach ($channels as $channel => $available)
                     <label
-                        class="cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition-colors {{ ! $available ? 'cursor-not-allowed opacity-40' : '' }} {{ $user->effectiveTwoFactorMethod() === $channel ? 'border-sky-600 bg-sky-600 text-paper-50' : 'border-paper-200 bg-paper-50 text-ink-soft hover:border-sky-300' }}"
+                        class="cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition-colors {{ ! $available ? 'cursor-not-allowed opacity-40' : '' }} {{ $user->effectiveTwoFactorMethod() === $channel ? 'border-sky-600 bg-sky-600 text-on-dark' : 'border-paper-200 bg-paper-50 text-ink-soft hover:border-sky-300' }}"
                     >
                         <input
                             type="radio" name="method" value="{{ $channel }}" class="sr-only"

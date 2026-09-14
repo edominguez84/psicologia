@@ -12,7 +12,7 @@
         @method('PUT')
 
         @foreach ($fixedFields as $key => $label)
-            <label class="flex items-center justify-between gap-4 rounded-2xl border border-paper-200 bg-white px-4 py-3">
+            <label class="flex items-center justify-between gap-4 rounded-2xl border border-paper-200 bg-paper-alt px-4 py-3">
                 <span class="text-sm font-semibold text-ink">{{ $label }}</span>
                 <input
                     type="checkbox"
@@ -34,7 +34,7 @@
 
     <div class="mt-4 max-w-lg space-y-3">
         @forelse ($customFields as $field)
-            <div class="flex items-center justify-between gap-4 rounded-2xl border border-paper-200 bg-white px-4 py-3">
+            <div class="flex items-center justify-between gap-4 rounded-2xl border border-paper-200 bg-paper-alt px-4 py-3">
                 <div>
                     <p class="text-sm font-semibold text-ink">{{ $field['label'] }}</p>
                     @if ($field['required'])

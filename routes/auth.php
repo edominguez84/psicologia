@@ -69,7 +69,7 @@ Route::middleware('throttle:20,1')->group(function () {
     Route::post('2fa/resend', [TwoFactorChallengeController::class, 'resend'])->name('2fa.resend');
 });
 
-Route::middleware(['auth', 'banned'])->group(function () {
+Route::middleware(['auth', 'banned', 'session.idle'])->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 
@@ -118,4 +118,13 @@ Route::middleware(['auth', 'banned'])->group(function () {
     Route::get('perfil/citas', [AppointmentBookingController::class, 'index'])->name('patient.appointments.index');
     Route::post('perfil/citas', [AppointmentBookingController::class, 'store'])->name('patient.appointments.store');
     Route::delete('perfil/citas/{appointment}', [AppointmentBookingController::class, 'cancel'])->name('patient.appointments.cancel');
+
+    // Refresca 'last_activity_at' en sesión: lo llama el botón "Seguir
+    // conectado" del aviso de inactividad (resources/js/inactivity.js) para
+    // no cerrar la sesión mientras la persona sigue frente a la pantalla.
+    Route::post('session/ping', function () {
+        request()->session()->put('last_activity_at', now());
+
+        return response()->noContent();
+    })->name('session.ping');
 });

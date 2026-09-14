@@ -6,10 +6,12 @@ use App\Enums\AppointmentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class AppointmentSlot extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = ['starts_at', 'ends_at', 'is_active'];
 
@@ -49,5 +51,13 @@ class AppointmentSlot extends Model
         return $query->active()->upcoming()->whereDoesntHave('appointments', function ($q) {
             $q->whereIn('status', [AppointmentStatus::Pending->value, AppointmentStatus::Approved->value]);
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['starts_at', 'ends_at', 'is_active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

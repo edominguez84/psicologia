@@ -38,6 +38,9 @@ class AuthenticatedSessionController extends Controller
         if ($trustedDevices->isTrusted($user, $request)) {
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
+            $request->session()->put('last_activity_at', now());
+
+            activity('auth')->causedBy($user)->log('login');
 
             return redirect()->intended(route($user->defaultRedirectRouteName(), absolute: false));
         }
@@ -60,6 +63,8 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        activity('auth')->causedBy(Auth::user())->log('logout');
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

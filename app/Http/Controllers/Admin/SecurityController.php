@@ -21,6 +21,7 @@ class SecurityController extends Controller
             'channels' => config('site.security.default_channels'),
             'oauth' => config('site.security.default_oauth'),
             'trusted_device_days' => config('site.security.trusted_device_days'),
+            'inactivity_timeout_minutes' => 30,
         ]);
 
         return view('admin.security.edit', [
@@ -44,6 +45,7 @@ class SecurityController extends Controller
             'oauth.facebook' => ['nullable', 'boolean'],
             'oauth.microsoft' => ['nullable', 'boolean'],
             'trusted_device_days' => ['required', 'integer', 'min:1', 'max:365'],
+            'inactivity_timeout_minutes' => ['required', 'integer', 'min:1', 'max:240'],
         ]);
 
         $this->settings->set('security', [
@@ -57,6 +59,7 @@ class SecurityController extends Controller
                 'microsoft' => (bool) ($data['oauth']['microsoft'] ?? false),
             ],
             'trusted_device_days' => (int) $data['trusted_device_days'],
+            'inactivity_timeout_minutes' => (int) $data['inactivity_timeout_minutes'],
         ]);
 
         return back()->with('status', 'Ajustes de seguridad actualizados.');

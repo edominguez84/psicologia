@@ -12,7 +12,8 @@
         "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
         "pragmarx/google2fa": "*",
-        "socialiteproviders/microsoft": "*"
+        "socialiteproviders/microsoft": "*",
+        "spatie/laravel-activitylog": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

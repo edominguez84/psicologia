@@ -7,7 +7,7 @@
 
     <div class="mt-8 space-y-4">
         @forelse ($testimonials as $testimonial)
-            <div class="rounded-2xl border border-paper-200 bg-white p-5">
+            <div class="rounded-2xl border border-paper-200 bg-paper-alt p-5">
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
                         <p class="font-semibold text-ink">{{ $testimonial->user->name }}</p>

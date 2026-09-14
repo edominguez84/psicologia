@@ -6,10 +6,12 @@ use App\Enums\AppointmentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Appointment extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'user_id', 'appointment_slot_id', 'patient_note',
@@ -41,5 +43,13 @@ class Appointment extends Model
     public function scopePending($query)
     {
         return $query->where('status', AppointmentStatus::Pending);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'admin_note', 'decided_at', 'decided_by'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

@@ -86,6 +86,9 @@ class TwoFactorChallengeController extends Controller
         Auth::login($user, (bool) $request->session()->get('pending_2fa.remember', false));
         $request->session()->forget('pending_2fa');
         $request->session()->regenerate();
+        $request->session()->put('last_activity_at', now());
+
+        activity('auth')->causedBy($user)->log('login');
 
         $response = redirect()->intended(route($user->defaultRedirectRouteName(), absolute: false));
 
