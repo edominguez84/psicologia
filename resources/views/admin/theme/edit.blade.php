@@ -96,6 +96,26 @@
                     <p class="mt-1 text-xs font-semibold text-clay-500">{{ $message }}</p>
                 @enderror
             </div>
+
+            <div>
+                <label for="font_button" class="mb-1.5 block text-sm font-semibold text-sky-700">Tipografía de botones</label>
+                <select
+                    name="font_button"
+                    id="font_button"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400"
+                >
+                    @foreach ($buttonFonts as $key => $font)
+                        <option
+                            value="{{ $key }}"
+                            style="font-family: {{ $font['family'] }};"
+                            @selected(old('font_button', $fonts['button'] ?? 'nunito-sans') === $key)
+                        >{{ $font['label'] }}</option>
+                    @endforeach
+                </select>
+                @error('font_button')
+                    <p class="mt-1 text-xs font-semibold text-clay-500">{{ $message }}</p>
+                @enderror
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary">Guardar apariencia</button>

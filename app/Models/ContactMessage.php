@@ -13,6 +13,7 @@ class ContactMessage extends Model
         'subject',
         'message',
         'preferred_contact',
+        'custom_fields',
         'locale',
         'ip',
         'user_agent',
@@ -21,5 +22,6 @@ class ContactMessage extends Model
 
     protected $casts = [
         'handled_at' => 'datetime',
+        'custom_fields' => 'array',
     ];
 }

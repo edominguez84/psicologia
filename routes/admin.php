@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AboutPhotoController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\AppointmentSlotController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
+use App\Http\Controllers\Admin\ContactFormSettingsController;
 use App\Http\Controllers\Admin\ContactSettingsController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\CustomSectionController;
@@ -32,6 +33,11 @@ Route::middleware(['auth', 'banned', 'admin'])->prefix('admin')->name('admin.')-
 
     Route::get('/contact', [ContactSettingsController::class, 'edit'])->name('contact.edit');
     Route::put('/contact', [ContactSettingsController::class, 'update'])->name('contact.update');
+
+    Route::get('/contact-form', [ContactFormSettingsController::class, 'edit'])->name('contact-form.edit');
+    Route::put('/contact-form', [ContactFormSettingsController::class, 'update'])->name('contact-form.update');
+    Route::post('/contact-form/custom-fields', [ContactFormSettingsController::class, 'storeCustomField'])->name('contact-form.custom-fields.store');
+    Route::delete('/contact-form/custom-fields/{key}', [ContactFormSettingsController::class, 'destroyCustomField'])->name('contact-form.custom-fields.destroy');
 
     Route::get('/messages', [MessagesController::class, 'index'])->name('messages.index');
     Route::patch('/messages/contact/{contactMessage}/handle', [MessagesController::class, 'handleContact'])->name('messages.contact.handle');

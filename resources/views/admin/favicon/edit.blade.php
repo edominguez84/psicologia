@@ -24,6 +24,7 @@
             <label for="favicon" class="mb-1.5 block text-sm font-semibold text-sky-700">Nueva imagen</label>
             <input type="file" name="favicon" id="favicon" accept="image/png,image/jpeg,.ico"
                 class="block w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700">
+            <p class="mt-1 text-xs text-ink-soft">Formato PNG, JPG o ICO, máximo 512&nbsp;KB, hasta 512×512&nbsp;px.</p>
             @error('favicon')<p class="mt-1 text-xs font-semibold text-clay-500">{{ $message }}</p>@enderror
         </div>
         <button type="submit" class="btn btn-primary">Subir icono</button>

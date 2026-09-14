@@ -21,11 +21,20 @@
         'demoMode'   => $demoMode,
         'results'    => $s['checkup']['results'],
     ];
+    // Campos del formulario de contacto: cuáles fijos mostrar y cuáles
+    // personalizados añadió el admin desde /admin/contact-form.
+    $contactFormSettings = app(\App\Services\SiteSettingsService::class)->get('contact_form', []);
+    $contactFieldDefaults = array_fill_keys(array_keys(\App\Http\Controllers\Admin\ContactFormSettingsController::OPTIONAL_FIXED_FIELDS), true);
+    $contactVisibleFields = array_merge($contactFieldDefaults, $contactFormSettings['fields'] ?? []);
+    $contactCustomFields = $contactFormSettings['custom_fields'] ?? [];
+
     $contactProps = [
         'subjects' => $s['contact_section']['subjects'],
         'endpoint' => $demoMode ? null : route('contact.store'),
         'demoMode' => $demoMode,
         'whatsapp' => $wa,
+        'visibleFields' => $contactVisibleFields,
+        'customFields' => $contactCustomFields,
     ];
     $scheduleCallProps = [
         'subjects' => $s['contact_section']['subjects'],
@@ -33,6 +42,8 @@
         'demoMode' => $demoMode,
         'whatsapp' => $wa,
         'subject'  => $s['contact_section']['subjects'][0] ?? null,
+        'visibleFields' => $contactVisibleFields,
+        'customFields' => $contactCustomFields,
     ];
 
     // Foto de "Sobre mí": la subida desde /admin/about-photo tiene prioridad
@@ -348,6 +359,7 @@
 @endforeach
 
 {{-- ============ CONTACTO ============ --}}
+@if ($isSectionVisible('contact_section'))
 <section id="contacto" class="section bg-paper-50">
     <div class="container-x grid gap-12 md:grid-cols-[0.85fr_1.15fr] md:items-start">
         <div>
@@ -391,5 +403,6 @@
         ></div>
     </div>
 </section>
+@endif
 
 @endsection

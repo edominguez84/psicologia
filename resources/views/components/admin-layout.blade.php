@@ -48,6 +48,7 @@
                             ['route' => 'admin.gallery.edit', 'label' => 'Galería', 'icon' => 'grid'],
                             ['route' => 'admin.social.edit', 'label' => 'Redes sociales', 'icon' => 'share'],
                             ['route' => 'admin.contact.edit', 'label' => 'Contacto', 'icon' => 'mail'],
+                            ['route' => 'admin.contact-form.edit', 'label' => 'Formulario de contacto', 'icon' => 'inbox'],
                             ['route' => 'admin.messages.index', 'label' => 'Mensajes', 'icon' => 'inbox'],
                             ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'],
                             ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas', 'icon' => 'clock'],

@@ -27,7 +27,16 @@
                             <p>{{ $message->email }}</p>
                             <p class="text-xs text-ink-soft">{{ $message->phone }}</p>
                         </td>
-                        <td class="max-w-xs px-4 py-3 align-top text-ink-soft">{{ \Illuminate\Support\Str::limit($message->message, 120) }}</td>
+                        <td class="max-w-xs px-4 py-3 align-top text-ink-soft">
+                            {{ \Illuminate\Support\Str::limit($message->message, 120) }}
+                            @if (!empty($message->custom_fields))
+                                <dl class="mt-2 space-y-0.5 text-xs">
+                                    @foreach ($message->custom_fields as $field)
+                                        <div><dt class="inline font-semibold text-sky-700">{{ $field['label'] }}:</dt> <dd class="inline">{{ $field['value'] ?: '—' }}</dd></div>
+                                    @endforeach
+                                </dl>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 align-top">
                             @if ($message->handled_at)
                                 <span class="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-700">Atendido</span>

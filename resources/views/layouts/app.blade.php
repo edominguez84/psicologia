@@ -16,6 +16,7 @@
         $fonts = app(\App\Services\SiteSettingsService::class)->get('fonts', \App\Support\FontOptions::defaults());
         $headingFont = \App\Support\FontOptions::findHeading($fonts['heading'] ?? '') ?? \App\Support\FontOptions::findHeading(\App\Support\FontOptions::defaults()['heading']);
         $bodyFont = \App\Support\FontOptions::findBody($fonts['body'] ?? '') ?? \App\Support\FontOptions::findBody(\App\Support\FontOptions::defaults()['body']);
+        $buttonFont = \App\Support\FontOptions::findBody($fonts['button'] ?? '') ?? \App\Support\FontOptions::findBody(\App\Support\FontOptions::defaults()['button']);
     @endphp
     @include('partials.google-fonts-link', ['fonts' => $fonts])
 
@@ -39,6 +40,7 @@
             @endif
             --font-serif: {{ $headingFont['family'] }};
             --font-sans: {{ $bodyFont['family'] }};
+            --font-button: {{ $buttonFont['family'] }};
         }
     </style>
 </head>
