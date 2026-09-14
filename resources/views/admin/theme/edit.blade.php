@@ -20,7 +20,7 @@
                     <input type="hidden" name="preset" value="{{ $key }}">
                     <button
                         type="submit"
-                        class="w-full rounded-2xl border bg-white p-3 text-left transition-colors hover:border-sky-300 {{ $activePreset === $key ? 'border-sky-500 ring-2 ring-sky-500' : 'border-paper-200' }}"
+                        class="w-full rounded-2xl border bg-paper-alt p-3 text-left transition-colors hover:border-sky-300 {{ $activePreset === $key ? 'border-sky-500 ring-2 ring-sky-500' : 'border-paper-200' }}"
                     >
                         <span class="flex -space-x-1.5">
                             @foreach (['primary', 'accent', 'background', 'text'] as $swatch)

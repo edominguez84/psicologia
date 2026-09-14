@@ -36,7 +36,7 @@
         <div>
             <label for="body_html" class="mb-1.5 block text-sm font-semibold text-sky-700">Contenido</label>
             <input type="hidden" name="body_html" id="body_html" value="{{ old('body_html', $bodyHtml) }}">
-            <trix-editor input="body_html" class="min-h-[24rem] rounded-xl border border-paper-200 bg-white px-4 py-3 text-sm"></trix-editor>
+            <trix-editor input="body_html" class="min-h-[24rem] rounded-xl border border-paper-200 bg-paper-alt px-4 py-3 text-sm"></trix-editor>
             @error('body_html')<p class="mt-1 text-xs font-semibold text-clay-500">{{ $message }}</p>@enderror
         </div>
 

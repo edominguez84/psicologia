@@ -8,7 +8,7 @@
 
     <div class="mt-8 max-w-lg">
         <p class="mb-2 text-sm font-semibold text-sky-700">Vista previa actual</p>
-        <div class="flex items-center gap-4 rounded-2xl border border-paper-200 bg-white p-6">
+        <div class="flex items-center gap-4 rounded-2xl border border-paper-200 bg-paper-alt p-6">
             <img
                 src="{{ ! empty($favicon['path']) ? \Illuminate\Support\Facades\Storage::url($favicon['path']) : asset('favicon.ico') }}"
                 alt="Icono actual"

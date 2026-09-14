@@ -24,7 +24,7 @@
         class="mt-8 space-y-4"
     >
         <template x-for="(section, i) in sections" :key="section.id">
-            <div class="flex items-center gap-4 rounded-2xl border border-paper-200 bg-white p-5" :class="{ 'opacity-50': !section.is_active }">
+            <div class="flex items-center gap-4 rounded-2xl border border-paper-200 bg-paper-alt p-5" :class="{ 'opacity-50': !section.is_active }">
                 <div class="flex shrink-0 flex-col gap-1.5">
                     <button type="button" @click="moveUp(i)" class="grid size-8 place-items-center rounded-full border border-paper-200 text-sky-700 hover:bg-sky-50" aria-label="Subir">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>

@@ -113,9 +113,9 @@ function sendDraft() {
         <Transition name="fade">
             <div
                 v-if="open"
-                class="flex h-[32rem] max-h-[75vh] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-3xl border border-paper-200 bg-white shadow-2xl"
+                class="flex h-[32rem] max-h-[75vh] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-3xl border border-paper-200 bg-card-fixed shadow-2xl"
             >
-                <div class="flex items-center justify-between bg-sky-800 px-5 py-4 text-paper-50">
+                <div class="flex items-center justify-between bg-ink-panel px-5 py-4 text-on-dark">
                     <div class="flex items-center gap-3">
                         <div class="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-sky-600 text-sm font-bold">
                             <img v-if="avatar" :src="avatar" :alt="botName" class="size-full object-cover" />
@@ -123,7 +123,7 @@ function sendDraft() {
                         </div>
                         <div>
                             <p class="text-sm font-bold leading-tight">{{ botName }}</p>
-                            <p class="text-xs text-paper-200">{{ botTagline }} · en línea</p>
+                            <p class="text-xs text-on-dark-soft">{{ botTagline }} · en línea</p>
                         </div>
                     </div>
                     <button type="button" class="grid size-8 place-items-center rounded-full hover:bg-white/10" aria-label="Cerrar" @click="close">
@@ -135,7 +135,7 @@ function sendDraft() {
                     <div v-for="(m, i) in messages" :key="i" class="flex" :class="m.from === 'user' ? 'justify-end' : 'justify-start'">
                         <div
                             class="max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
-                            :class="m.from === 'user' ? 'bg-sky-600 text-paper-50' : 'border border-paper-200 bg-white text-ink'"
+                            :class="m.from === 'user' ? 'bg-sky-600 text-on-dark' : 'border border-paper-200 bg-card-fixed text-on-card-fixed'"
                         >
                             {{ m.text }}
                         </div>
@@ -144,25 +144,25 @@ function sendDraft() {
                     <div v-if="step === 'chat'" class="flex flex-wrap gap-2 pt-1">
                         <button
                             v-for="faq in faqs" :key="faq.id" type="button"
-                            class="rounded-full border border-sky-200 bg-white px-3 py-1.5 text-xs font-semibold text-sky-700 hover:border-sky-400"
+                            class="rounded-full border border-sky-200 bg-card-fixed px-3 py-1.5 text-xs font-semibold text-sky-700 hover:border-sky-400"
                             @click="useFaq(faq)"
                         >
                             {{ faq.question }}
                         </button>
                         <a
                             :href="whatsapp" target="_blank" rel="noopener"
-                            class="rounded-full bg-sky-600 px-3 py-1.5 text-xs font-semibold text-paper-50 hover:bg-sky-700"
+                            class="rounded-full bg-sky-600 px-3 py-1.5 text-xs font-semibold text-on-dark hover:bg-sky-700"
                         >
                             Hablar por WhatsApp
                         </a>
                     </div>
                 </div>
 
-                <div class="border-t border-paper-200 bg-white p-3">
+                <div class="border-t border-paper-200 bg-card-fixed p-3">
                     <form v-if="step === 'name'" class="flex gap-2" @submit.prevent="submitName">
                         <input v-model="lead.name" type="text" placeholder="Tu nombre" required autofocus
                             class="w-full rounded-full border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" />
-                        <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-paper-50 hover:bg-sky-700">
+                        <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-on-dark hover:bg-sky-700">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>
                         </button>
                     </form>
@@ -170,7 +170,7 @@ function sendDraft() {
                     <form v-else-if="step === 'email'" class="flex gap-2" @submit.prevent="submitEmail">
                         <input v-model="lead.email" type="email" placeholder="tu@correo.com" required autofocus
                             class="w-full rounded-full border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" />
-                        <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-paper-50 hover:bg-sky-700">
+                        <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-on-dark hover:bg-sky-700">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>
                         </button>
                     </form>
@@ -179,7 +179,7 @@ function sendDraft() {
                     <form v-else-if="step === 'phone'" class="flex gap-2" @submit.prevent="submitPhone">
                         <input v-model="lead.phone" type="tel" placeholder="Teléfono (opcional)" autofocus
                             class="w-full rounded-full border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" />
-                        <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-paper-50 hover:bg-sky-700">
+                        <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-on-dark hover:bg-sky-700">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>
                         </button>
                     </form>
@@ -187,11 +187,11 @@ function sendDraft() {
                     <form v-else-if="step === 'chat'" class="flex gap-2" @submit.prevent="sendDraft">
                         <input v-model="draft" type="text" placeholder="Escribe tu mensaje…"
                             class="w-full rounded-full border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" />
-                        <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-paper-50 hover:bg-sky-700">
+                        <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-on-dark hover:bg-sky-700">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>
                         </button>
                     </form>
-                    <p class="mt-2 px-2 text-[11px] leading-snug text-ink-soft">
+                    <p class="mt-2 px-2 text-[11px] leading-snug text-on-card-fixed-soft">
                         Asistente informativo, no sustituye atención profesional.
                         <a :href="whatsapp" target="_blank" rel="noopener" class="font-semibold text-sky-700 underline">Hablar con la psicóloga por WhatsApp</a>
                     </p>

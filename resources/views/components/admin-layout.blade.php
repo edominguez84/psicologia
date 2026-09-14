@@ -7,6 +7,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- Ver el mismo script en layouts/app.blade.php: aplica el modo
+         claro/oscuro antes del primer render para evitar el parpadeo. --}}
+    <script>
+        (function () {
+            try {
+                var mode = localStorage.getItem('themeMode') || 'system';
+                var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
+            } catch (e) {}
+        })();
+    </script>
+
     <title>{{ $title }} · Admin · {{ config('site.name') }}</title>
 
     @php
@@ -18,23 +30,29 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased bg-sky-50">
+<body class="antialiased bg-paper-50">
     <div class="min-h-screen md:flex">
         {{-- Navegación lateral (móvil: barra superior + menú colapsable con Alpine) --}}
         <div x-data="{ open: false }" class="md:contents">
-            <header class="flex items-center justify-between border-b border-paper-200 bg-white px-4 py-3 md:hidden">
+            <header class="flex items-center justify-between border-b border-paper-200 bg-paper-alt px-4 py-3 md:hidden">
                 <a href="{{ route('admin.dashboard') }}">@include('partials.logo', ['class' => 'h-8 w-auto'])</a>
-                <button type="button" @click="open = !open" class="grid size-10 place-items-center rounded-full border border-paper-200 text-sky-700" aria-label="Abrir menú">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-                </button>
+                <div class="flex items-center gap-2">
+                    @include('partials.theme-switch')
+                    <button type="button" @click="open = !open" class="grid size-10 place-items-center rounded-full border border-paper-200 text-sky-700" aria-label="Abrir menú">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                    </button>
+                </div>
             </header>
 
             <aside
                 x-show="open"
                 x-transition
-                class="w-full shrink-0 border-b border-paper-200 bg-white px-4 py-6 md:!block md:w-64 md:border-b-0 md:border-r md:px-6 md:py-8"
+                class="w-full shrink-0 border-b border-paper-200 bg-paper-alt px-4 py-6 md:!block md:w-64 md:border-b-0 md:border-r md:px-6 md:py-8"
             >
-                <a href="{{ route('admin.dashboard') }}" class="mb-8 hidden md:block">@include('partials.logo')</a>
+                <div class="mb-8 hidden items-center justify-between md:flex">
+                    <a href="{{ route('admin.dashboard') }}">@include('partials.logo')</a>
+                    @include('partials.theme-switch')
+                </div>
 
                 <nav class="flex flex-col gap-1">
                     @php
@@ -62,6 +80,8 @@
                             $links[] = ['route' => 'admin.staff.create', 'label' => 'Crear cuenta', 'icon' => 'user-plus'];
                             $links[] = ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'];
                             $links[] = ['route' => 'admin.legal.edit', 'params' => ['page' => 'privacy'], 'label' => 'Páginas legales', 'icon' => 'document'];
+                            $links[] = ['route' => 'admin.activity-log.index', 'label' => 'Registro de auditoría', 'icon' => 'clipboard'];
+                            $links[] = ['route' => 'admin.system-log.index', 'label' => 'Logs del sistema', 'icon' => 'terminal'];
                         }
                     @endphp
                     @foreach ($links as $link)
@@ -116,5 +136,12 @@
             </div>
         </main>
     </div>
+
+    @auth
+        @php
+            $inactivityTimeout = app(\App\Services\SiteSettingsService::class)->get('security')['inactivity_timeout_minutes'] ?? 30;
+        @endphp
+        @include('partials.inactivity-modal', ['timeoutMinutes' => $inactivityTimeout])
+    @endauth
 </body>
 </html>

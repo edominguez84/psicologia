@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'super_admin' => \App\Http\Middleware\EnsureUserIsSuperAdmin::class,
             'banned' => \App\Http\Middleware\EnsureUserIsNotBanned::class,
+            'session.idle' => \App\Http\Middleware\EnsureSessionIsActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

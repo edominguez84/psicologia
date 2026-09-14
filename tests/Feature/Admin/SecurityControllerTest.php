@@ -26,6 +26,7 @@ class SecurityControllerTest extends TestCase
             'channels' => ['sms' => '1'],
             'oauth' => ['google' => '1'],
             'trusted_device_days' => 45,
+            'inactivity_timeout_minutes' => 30,
         ]);
 
         $response->assertRedirect();
@@ -39,6 +40,7 @@ class SecurityControllerTest extends TestCase
         $this->actingAs($admin)->put('/admin/security', [
             'channels' => ['sms' => '1'],
             'trusted_device_days' => 30,
+            'inactivity_timeout_minutes' => 30,
         ]);
 
         config(['services.twilio.sid' => null, 'services.twilio.token' => null]);
@@ -55,6 +57,7 @@ class SecurityControllerTest extends TestCase
         $this->actingAs($admin)->put('/admin/security', [
             'channels' => ['sms' => '1'],
             'trusted_device_days' => 30,
+            'inactivity_timeout_minutes' => 30,
         ]);
 
         config(['services.twilio.sid' => 'test-sid', 'services.twilio.token' => 'test-token']);

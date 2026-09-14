@@ -7,7 +7,7 @@
 
     <div class="mt-8 max-w-sm">
         <p class="mb-2 text-sm font-semibold text-sky-700">Vista previa actual</p>
-        <div class="overflow-hidden rounded-2xl border border-paper-200 bg-white p-3">
+        <div class="overflow-hidden rounded-2xl border border-paper-200 bg-paper-alt p-3">
             <img
                 src="{{ !empty($photo['path']) ? \Illuminate\Support\Facades\Storage::url($photo['path']) : asset(config('site.about.photo')) }}"
                 alt="Foto de portada actual"

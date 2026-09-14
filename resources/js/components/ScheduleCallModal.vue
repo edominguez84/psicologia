@@ -45,15 +45,15 @@ onUnmounted(() => {
                 class="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-ink/50 px-4 py-8 backdrop-blur-sm sm:items-center"
                 @click.self="close"
             >
-                <div class="w-full max-w-xl rounded-3xl bg-white shadow-2xl">
+                <div class="w-full max-w-xl rounded-3xl bg-card-fixed shadow-2xl">
                     <div class="flex items-center justify-between border-b border-paper-200 px-6 py-5 sm:px-8">
                         <div>
                             <p class="eyebrow mb-1">Sin compromiso</p>
-                            <h2 class="font-serif text-xl text-sky-800">Reserva tu llamada gratuita</h2>
+                            <h2 class="font-serif text-xl text-on-card-fixed">Reserva tu llamada gratuita</h2>
                         </div>
                         <button
                             type="button"
-                            class="grid size-9 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-paper-100"
+                            class="grid size-9 shrink-0 place-items-center rounded-full text-on-card-fixed-soft hover:bg-paper-100"
                             aria-label="Cerrar"
                             @click="close"
                         >
@@ -64,7 +64,7 @@ onUnmounted(() => {
                     </div>
 
                     <div class="max-h-[75vh] overflow-y-auto px-6 py-6 sm:px-8">
-                        <p class="mb-5 text-sm leading-relaxed text-ink-soft">
+                        <p class="mb-5 text-sm leading-relaxed text-on-card-fixed-soft">
                             Cuéntame un poco sobre ti y te contacto para coordinar el horario de tu llamada de 15 minutos.
                         </p>
                         <ContactForm

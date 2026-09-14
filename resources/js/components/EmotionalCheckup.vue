@@ -73,20 +73,20 @@ function reset() {
 </script>
 
 <template>
-    <div class="rounded-3xl border border-paper-200 bg-white p-6 sm:p-9">
+    <div class="rounded-3xl border border-paper-200 bg-card-fixed p-6 sm:p-9">
         <template v-if="!result">
             <p class="mb-6 text-sm font-semibold text-sky-500">{{ props.period }}</p>
 
             <div class="space-y-7">
                 <fieldset v-for="(q, i) in props.questions" :key="i">
-                    <legend class="mb-3 font-serif text-lg text-sky-800">{{ i + 1 }}. {{ q }}</legend>
+                    <legend class="mb-3 font-serif text-lg text-on-card-fixed">{{ i + 1 }}. {{ q }}</legend>
                     <div class="flex flex-wrap gap-2">
                         <label
                             v-for="(opt, oi) in props.options"
                             :key="oi"
                             class="cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
                             :class="answers[i] === oi
-                                ? 'border-sky-600 bg-sky-600 text-paper-50'
+                                ? 'border-sky-600 bg-sky-600 text-on-dark'
                                 : 'border-paper-200 bg-paper-50 text-ink-soft hover:border-sky-300'"
                         >
                             <input type="radio" class="sr-only" :name="`q${i}`" :value="oi" v-model="answers[i]" />

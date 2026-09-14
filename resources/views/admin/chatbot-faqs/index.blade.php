@@ -6,7 +6,7 @@
         sección.
     </p>
 
-    <div class="mt-8 max-w-lg rounded-2xl border border-paper-200 bg-white p-5">
+    <div class="mt-8 max-w-lg rounded-2xl border border-paper-200 bg-paper-alt p-5">
         <h2 class="mb-3 font-serif text-lg text-sky-800">Nombre e imagen del bot</h2>
 
         <div class="flex items-center gap-4">
@@ -65,7 +65,7 @@
         class="mt-6 space-y-4"
     >
         <template x-for="(faq, i) in faqs" :key="faq.id">
-            <div class="rounded-2xl border border-paper-200 bg-white p-5" :class="{ 'opacity-50': !faq.is_active }">
+            <div class="rounded-2xl border border-paper-200 bg-paper-alt p-5" :class="{ 'opacity-50': !faq.is_active }">
                 <div class="flex items-start gap-4">
                     <div class="flex shrink-0 flex-col gap-1.5">
                         <button type="button" @click="moveUp(i)" class="grid size-8 place-items-center rounded-full border border-paper-200 text-sky-700 hover:bg-sky-50" aria-label="Subir">

@@ -2,7 +2,7 @@
     <h1 class="text-2xl font-serif text-sky-800">Usuarios</h1>
     <p class="mt-2 text-sm text-ink-soft">Gestiona roles y suspende cuentas que no deberían tener acceso.</p>
 
-    <div class="mt-8 overflow-x-auto rounded-2xl border border-paper-200 bg-white">
+    <div class="mt-8 overflow-x-auto rounded-2xl border border-paper-200 bg-paper-alt">
         <table class="w-full min-w-[720px] text-left text-sm">
             <thead class="border-b border-paper-200 text-xs font-bold uppercase tracking-wider text-sky-500">
                 <tr>

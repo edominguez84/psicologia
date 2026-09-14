@@ -29,14 +29,14 @@
     ];
 
     $circleClasses = $dark
-        ? 'border border-white/15 bg-white/5 text-paper-50 hover:bg-white/10'
+        ? 'border border-white/15 bg-white/5 text-on-dark hover:bg-white/10'
         : 'border border-paper-200 bg-white text-sky-700 hover:border-sky-300 hover:bg-sky-50';
 @endphp
 
 @if ($networks->isNotEmpty())
     <div>
         @if ($heading)
-            <p class="mb-3 text-xs font-bold uppercase tracking-wider {{ $dark ? 'text-paper-50' : 'text-sky-500' }}">{{ $heading }}</p>
+            <p class="mb-3 text-xs font-bold uppercase tracking-wider {{ $dark ? 'text-on-dark' : 'text-sky-500' }}">{{ $heading }}</p>
         @endif
         <div class="flex items-center gap-2.5">
             @foreach ($networks as $network)

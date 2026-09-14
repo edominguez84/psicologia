@@ -36,7 +36,7 @@
             @method('PUT')
 
             @foreach ($sections as $key => $section)
-                <label class="flex items-center justify-between gap-4 rounded-2xl border border-paper-200 bg-white px-4 py-3">
+                <label class="flex items-center justify-between gap-4 rounded-2xl border border-paper-200 bg-paper-alt px-4 py-3">
                     <span class="text-sm font-semibold text-ink">{{ $section['label'] }}</span>
                     <input
                         type="checkbox"

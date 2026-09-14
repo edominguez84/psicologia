@@ -2,7 +2,7 @@
 
 @php
     $logo = app(\App\Services\SiteSettingsService::class)->get('logo');
-    $wordmarkColor = $dark ? 'text-paper-50' : 'text-sky-800';
+    $wordmarkColor = $dark ? 'text-on-dark' : 'text-heading';
 @endphp
 
 @if (!empty($logo['path']))

@@ -59,6 +59,20 @@
                 class="w-32 rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
         </div>
 
+        <div>
+            <label for="inactivity_timeout_minutes" class="mb-1.5 block text-sm font-semibold text-sky-700">
+                Cerrar sesión tras minutos de inactividad
+            </label>
+            <input type="number" name="inactivity_timeout_minutes" id="inactivity_timeout_minutes" min="1" max="240"
+                value="{{ old('inactivity_timeout_minutes', $current['inactivity_timeout_minutes'] ?? 30) }}"
+                class="w-32 rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+            <p class="mt-1 text-xs text-ink-soft">
+                Aplica a todas las cuentas (super administradoras, administradoras y pacientes). 30
+                segundos antes de cumplirse este tiempo, se avisa con un mensaje para seguir conectado.
+            </p>
+            @error('inactivity_timeout_minutes')<p class="mt-1 text-xs font-semibold text-clay-500">{{ $message }}</p>@enderror
+        </div>
+
         <button type="submit" class="btn btn-primary">Guardar ajustes de seguridad</button>
     </form>
 </x-admin-layout>

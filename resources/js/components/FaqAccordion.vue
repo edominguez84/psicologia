@@ -13,7 +13,7 @@ function toggle(i) {
 </script>
 
 <template>
-    <div class="divide-y divide-paper-200 rounded-2xl border border-paper-200 bg-white">
+    <div class="divide-y divide-paper-200 rounded-2xl border border-paper-200 bg-card-fixed">
         <div v-for="(item, i) in props.items" :key="i">
             <button
                 type="button"
@@ -21,7 +21,7 @@ function toggle(i) {
                 :aria-expanded="open === i"
                 @click="toggle(i)"
             >
-                <span class="font-serif text-lg text-sky-800">{{ item.q }}</span>
+                <span class="font-serif text-lg text-on-card-fixed">{{ item.q }}</span>
                 <span
                     class="grid size-7 shrink-0 place-items-center rounded-full bg-sky-100 text-sky-600 transition-transform"
                     :class="{ 'rotate-45': open === i }"
@@ -33,7 +33,7 @@ function toggle(i) {
             </button>
             <div class="accordion-body" :class="{ open: open === i }">
                 <div>
-                    <p class="px-5 pb-6 leading-relaxed text-ink-soft">{{ item.a }}</p>
+                    <p class="px-5 pb-6 leading-relaxed text-on-card-fixed-soft">{{ item.a }}</p>
                 </div>
             </div>
         </div>

@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- Aplica el modo claro/oscuro ANTES del primer render para evitar el
+         parpadeo (FOUC): un usuario que eligió "oscuro" no debe ver un
+         flash blanco mientras carga el bundle de Vite. Ver theme-mode.js
+         para la lógica completa (persistencia y reacción a cambios en vivo). --}}
+    <script>
+        (function () {
+            try {
+                var mode = localStorage.getItem('themeMode') || 'system';
+                var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
+            } catch (e) {}
+        })();
+    </script>
+
     <title>@yield('title', config('site.name').' · '.config('site.role'))</title>
     <meta name="description" content="@yield('meta_description', 'Terapia psicológica online en español, especializada en trauma y EMDR. Sesiones por videollamada para personas en Estados Unidos y Europa.')">
 
@@ -85,5 +99,12 @@
         ];
     @endphp
     <div data-vue="ChatbotWidget" data-props="{{ json_encode($chatbotProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>
+
+    @auth
+        @php
+            $inactivityTimeout = app(\App\Services\SiteSettingsService::class)->get('security')['inactivity_timeout_minutes'] ?? 30;
+        @endphp
+        @include('partials.inactivity-modal', ['timeoutMinutes' => $inactivityTimeout])
+    @endauth
 </body>
 </html>

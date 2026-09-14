@@ -52,6 +52,11 @@ class LoginRequest extends FormRequest
         if (! $user || ! Auth::getProvider()->validateCredentials($user, $this->only('email', 'password'))) {
             RateLimiter::hit($this->throttleKey());
 
+            activity('auth')
+                ->causedBy($user)
+                ->withProperties(['email' => $this->string('email')->value(), 'ip' => $this->ip()])
+                ->log('login_failed');
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);

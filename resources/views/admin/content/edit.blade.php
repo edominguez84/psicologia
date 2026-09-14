@@ -34,7 +34,7 @@
                         class="space-y-4"
                     >
                         <template x-for="(item, i) in items" :key="i">
-                            <div class="rounded-2xl border border-paper-200 bg-white p-4">
+                            <div class="rounded-2xl border border-paper-200 bg-paper-alt p-4">
                                 <div class="mb-3 flex items-center justify-between">
                                     <span class="text-xs font-bold uppercase tracking-wider text-sky-500" x-text="'#' + (i + 1)"></span>
                                     <button type="button" @click="remove(i)" class="text-xs font-semibold text-clay-500 hover:underline">Eliminar</button>

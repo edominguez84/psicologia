@@ -7,7 +7,7 @@
 
     <div class="mt-8 space-y-3">
         @forelse ($slots as $slot)
-            <div class="flex items-center justify-between gap-4 rounded-2xl border border-paper-200 bg-white p-4" @class(['opacity-50' => ! $slot->is_active])>
+            <div class="flex items-center justify-between gap-4 rounded-2xl border border-paper-200 bg-paper-alt p-4" @class(['opacity-50' => ! $slot->is_active])>
                 <div>
                     <p class="font-semibold text-ink">{{ $slot->starts_at->format('d/m/Y H:i') }} — {{ $slot->ends_at->format('H:i') }}</p>
                     @if ($slot->active_appointments_count > 0)

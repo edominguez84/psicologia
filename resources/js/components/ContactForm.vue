@@ -105,15 +105,15 @@ function err(field) {
 </script>
 
 <template>
-    <div class="rounded-3xl border border-paper-200 bg-white p-6 sm:p-9">
+    <div class="rounded-3xl border border-paper-200 bg-card-fixed p-6 sm:p-9">
         <div v-if="success" class="rounded-2xl border border-sky-200 bg-sky-50 p-6 text-center">
-            <div class="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-sky-600 text-paper-50">
+            <div class="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-sky-600 text-on-dark">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                     <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
             </div>
-            <p class="font-serif text-lg text-sky-800">¡Mensaje enviado!</p>
-            <p class="mt-1 text-sm text-ink-soft">{{ success }}</p>
+            <p class="font-serif text-lg text-on-card-fixed">¡Mensaje enviado!</p>
+            <p class="mt-1 text-sm text-on-card-fixed-soft">{{ success }}</p>
         </div>
 
         <form v-else class="space-y-5" @submit.prevent="submit">

@@ -73,6 +73,9 @@ class SocialiteController extends Controller
 
         Auth::login($user);
         request()->session()->regenerate();
+        request()->session()->put('last_activity_at', now());
+
+        activity('auth')->causedBy($user)->log('login');
 
         return redirect()->intended(route($user->defaultRedirectRouteName(), absolute: false));
     }

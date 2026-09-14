@@ -126,7 +126,7 @@
                     onerror="this.style.display='none'; this.parentElement.classList.add('grid','place-items-center','aspect-[4/5]');"
                 >
             </div>
-            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-paper-200 bg-white px-5 py-2.5 text-center text-xs font-bold text-sky-700 shadow-lg">
+            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-paper-200 bg-card-fixed px-5 py-2.5 text-center text-xs font-bold text-on-card-fixed shadow-lg">
                 {{ $s['registration'] }}
             </div>
         </div>
@@ -153,7 +153,7 @@
 
 {{-- ============ SOBRE MÍ ============ --}}
 @if ($isSectionVisible('about'))
-<section id="sobre-mi" class="section bg-white">
+<section id="sobre-mi" class="section bg-paper-alt">
     <div class="container-x grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:items-start">
         <div>
             <p class="eyebrow">Quién te acompaña</p>
@@ -202,13 +202,13 @@
         </div>
 
         {{-- Cómo son las sesiones --}}
-        <div class="mt-12 rounded-3xl border border-paper-200 bg-white p-8">
-            <h3 class="text-xl">{{ $s['sessions']['title'] }}</h3>
+        <div class="mt-12 rounded-3xl border border-paper-200 bg-card-fixed p-8">
+            <h3 class="text-xl !text-on-card-fixed">{{ $s['sessions']['title'] }}</h3>
             <dl class="mt-6 grid gap-6 sm:grid-cols-3 lg:grid-cols-6">
                 @foreach ($s['sessions']['items'] as $item)
                     <div>
-                        <dt class="text-xs font-bold uppercase tracking-wider text-sky-500">{{ $item['label'] }}</dt>
-                        <dd class="mt-1 font-serif text-lg text-sky-800">{{ $item['value'] }}</dd>
+                        <dt class="text-xs font-bold uppercase tracking-wider text-on-card-fixed-soft">{{ $item['label'] }}</dt>
+                        <dd class="mt-1 font-serif text-lg text-on-card-fixed">{{ $item['value'] }}</dd>
                     </div>
                 @endforeach
             </dl>
@@ -219,7 +219,7 @@
 
 {{-- ============ BENEFICIOS ============ --}}
 @if ($isSectionVisible('benefits'))
-<section id="beneficios" class="section bg-white">
+<section id="beneficios" class="section bg-paper-alt">
     <div class="container-x grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:items-start">
         <div>
             <p class="eyebrow">Beneficios</p>
@@ -230,7 +230,7 @@
         <ul class="grid gap-4 sm:grid-cols-2">
             @foreach ($s['benefits']['items'] as $item)
                 <li class="reveal reveal-delay-{{ ($loop->index % 6) + 1 }} flex gap-3 rounded-2xl border border-paper-200 bg-paper-50 p-4 transition-colors hover:border-sky-300">
-                    <span class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-sky-600 text-paper-50">
+                    <span class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-sky-600 text-on-dark">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </span>
                     <span class="text-sm leading-relaxed text-ink">{{ $item }}</span>
@@ -243,34 +243,34 @@
 
 {{-- ============ TERAPIA EMDR ============ --}}
 @if ($isSectionVisible('emdr'))
-<section id="emdr" class="section relative overflow-hidden bg-sky-800 text-paper-100">
+<section id="emdr" class="section relative overflow-hidden bg-ink-panel text-on-dark-soft">
     <div class="section-glow -right-24 -top-24 size-80 bg-sky-600/40"></div>
     <div class="section-glow -bottom-32 left-1/4 size-96 bg-clay-400/10"></div>
 
     <div class="container-x relative">
         <div class="max-w-2xl">
-            <p class="eyebrow text-paper-200">Método</p>
-            <h2 class="mt-3 text-3xl text-paper-50 sm:text-4xl">{{ $s['emdr']['title'] }}</h2>
-            <p class="mt-5 text-lg leading-relaxed text-paper-200">{{ $s['emdr']['lead'] }}</p>
+            <p class="eyebrow text-on-dark-soft">Método</p>
+            <h2 class="mt-3 text-3xl text-on-dark sm:text-4xl">{{ $s['emdr']['title'] }}</h2>
+            <p class="mt-5 text-lg leading-relaxed text-on-dark-soft">{{ $s['emdr']['lead'] }}</p>
         </div>
 
         <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             @foreach ($s['emdr']['advantages'] as $adv)
                 <div class="reveal reveal-delay-{{ ($loop->index % 6) + 1 }} rounded-2xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/10">
-                    <h3 class="text-base text-paper-50">{{ $adv['title'] }}</h3>
-                    <p class="mt-2 text-sm leading-relaxed text-paper-200">{{ $adv['text'] }}</p>
+                    <h3 class="text-base text-on-dark">{{ $adv['title'] }}</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-on-dark-soft">{{ $adv['text'] }}</p>
                 </div>
             @endforeach
         </div>
 
         <div class="mt-14">
-            <h3 class="text-xl text-paper-50">Cómo funciona el proceso</h3>
+            <h3 class="text-xl text-on-dark">Cómo funciona el proceso</h3>
             <ol class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ($s['emdr']['steps'] as $step)
                     <li class="reveal reveal-delay-{{ ($loop->index % 6) + 1 }} relative rounded-2xl border border-white/10 p-6 transition-colors hover:bg-white/5">
                         <span class="font-serif text-3xl text-sky-300">{{ $step['n'] }}</span>
-                        <h4 class="mt-2 text-base text-paper-50">{{ $step['title'] }}</h4>
-                        <p class="mt-1 text-sm leading-relaxed text-paper-200">{{ $step['text'] }}</p>
+                        <h4 class="mt-2 text-base text-on-dark">{{ $step['title'] }}</h4>
+                        <p class="mt-1 text-sm leading-relaxed text-on-dark-soft">{{ $step['text'] }}</p>
                     </li>
                 @endforeach
             </ol>
@@ -279,7 +279,7 @@
         <div
             class="mt-12"
             data-vue="ScheduleCallModal"
-            data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => 'Reserva tu llamada gratuita', 'triggerClass' => 'btn bg-paper-50 text-sky-800 hover:bg-white'], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+            data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => 'Reserva tu llamada gratuita', 'triggerClass' => 'btn bg-on-dark text-ink-panel hover:opacity-90'], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
         ></div>
     </div>
 </section>
@@ -321,7 +321,7 @@
 
 {{-- ============ MITOS ============ --}}
 @if ($isSectionVisible('myths'))
-<section id="mitos" class="section bg-white">
+<section id="mitos" class="section bg-paper-alt">
     <div class="container-x">
         <div class="max-w-2xl">
             <p class="eyebrow">Sin estigmas</p>
@@ -352,7 +352,7 @@
 
 {{-- ============ FAQ ============ --}}
 @if ($isSectionVisible('faq'))
-<section id="faq" class="section bg-white">
+<section id="faq" class="section bg-paper-alt">
     <div class="container-x grid gap-12 md:grid-cols-[0.7fr_1.3fr] md:items-start">
         <div>
             <p class="eyebrow">Dudas</p>
@@ -381,26 +381,26 @@
             <p class="mt-4 leading-relaxed text-ink-soft">{{ $s['contact_section']['subtitle'] }}</p>
 
             <div class="mt-8 space-y-4">
-                <a href="{{ $wa }}" target="_blank" rel="noopener" class="flex items-center gap-3 rounded-2xl border border-paper-200 bg-white p-4 transition-colors hover:border-sky-300">
+                <a href="{{ $wa }}" target="_blank" rel="noopener" class="flex items-center gap-3 rounded-2xl border border-paper-200 bg-card-fixed p-4 transition-colors hover:border-sky-300">
                     <span class="grid size-10 place-items-center rounded-full bg-sky-100 text-sky-600">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2zm0 18a8 8 0 01-4.1-1.1l-.3-.2-2.8.9.9-2.7-.2-.3A8 8 0 1112 20zm4.4-5.6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.5 6.5 0 01-1.9-1.2 7.2 7.2 0 01-1.3-1.7c-.1-.2 0-.4.1-.5l.4-.5.3-.5v-.5c0-.1-.6-1.5-.8-2s-.4-.4-.6-.4h-.5a1 1 0 00-.7.3A2.9 2.9 0 006 6.6c0 1.7 1.3 3.4 1.5 3.6s2.5 3.9 6.1 5.3c2.2.8 2.7.7 3.2.6s1.4-.6 1.6-1.1a2 2 0 00.1-1.1c0-.2-.2-.3-.4-.4z"/></svg>
                     </span>
                     <span>
-                        <span class="block text-xs font-bold uppercase tracking-wider text-sky-500">WhatsApp</span>
-                        <span class="block text-sm font-semibold text-ink">{{ $s['contact']['whatsapp_show'] }}</span>
+                        <span class="block text-xs font-bold uppercase tracking-wider text-on-card-fixed-soft">WhatsApp</span>
+                        <span class="block text-sm font-semibold text-on-card-fixed">{{ $s['contact']['whatsapp_show'] }}</span>
                     </span>
                 </a>
-                <a href="mailto:{{ $s['contact']['email'] }}" class="flex items-center gap-3 rounded-2xl border border-paper-200 bg-white p-4 transition-colors hover:border-sky-300">
+                <a href="mailto:{{ $s['contact']['email'] }}" class="flex items-center gap-3 rounded-2xl border border-paper-200 bg-card-fixed p-4 transition-colors hover:border-sky-300">
                     <span class="grid size-10 place-items-center rounded-full bg-sky-100 text-sky-600">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
                     </span>
                     <span>
-                        <span class="block text-xs font-bold uppercase tracking-wider text-sky-500">Email</span>
-                        <span class="block text-sm font-semibold text-ink">{{ $s['contact']['email'] }}</span>
+                        <span class="block text-xs font-bold uppercase tracking-wider text-on-card-fixed-soft">Email</span>
+                        <span class="block text-sm font-semibold text-on-card-fixed">{{ $s['contact']['email'] }}</span>
                     </span>
                 </a>
-                <div class="rounded-2xl border border-paper-200 bg-white p-4 text-sm text-ink-soft">
-                    <p><strong class="text-sky-700">Zona de atención:</strong> {{ $s['contact']['area'] }}</p>
+                <div class="rounded-2xl border border-paper-200 bg-card-fixed p-4 text-sm text-on-card-fixed-soft">
+                    <p><strong class="text-on-card-fixed">Zona de atención:</strong> {{ $s['contact']['area'] }}</p>
                     <p class="mt-1">{{ $s['contact']['response'] }}</p>
                 </div>
 
