@@ -23,7 +23,9 @@ class StoreStaffRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
-            'password' => ['required', Password::min(8)],
+            // Mismo criterio que el registro público (StoreRegistrationRequest):
+            // mínimo 10 caracteres, mayúscula, minúscula, número y símbolo.
+            'password' => ['required', Password::min(10)->mixedCase()->numbers()->symbols()],
             'role' => ['required', new Enum(UserRole::class)],
         ];
     }

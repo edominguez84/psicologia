@@ -20,11 +20,7 @@
             <x-input-error :messages="$errors->get('email')" class="mt-1" />
         </div>
 
-        <div>
-            <x-input-label for="password" value="Contraseña" />
-            <x-text-input id="password" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-1" />
-        </div>
+        <x-password-strength-field name="password" label="Contraseña" />
 
         <div>
             <x-input-label for="role" value="Rol" />
