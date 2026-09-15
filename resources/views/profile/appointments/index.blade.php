@@ -73,6 +73,13 @@
                         @endif
                         <p class="mt-2 text-ink-soft">{{ $payment['bank_transfer']['instructions'] ?? '' }}</p>
                     </div>
+                @else
+                    <div class="rounded-2xl border border-paper-200 bg-paper-50 p-4 text-sm" x-show="paymentMethod === 'wompi'">
+                        <p class="text-ink-soft">
+                            Al solicitar la cita te llevaremos a la pantalla segura de Wompi para pagar con
+                            tarjeta. Tu cita quedará confirmada automáticamente en cuanto el pago se apruebe.
+                        </p>
+                    </div>
                 @endif
 
                 <button type="submit" class="btn btn-primary">Solicitar cita</button>
@@ -106,6 +113,8 @@
                                     · <span class="font-semibold text-sky-700">Confirmado</span>
                                 @elseif ($appointment->payment_status === 'reported')
                                     · <span class="font-semibold text-clay-500">Avisado, en revisión</span>
+                                @elseif ($appointment->payment_method === 'wompi' && $appointment->payment_status === 'unpaid')
+                                    · <span class="font-semibold text-clay-500">Pago pendiente</span>
                                 @endif
                                 @if ($appointment->promotion)
                                     · {{ $appointment->promotion->title }} (${{ number_format($appointment->amount, 2) }})

@@ -55,14 +55,16 @@ class PaymentSettingsControllerTest extends TestCase
 
         $this->actingAs($superAdmin)->put('/admin/payment-settings', [
             'method' => 'wompi',
-            'wompi_public_key' => 'pub_test_123',
-            'wompi_private_key' => 'prv_test_456',
-            'wompi_events_key' => 'evt_test_789',
+            'wompi_mode' => 'sandbox',
+            'wompi_app_id' => '44904ee8-2cb3-40fa-b565-6bb89c13d185',
+            'wompi_api_secret' => '708b5783-8de0-4bbb-ae6e-1700afa67627',
         ]);
 
         $payment = app(SiteSettingsService::class)->get('payment');
         $this->assertSame('wompi', $payment['method']);
-        $this->assertSame('pub_test_123', $payment['wompi']['public_key']);
+        $this->assertSame('sandbox', $payment['wompi']['mode']);
+        $this->assertSame('44904ee8-2cb3-40fa-b565-6bb89c13d185', $payment['wompi']['app_id']);
+        $this->assertSame('708b5783-8de0-4bbb-ae6e-1700afa67627', $payment['wompi']['api_secret']);
     }
 
     public function test_puede_subir_la_imagen_del_numero_de_cuenta(): void

@@ -5,8 +5,11 @@ namespace Tests\Feature;
 use App\Mail\AppointmentRequested;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
+use App\Models\Promotion;
 use App\Models\User;
+use App\Services\SiteSettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -219,5 +222,82 @@ class AppointmentBookingControllerTest extends TestCase
 
         $response->assertSessionHasErrors('payment_method');
         $this->assertDatabaseCount('appointments', 0);
+    }
+
+    public function test_pagar_con_wompi_redirige_al_enlace_de_pago_generado(): void
+    {
+        app(SiteSettingsService::class)->set('payment', [
+            'method' => 'wompi',
+            'wompi' => ['mode' => 'sandbox', 'app_id' => 'test-app', 'api_secret' => 'test-secret'],
+        ]);
+        Http::fake([
+            'id.wompi.sv/*' => Http::response(['access_token' => 'tok'], 200),
+            'api.wompi.sv/EnlacePago' => Http::response([
+                'idEnlace' => 555, 'urlEnlace' => 'https://checkout.wompi.sv/enlace/555',
+            ], 200),
+        ]);
+        $patient = User::factory()->create(['role' => 'patient']);
+        $slot = AppointmentSlot::factory()->create();
+        $promotion = Promotion::create(['title' => 'Plan', 'price' => 45, 'description' => 'x', 'is_active' => true]);
+
+        $response = $this->actingAs($patient)->post('/perfil/citas', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'wompi',
+            'promotion_id' => $promotion->id,
+        ]);
+
+        $response->assertRedirect('https://checkout.wompi.sv/enlace/555');
+        $this->assertDatabaseHas('appointments', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'wompi',
+            'payment_reference' => '555',
+        ]);
+    }
+
+    public function test_pagar_con_wompi_sin_credenciales_configuradas_no_pierde_la_cita(): void
+    {
+        $patient = User::factory()->create(['role' => 'patient']);
+        $slot = AppointmentSlot::factory()->create();
+        $promotion = Promotion::create(['title' => 'Plan', 'price' => 45, 'description' => 'x', 'is_active' => true]);
+
+        $response = $this->actingAs($patient)->post('/perfil/citas', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'wompi',
+            'promotion_id' => $promotion->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('appointments', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'wompi',
+            'payment_status' => 'unpaid',
+        ]);
+    }
+
+    public function test_si_wompi_falla_al_generar_el_enlace_la_cita_sigue_creada(): void
+    {
+        app(SiteSettingsService::class)->set('payment', [
+            'method' => 'wompi',
+            'wompi' => ['mode' => 'sandbox', 'app_id' => 'test-app', 'api_secret' => 'test-secret'],
+        ]);
+        Http::fake([
+            'id.wompi.sv/*' => Http::response(['error' => 'invalid_client'], 400),
+        ]);
+        $patient = User::factory()->create(['role' => 'patient']);
+        $slot = AppointmentSlot::factory()->create();
+        $promotion = Promotion::create(['title' => 'Plan', 'price' => 45, 'description' => 'x', 'is_active' => true]);
+
+        $response = $this->actingAs($patient)->post('/perfil/citas', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'wompi',
+            'promotion_id' => $promotion->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('appointments', [
+            'appointment_slot_id' => $slot->id,
+            'payment_method' => 'wompi',
+            'payment_status' => 'unpaid',
+        ]);
     }
 }

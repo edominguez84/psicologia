@@ -23,6 +23,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\ResolveSiteLocale::class,
         ]);
+
+        // El webhook de Wompi lo llama su servidor, no un navegador con
+        // sesión/token CSRF — se autentica en su lugar verificando la firma
+        // 'wompi_hash' dentro del propio controlador (ver
+        // App\Http\Controllers\Webhooks\WompiWebhookController).
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/wompi',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

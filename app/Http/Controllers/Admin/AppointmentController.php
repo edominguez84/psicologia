@@ -61,8 +61,11 @@ class AppointmentController extends Controller
     }
 
     /**
-     * Confirma manualmente que el pago (transferencia bancaria avisada por
-     * WhatsApp, o Wompi cuando haya integración real) ya se verificó.
+     * Confirma manualmente que el pago por transferencia bancaria (avisado
+     * por WhatsApp) ya se verificó. Los pagos con Wompi normalmente se
+     * confirman solos vía Webhooks\WompiWebhookController cuando Wompi
+     * notifica la transacción exitosa; este botón queda disponible también
+     * para Wompi como respaldo manual si el webhook no llegara.
      * payment_status no es mass-assignable — se setea explícitamente aquí.
      */
     public function confirmPayment(Appointment $appointment): RedirectResponse

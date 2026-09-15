@@ -140,6 +140,7 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
         // super administradora.
         Route::get('/payment-settings', [PaymentSettingsController::class, 'edit'])->name('payment-settings.edit');
         Route::put('/payment-settings', [PaymentSettingsController::class, 'update'])->name('payment-settings.update');
+        Route::post('/payment-settings/test-wompi', [PaymentSettingsController::class, 'testWompi'])->name('payment-settings.test-wompi');
 
         // Aprobación de testimonios y filtro de contenido — reservado a la
         // super administradora (antes cualquier admin podía aprobar).

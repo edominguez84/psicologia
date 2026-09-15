@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\SiteSettingsService;
+use App\Services\WompiPaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +15,7 @@ class PaymentSettingsController extends Controller
 {
     private const DEFAULTS = [
         'method' => 'bank_transfer',
-        'wompi' => ['public_key' => '', 'private_key' => '', 'events_key' => ''],
+        'wompi' => ['mode' => 'sandbox', 'app_id' => '', 'api_secret' => ''],
         'bank_transfer' => [
             'bank_name' => '', 'account_number' => '', 'account_holder' => '',
             'instructions' => 'Toma captura del comprobante de tu pago y envíalo por WhatsApp para apartar tu cita.',
@@ -39,9 +40,9 @@ class PaymentSettingsController extends Controller
     {
         $data = $request->validate([
             'method' => ['required', Rule::in(['bank_transfer', 'wompi'])],
-            'wompi_public_key' => ['nullable', 'string', 'max:255'],
-            'wompi_private_key' => ['nullable', 'string', 'max:255'],
-            'wompi_events_key' => ['nullable', 'string', 'max:255'],
+            'wompi_mode' => ['nullable', Rule::in(['sandbox', 'production'])],
+            'wompi_app_id' => ['nullable', 'string', 'max:255'],
+            'wompi_api_secret' => ['nullable', 'string', 'max:255'],
             'bank_name' => ['nullable', 'string', 'max:255'],
             'account_number' => ['nullable', 'string', 'max:60'],
             'account_holder' => ['nullable', 'string', 'max:255'],
@@ -66,9 +67,9 @@ class PaymentSettingsController extends Controller
         $this->settings->set('payment', [
             'method' => $data['method'],
             'wompi' => [
-                'public_key' => $data['wompi_public_key'] ?? '',
-                'private_key' => $data['wompi_private_key'] ?? '',
-                'events_key' => $data['wompi_events_key'] ?? '',
+                'mode' => $data['wompi_mode'] ?? self::DEFAULTS['wompi']['mode'],
+                'app_id' => $data['wompi_app_id'] ?? '',
+                'api_secret' => $data['wompi_api_secret'] ?? '',
             ],
             'bank_transfer' => [
                 'bank_name' => $data['bank_name'] ?? '',
@@ -80,5 +81,28 @@ class PaymentSettingsController extends Controller
         ]);
 
         return back()->with('status', 'Configuración de pagos actualizada.');
+    }
+
+    /**
+     * Solo intenta autenticarse contra Wompi con las credenciales ya
+     * guardadas, sin crear ningún enlace de pago — feedback inmediato de si
+     * el App ID/API Secret son correctos antes de que una paciente real
+     * intente pagar.
+     */
+    public function testWompi(WompiPaymentService $wompi): RedirectResponse
+    {
+        try {
+            $wompi->testConnection();
+
+            return back()->with('wompi_test_result', [
+                'ok' => true,
+                'message' => 'Conexión exitosa: Wompi aceptó las credenciales.',
+            ]);
+        } catch (\Throwable $e) {
+            return back()->with('wompi_test_result', [
+                'ok' => false,
+                'message' => 'No se pudo conectar con Wompi: '.$e->getMessage(),
+            ]);
+        }
     }
 }
