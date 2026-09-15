@@ -10,6 +10,7 @@ use App\Models\AppointmentSlot;
 use App\Models\Promotion;
 use App\Models\User;
 use App\Services\SiteSettingsService;
+use App\Services\WompiPaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,7 @@ use Illuminate\View\View;
 
 class AppointmentBookingController extends Controller
 {
-    public function __construct(private SiteSettingsService $settings)
+    public function __construct(private SiteSettingsService $settings, private WompiPaymentService $wompi)
     {
     }
 
@@ -107,7 +108,45 @@ class AppointmentBookingController extends Controller
 
         $this->notifySuperAdmins($appointment);
 
+        if ($data['payment_method'] === 'wompi' && $appointment->amount > 0) {
+            return $this->redirectToWompiPaymentLink($appointment);
+        }
+
         return back()->with('status', 'Solicitud enviada. Te avisaremos por email cuando se confirme.');
+    }
+
+    /**
+     * Genera el enlace de pago de Wompi para esta cita y redirige ahí a la
+     * paciente. Si Wompi no está configurado o la llamada falla, la cita
+     * queda igual creada (payment_status 'unpaid') y se avisa para que
+     * intente de nuevo o elija transferencia — nunca se pierde la solicitud
+     * ya guardada por un error de la pasarela.
+     */
+    private function redirectToWompiPaymentLink(Appointment $appointment): RedirectResponse
+    {
+        if (! $this->wompi->isConfigured()) {
+            return back()->with('status', 'Solicitud guardada, pero Wompi no está disponible ahora mismo. Contáctanos por WhatsApp para coordinar el pago.');
+        }
+
+        try {
+            $link = $this->wompi->createPaymentLink(
+                amount: (float) $appointment->amount,
+                reference: "cita-{$appointment->id}",
+                productName: 'Cita psicológica - '.($appointment->promotion?->title ?? 'Consulta'),
+                redirectUrl: route('patient.appointments.index'),
+                webhookUrl: route('webhooks.wompi'),
+            );
+
+            $appointment->forceFill([
+                'payment_reference' => $link['idEnlace'] ?? null,
+            ])->save();
+
+            return redirect()->away($link['urlEnlace']);
+        } catch (\Throwable $e) {
+            Log::error('No se pudo generar el enlace de pago de Wompi: '.$e->getMessage());
+
+            return back()->with('status', 'Solicitud guardada, pero no se pudo generar el enlace de pago. Intenta de nuevo o elige transferencia bancaria.');
+        }
     }
 
     /**

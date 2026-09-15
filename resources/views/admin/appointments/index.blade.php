@@ -59,6 +59,13 @@
                                     </form>
                                 @else
                                     <span class="rounded-full bg-paper-100 px-2 py-0.5 text-xs font-semibold text-ink-soft">Sin pagar</span>
+                                    @if ($appointment->payment_method === 'wompi')
+                                        <form method="POST" action="{{ route('admin.appointments.confirm-payment', $appointment) }}" class="mt-1" onsubmit="return confirm('¿Confirmar manualmente? Normalmente Wompi lo hace solo al aprobar el pago.')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="text-xs font-semibold text-clay-500 hover:underline">Confirmar manualmente</button>
+                                        </form>
+                                    @endif
                                 @endif
                             @else
                                 <span class="text-xs text-ink-soft">—</span>
