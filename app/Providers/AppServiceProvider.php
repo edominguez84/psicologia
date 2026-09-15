@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\SiteSettingsService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 use SocialiteProviders\Microsoft\MicrosoftExtendSocialite;
 
@@ -28,6 +29,18 @@ class AppServiceProvider extends ServiceProvider
         // Microsoft no viene en Socialite core; el paquete comunitario se
         // registra vía este listener de evento.
         Event::listen(SocialiteWasCalled::class, [MicrosoftExtendSocialite::class, 'handle']);
+
+        // Regla mínima de contraseña para todo el sitio (registro público,
+        // cambio de password del propio perfil, reset por enlace, alta
+        // manual de staff): 10+ caracteres, mayúscula, minúscula, número y
+        // símbolo — mismo criterio que el medidor visual del formulario de
+        // registro (resources/views/auth/register.blade.php). Los
+        // formularios que necesitan esta regla la referencian explícitamente
+        // vía Password::min(10)->mixedCase()->numbers()->symbols() en vez de
+        // Password::defaults() cuando quieren ser explícitos sobre el
+        // requisito; este default cubre a los que ya usaban
+        // Password::defaults() (cambio de password, reset por enlace).
+        Password::defaults(fn () => Password::min(10)->mixedCase()->numbers()->symbols());
     }
 
     /**

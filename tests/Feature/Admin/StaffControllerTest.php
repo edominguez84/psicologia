@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class StaffControllerTest extends TestCase
@@ -13,7 +14,7 @@ class StaffControllerTest extends TestCase
     private array $validPayload = [
         'name' => 'Nueva Editora',
         'email' => 'editora@example.com',
-        'password' => 'password123',
+        'password' => 'Contrasena#123',
         'role' => 'editor',
     ];
 
@@ -55,16 +56,29 @@ class StaffControllerTest extends TestCase
         $response->assertSessionHasErrors('email');
     }
 
-    public function test_rechaza_una_password_menor_a_8_caracteres(): void
+    #[DataProvider('debilesProvider')]
+    public function test_rechaza_contrasenas_que_no_cumplen_el_criterio_de_fuerza(string $weak): void
     {
         $superAdmin = User::factory()->create(['role' => 'super_admin']);
 
         $response = $this->actingAs($superAdmin)->post('/admin/staff', [
             ...$this->validPayload,
-            'password' => 'corta',
+            'password' => $weak,
         ]);
 
         $response->assertSessionHasErrors('password');
+        $this->assertDatabaseMissing('users', ['email' => 'editora@example.com']);
+    }
+
+    public static function debilesProvider(): array
+    {
+        return [
+            'menos de 10 caracteres' => ['Ab1#567'],
+            'sin mayúscula' => ['contrasena#123'],
+            'sin minúscula' => ['CONTRASENA#123'],
+            'sin número' => ['Contrasena#abc'],
+            'sin símbolo' => ['Contrasena1234'],
+        ];
     }
 
     public function test_rechaza_un_rol_que_no_existe_en_el_enum(): void
