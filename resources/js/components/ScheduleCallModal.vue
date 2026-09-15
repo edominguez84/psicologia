@@ -14,6 +14,11 @@ const props = defineProps({
     triggerClass: { type: String, default: 'btn btn-ghost' },
     visibleFields: { type: Object, default: () => ({}) },
     customFields: { type: Array, default: () => [] },
+    // Horarios de llamada gratis disponibles: [{id, label}]. El botón que
+    // abre este modal solo se renderiza si el servidor ya determinó que hay
+    // al menos uno (ver home.blade.php) — así que aquí siempre llega con al
+    // menos un elemento cuando el modal existe en el DOM.
+    callSlots: { type: Array, default: () => [] },
 });
 
 const open = ref(false);
@@ -65,7 +70,12 @@ onUnmounted(() => {
 
                     <div class="max-h-[75vh] overflow-y-auto px-6 py-6 sm:px-8">
                         <p class="mb-5 text-sm leading-relaxed text-on-card-fixed-soft">
-                            Cuéntame un poco sobre ti y te contacto para coordinar el horario de tu llamada de 15 minutos.
+                            <template v-if="callSlots.length > 0">
+                                Elige el horario que mejor te quede y cuéntame un poco sobre ti — te confirmo tu llamada de 15 minutos.
+                            </template>
+                            <template v-else>
+                                Cuéntame un poco sobre ti y te contacto para coordinar el horario de tu llamada de 15 minutos.
+                            </template>
                         </p>
                         <ContactForm
                             :subjects="subjects"
@@ -75,6 +85,7 @@ onUnmounted(() => {
                             :initial-subject="subject"
                             :visible-fields="visibleFields"
                             :custom-fields="customFields"
+                            :call-slots="callSlots"
                         />
                     </div>
                 </div>

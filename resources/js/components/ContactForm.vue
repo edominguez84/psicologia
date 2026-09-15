@@ -15,6 +15,11 @@ const props = defineProps({
     visibleFields: { type: Object, default: () => ({}) },
     // Campos personalizados definidos por el admin: [{key, label, required}].
     customFields: { type: Array, default: () => [] },
+    // Horarios de llamada gratis disponibles: [{id, label}]. Solo lo pasa
+    // ScheduleCallModal — el formulario de contacto general nunca lo usa, y
+    // por eso el <select> de horario solo aparece cuando este array no está
+    // vacío.
+    callSlots: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['sent']);
@@ -33,6 +38,7 @@ const form = reactive({
     consent: false,
     website: '', // honeypot
     custom: Object.fromEntries(props.customFields.map((f) => [f.key, ''])),
+    call_slot_id: props.callSlots[0]?.id ?? null,
 });
 
 const loading = ref(false);
@@ -44,22 +50,26 @@ async function submit() {
     if (loading.value) return;
 
     const missingCustom = props.customFields.find((f) => f.required && !form.custom[f.key]);
+    const needsSlot = props.callSlots.length > 0 && !form.call_slot_id;
 
-    if (!form.name || !form.email || form.message.length < 10 || !form.consent || missingCustom) {
+    if (!form.name || !form.email || form.message.length < 10 || !form.consent || missingCustom || needsSlot) {
         errors.value = {
             ...(!form.name ? { name: ['El campo nombre es obligatorio.'] } : {}),
             ...(!form.email ? { email: ['El campo email es obligatorio.'] } : {}),
             ...(form.message.length < 10 ? { message: ['Cuéntame un poco más para poder ayudarte (mínimo 10 caracteres).'] } : {}),
             ...(!form.consent ? { consent: ['Debes aceptar la política de privacidad para continuar.'] } : {}),
             ...(missingCustom ? { [`custom_${missingCustom.key}`]: ['Este campo es obligatorio.'] } : {}),
+            ...(needsSlot ? { call_slot_id: ['Elige un horario para tu llamada.'] } : {}),
         };
         return;
     }
 
     if (props.demoMode) {
+        const chosenSlot = props.callSlots.find((s) => s.id === form.call_slot_id);
         const text = [
             `Hola, soy ${form.name}.`,
             form.subject ? `Asunto: ${form.subject}.` : null,
+            chosenSlot ? `Horario elegido: ${chosenSlot.label}.` : null,
             form.message,
         ].filter(Boolean).join(' ');
         window.open(`${props.whatsapp}${props.whatsapp.includes('?') ? '&' : '?'}text=${encodeURIComponent(text)}`, '_blank', 'noopener');
@@ -149,6 +159,15 @@ function err(field) {
                         <option v-for="s in props.subjects" :key="s" :value="s">{{ s }}</option>
                     </select>
                 </div>
+            </div>
+
+            <div v-if="callSlots.length > 0">
+                <label class="mb-1.5 block text-sm font-semibold text-sky-700">Horario de tu llamada *</label>
+                <select v-model="form.call_slot_id"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-3 text-sm outline-none focus:border-sky-400">
+                    <option v-for="slot in callSlots" :key="slot.id" :value="slot.id">{{ slot.label }}</option>
+                </select>
+                <p v-if="err('call_slot_id')" class="mt-1 text-xs font-semibold text-clay-500">{{ err('call_slot_id') }}</p>
             </div>
 
             <div>

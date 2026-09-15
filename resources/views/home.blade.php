@@ -36,6 +36,16 @@
         'visibleFields' => $contactVisibleFields,
         'customFields' => $contactCustomFields,
     ];
+    // La llamada gratis y "Agendar una cita" solo se ofrecen si hay cupo real
+    // configurado — evita que la paciente llene un formulario o se registre
+    // para toparse después con que no hay ningún horario disponible.
+    $availableCallSlots = $demoMode
+        ? collect()
+        : \App\Models\CallSlot::available()->ordered()->get();
+    $hasAvailableCallSlots = $demoMode || $availableCallSlots->isNotEmpty();
+    $hasAvailableAppointmentSlots = $demoMode
+        || \App\Models\AppointmentSlot::available()->exists();
+
     $scheduleCallProps = [
         'subjects' => $s['contact_section']['subjects'],
         'endpoint' => $demoMode ? null : route('contact.store'),
@@ -44,6 +54,10 @@
         'subject'  => $s['contact_section']['subjects'][0] ?? null,
         'visibleFields' => $contactVisibleFields,
         'customFields' => $contactCustomFields,
+        'callSlots' => $availableCallSlots->map(fn ($slot) => [
+            'id' => $slot->id,
+            'label' => $slot->starts_at->format('d/m/Y H:i').' — '.$slot->ends_at->format('H:i'),
+        ])->values()->all(),
     ];
 
     // Foto de "Sobre mí": la subida desde /admin/about-photo tiene prioridad
@@ -105,17 +119,23 @@
                 <a href="{{ $wa }}" target="_blank" rel="noopener" class="btn btn-primary">
                     {{ $s['hero']['cta_primary'] }}
                 </a>
-                <div
-                    data-vue="ScheduleCallModal"
-                    data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => $s['hero']['cta_secondary']], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
-                ></div>
+                @if ($hasAvailableCallSlots)
+                    <div
+                        data-vue="ScheduleCallModal"
+                        data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => $s['hero']['cta_secondary']], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+                    ></div>
+                @endif
                 {{-- "Agendar cita" es un flujo distinto de la llamada gratis de
                      arriba: exige cuenta de paciente y elegir método de pago,
                      por eso lleva a /perfil/citas (que ya exige login) o, si
-                     no hay sesión, directo al registro. --}}
-                <a href="{{ Auth::check() ? route('patient.appointments.index') : route('register') }}" class="btn btn-ghost">
-                    Agendar una cita
-                </a>
+                     no hay sesión, directo al registro. Igual que la llamada
+                     gratis, no se muestra si no hay ningún horario de cita
+                     disponible — evita hacer perder el tiempo a la paciente. --}}
+                @if ($hasAvailableAppointmentSlots)
+                    <a href="{{ Auth::check() ? route('patient.appointments.index') : route('register') }}" class="btn btn-ghost">
+                        Agendar una cita
+                    </a>
+                @endif
             </div>
 
             <dl class="mt-12 grid gap-6 sm:grid-cols-3">
@@ -318,11 +338,13 @@
             </ol>
         </div>
 
-        <div
-            class="mt-12"
-            data-vue="ScheduleCallModal"
-            data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => 'Reserva tu llamada gratuita', 'triggerClass' => 'btn bg-on-dark text-ink-panel hover:opacity-90'], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
-        ></div>
+        @if ($hasAvailableCallSlots)
+            <div
+                class="mt-12"
+                data-vue="ScheduleCallModal"
+                data-props="{{ json_encode($scheduleCallProps + ['triggerLabel' => 'Reserva tu llamada gratuita', 'triggerClass' => 'btn bg-on-dark text-ink-panel hover:opacity-90'], JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+            ></div>
+        @endif
     </div>
 </section>
 @endif
