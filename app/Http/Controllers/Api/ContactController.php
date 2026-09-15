@@ -14,7 +14,7 @@ class ContactController extends Controller
     public function store(StoreContactRequest $request)
     {
         $data = $request->safe()->only([
-            'name', 'email', 'phone', 'subject', 'message', 'preferred_contact', 'custom_fields',
+            'name', 'email', 'phone', 'subject', 'message', 'preferred_contact', 'custom_fields', 'call_slot_id',
         ]);
 
         $message = ContactMessage::create([

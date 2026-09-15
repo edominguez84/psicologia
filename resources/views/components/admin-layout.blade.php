@@ -84,6 +84,7 @@
                                     ['route' => 'admin.messages.index', 'label' => 'Mensajes', 'icon' => 'inbox'],
                                     ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas', 'icon' => 'clock'],
                                     ['route' => 'admin.appointments.index', 'label' => 'Citas', 'icon' => 'calendar'],
+                                    ['route' => 'admin.call-slots.index', 'label' => 'Horarios de llamada gratis', 'icon' => 'clock'],
                                 ],
                             ],
                             'sistema' => [

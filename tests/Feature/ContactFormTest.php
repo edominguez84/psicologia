@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\ContactReceived;
+use App\Models\CallSlot;
 use App\Models\ContactMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -102,5 +103,38 @@ class ContactFormTest extends TestCase
 
         $response->assertStatus(422)->assertJsonValidationErrors('custom_fields');
         $this->assertDatabaseCount('contact_messages', 0);
+    }
+
+    public function test_reservar_una_llamada_gratis_con_horario_lo_asocia_al_mensaje(): void
+    {
+        Mail::fake();
+        $slot = CallSlot::create(['starts_at' => now()->addDay(), 'ends_at' => now()->addDay()->addMinutes(15), 'is_active' => true]);
+
+        $response = $this->postJson('/contacto', [
+            'name' => 'Ana López',
+            'email' => 'ana@example.com',
+            'message' => 'Quiero reservar mi llamada gratuita.',
+            'consent' => true,
+            'call_slot_id' => $slot->id,
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('contact_messages', ['email' => 'ana@example.com', 'call_slot_id' => $slot->id]);
+    }
+
+    public function test_rechaza_un_horario_de_llamada_que_ya_no_esta_disponible(): void
+    {
+        $slot = CallSlot::create(['starts_at' => now()->addDay(), 'ends_at' => now()->addDay()->addMinutes(15), 'is_active' => true]);
+        ContactMessage::create(['name' => 'Otra', 'email' => 'otra@example.com', 'message' => 'x', 'call_slot_id' => $slot->id]);
+
+        $response = $this->postJson('/contacto', [
+            'name' => 'Ana López',
+            'email' => 'ana@example.com',
+            'message' => 'Quiero reservar mi llamada gratuita.',
+            'consent' => true,
+            'call_slot_id' => $slot->id,
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('call_slot_id');
     }
 }

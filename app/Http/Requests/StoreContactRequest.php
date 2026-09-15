@@ -20,6 +20,12 @@ class StoreContactRequest extends FormRequest
             'subject'          => ['nullable', 'string', 'max:160'],
             'message'          => ['required', 'string', 'min:10', 'max:4000'],
             'preferred_contact'=> ['nullable', 'in:whatsapp,email,llamada'],
+            // Solo lo manda el modal de "llamada gratis" cuando la persona
+            // elige un horario del catálogo — el formulario de contacto
+            // general nunca lo incluye. Se valida que siga libre en
+            // withValidator() para evitar una condición de carrera entre dos
+            // personas eligiendo el mismo horario casi al mismo tiempo.
+            'call_slot_id'     => ['nullable', 'integer', 'exists:call_slots,id'],
             'consent'          => ['accepted'],
             // honeypot anti-spam: debe llegar vacío
             'website'          => ['nullable', 'size:0'],
@@ -49,6 +55,11 @@ class StoreContactRequest extends FormRequest
                 if (empty($submitted[$label] ?? null)) {
                     $validator->errors()->add('custom_fields', "El campo \"{$label}\" es obligatorio.");
                 }
+            }
+
+            $callSlotId = $this->input('call_slot_id');
+            if ($callSlotId && ! \App\Models\CallSlot::available()->whereKey($callSlotId)->exists()) {
+                $validator->errors()->add('call_slot_id', 'Ese horario ya no está disponible, elige otro.');
             }
         });
     }

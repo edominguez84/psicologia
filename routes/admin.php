@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AboutPhotoController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\AppointmentSlotController;
+use App\Http\Controllers\Admin\CallSlotController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
 use App\Http\Controllers\Admin\ContactFormSettingsController;
 use App\Http\Controllers\Admin\ContactSettingsController;
@@ -77,6 +78,11 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
     Route::post('/appointment-slots', [AppointmentSlotController::class, 'store'])->name('appointment-slots.store');
     Route::patch('/appointment-slots/{appointmentSlot}/toggle', [AppointmentSlotController::class, 'toggle'])->name('appointment-slots.toggle');
     Route::delete('/appointment-slots/{appointmentSlot}', [AppointmentSlotController::class, 'destroy'])->name('appointment-slots.destroy');
+
+    Route::get('/call-slots', [CallSlotController::class, 'index'])->name('call-slots.index');
+    Route::post('/call-slots', [CallSlotController::class, 'store'])->name('call-slots.store');
+    Route::patch('/call-slots/{callSlot}/toggle', [CallSlotController::class, 'toggle'])->name('call-slots.toggle');
+    Route::delete('/call-slots/{callSlot}', [CallSlotController::class, 'destroy'])->name('call-slots.destroy');
 
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::patch('/appointments/{appointment}/approve', [AppointmentController::class, 'approve'])->name('appointments.approve');
