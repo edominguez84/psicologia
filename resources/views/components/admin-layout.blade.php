@@ -113,6 +113,13 @@
                             $groups['sistema']['links'][] = ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'];
                         }
 
+                        // Un ícono representativo por grupo, para que el header
+                        // colapsado no sea solo texto — ayuda a reconocer la
+                        // categoría de un vistazo, incluso sin leer la etiqueta.
+                        $groups['apariencia']['icon'] = 'palette';
+                        $groups['operacion']['icon'] = 'calendar';
+                        $groups['sistema']['icon'] = 'shield-lock';
+
                         // Si la página activa está dentro de un grupo, ese grupo
                         // empieza expandido aunque localStorage diga lo
                         // contrario — nunca se abre el panel "escondiendo" la
@@ -125,6 +132,21 @@
                                 }
                             }
                         }
+                        $contentActive = request()->routeIs('admin.content.edit');
+                        $groups['contenido'] = [
+                            'label' => 'Contenido',
+                            'icon' => 'layout',
+                            'links' => collect(\App\Support\SiteContentSections::all())->map(fn ($section, $key) => [
+                                'route' => 'admin.content.edit',
+                                'params' => [$key],
+                                'label' => $section['label'],
+                                'icon' => 'layout',
+                                'activeCheck' => fn () => request()->routeIs('admin.content.edit') && request()->route('section') === $key,
+                            ])->values()->all(),
+                        ];
+                        if ($contentActive) {
+                            $activeGroup = 'contenido';
+                        }
                     @endphp
 
                     <a
@@ -135,64 +157,46 @@
                         Panel
                     </a>
 
-                    <div class="my-2 border-t border-paper-200"></div>
-
-                    @foreach ($groups as $key => $group)
-                        <div x-data="{ open: {{ $activeGroup === $key ? 'true' : "(localStorage.getItem('adminNavGroup:{$key}') ?? 'false') === 'true'" }} }" x-init="$watch('open', value => localStorage.setItem('adminNavGroup:{$key}', value))">
-                            <button
-                                type="button"
-                                @click="open = !open"
-                                class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider text-sky-500 hover:bg-sky-50"
+                    <div class="my-3 flex flex-col gap-2">
+                        @foreach ($groups as $key => $group)
+                            <div
+                                x-data="{ open: {{ $activeGroup === $key ? 'true' : "(localStorage.getItem('adminNavGroup:{$key}') ?? 'false') === 'true'" }} }"
+                                x-init="$watch('open', value => localStorage.setItem('adminNavGroup:{$key}', value))"
+                                class="overflow-hidden rounded-2xl border border-paper-200 bg-paper-alt/60"
                             >
-                                {{ $group['label'] }}
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="shrink-0 transition-transform" :class="open ? 'rotate-180' : ''">
-                                    <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </button>
-                            <div x-show="open" x-transition>
-                                @foreach ($group['links'] as $link)
-                                    <a
-                                        href="{{ route($link['route'], $link['params'] ?? []) }}"
-                                        class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs($link['route']) ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
-                                    >
-                                        @include('partials.admin-nav-icon', ['name' => $link['icon']])
-                                        {{ $link['label'] }}
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endforeach
-
-                    <div class="my-2 border-t border-paper-200"></div>
-
-                    @php
-                        $contentActive = request()->routeIs('admin.content.edit');
-                    @endphp
-                    <div x-data="{ open: {{ $contentActive ? 'true' : "(localStorage.getItem('adminNavGroup:contenido') ?? 'false') === 'true'" }} }" x-init="$watch('open', value => localStorage.setItem('adminNavGroup:contenido', value))">
-                        <button
-                            type="button"
-                            @click="open = !open"
-                            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider text-sky-500 hover:bg-sky-50"
-                        >
-                            Contenido
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="shrink-0 transition-transform" :class="open ? 'rotate-180' : ''">
-                                <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </button>
-                        <div x-show="open" x-transition>
-                            @foreach (\App\Support\SiteContentSections::all() as $key => $section)
-                                <a
-                                    href="{{ route('admin.content.edit', $key) }}"
-                                    class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs('admin.content.edit') && request()->route('section') === $key ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
+                                <button
+                                    type="button"
+                                    @click="open = !open"
+                                    class="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm font-bold text-sky-800 transition-colors hover:bg-sky-50"
+                                    :class="open ? 'bg-sky-50/80' : ''"
                                 >
-                                    @include('partials.admin-nav-icon', ['name' => 'layout'])
-                                    {{ $section['label'] }}
-                                </a>
-                            @endforeach
-                        </div>
+                                    <span class="grid size-7 shrink-0 place-items-center rounded-lg bg-sky-100 text-sky-700 [&>svg]:size-3.5">
+                                        @include('partials.admin-nav-icon', ['name' => $group['icon']])
+                                    </span>
+                                    <span class="min-w-0 flex-1 leading-tight">{{ $group['label'] }}</span>
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="shrink-0 text-sky-400 transition-transform" :class="open ? 'rotate-180' : ''">
+                                        <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+                                <div x-show="open" x-transition class="space-y-0.5 border-t border-paper-200 bg-paper-50 p-1.5">
+                                    @foreach ($group['links'] as $link)
+                                        @php
+                                            $isActive = isset($link['activeCheck']) ? $link['activeCheck']() : request()->routeIs($link['route']);
+                                        @endphp
+                                        <a
+                                            href="{{ route($link['route'], $link['params'] ?? []) }}"
+                                            class="flex items-center gap-2.5 rounded-xl border-l-2 px-3 py-2 text-sm font-semibold transition-colors {{ $isActive ? 'border-sky-600 bg-sky-100 text-sky-800' : 'border-transparent text-ink-soft hover:border-sky-200 hover:bg-sky-50' }}"
+                                        >
+                                            @include('partials.admin-nav-icon', ['name' => $link['icon']])
+                                            <span class="truncate">{{ $link['label'] }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
 
-                    <div class="my-3 border-t border-paper-200"></div>
+                    <div class="mb-2 border-t border-paper-200"></div>
 
                     <a href="/" class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink-soft hover:bg-sky-50">
                         @include('partials.admin-nav-icon', ['name' => 'globe'])
