@@ -7,6 +7,7 @@ use App\Mail\LoginCode;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -21,8 +22,8 @@ class RegistrationTest extends TestCase
         'sex' => 'female',
         'department' => 'san-salvador',
         'municipality' => 'San Salvador',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
+        'password' => 'Contrasena#123',
+        'password_confirmation' => 'Contrasena#123',
     ];
 
     public function test_la_pagina_de_registro_se_puede_ver(): void
@@ -98,6 +99,30 @@ class RegistrationTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('password');
+    }
+
+    #[DataProvider('debilesProvider')]
+    public function test_rechaza_contrasenas_que_no_cumplen_el_criterio_de_fuerza(string $weak): void
+    {
+        $response = $this->post('/register', [
+            ...$this->validPayload,
+            'password' => $weak,
+            'password_confirmation' => $weak,
+        ]);
+
+        $response->assertSessionHasErrors('password');
+        $this->assertDatabaseMissing('users', ['email' => 'ana@example.com']);
+    }
+
+    public static function debilesProvider(): array
+    {
+        return [
+            'menos de 10 caracteres' => ['Ab1#567'],
+            'sin mayúscula' => ['contrasena#123'],
+            'sin minúscula' => ['CONTRASENA#123'],
+            'sin número' => ['Contrasena#abc'],
+            'sin símbolo' => ['Contrasena1234'],
+        ];
     }
 
     public function test_guarda_sexo_departamento_y_municipio(): void
