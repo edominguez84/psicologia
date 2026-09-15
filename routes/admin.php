@@ -67,11 +67,6 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
     Route::put('/gallery', [GalleryController::class, 'update'])->name('gallery.update');
     Route::delete('/gallery/{index}', [GalleryController::class, 'destroy'])->name('gallery.destroy');
 
-    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
-    Route::patch('/users/{user}/ban', [UsersController::class, 'ban'])->name('users.ban');
-    Route::patch('/users/{user}/unban', [UsersController::class, 'unban'])->name('users.unban');
-    Route::patch('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.role');
-
     Route::get('/security', [SecurityController::class, 'edit'])->name('security.edit');
     Route::put('/security', [SecurityController::class, 'update'])->name('security.update');
 
@@ -96,15 +91,23 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
     Route::put('/custom-sections-reorder', [CustomSectionController::class, 'reorder'])->name('custom-sections.reorder');
     Route::delete('/custom-sections/{customSection}', [CustomSectionController::class, 'destroy'])->name('custom-sections.destroy');
 
-    Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
-    Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
-    Route::put('/promotions/{promotion}', [PromotionController::class, 'update'])->name('promotions.update');
-    Route::patch('/promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
-    Route::put('/promotions-reorder', [PromotionController::class, 'reorder'])->name('promotions.reorder');
-    Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
-
-    // Preguntas del chatbot: reservado a la super administradora.
+    // A partir de aquí, todo reservado a la super administradora: gestión de
+    // usuarios (banear/cambiar rol), promociones y planes, preguntas del
+    // chatbot, alta de staff, páginas legales, auditoría/logs, pagos,
+    // testimonios y filtro de contenido, e informes.
     Route::middleware('super_admin')->group(function () {
+        Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+        Route::patch('/users/{user}/ban', [UsersController::class, 'ban'])->name('users.ban');
+        Route::patch('/users/{user}/unban', [UsersController::class, 'unban'])->name('users.unban');
+        Route::patch('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.role');
+
+        Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
+        Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
+        Route::put('/promotions/{promotion}', [PromotionController::class, 'update'])->name('promotions.update');
+        Route::patch('/promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
+        Route::put('/promotions-reorder', [PromotionController::class, 'reorder'])->name('promotions.reorder');
+        Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
+
         Route::get('/chatbot-faqs', [ChatbotFaqController::class, 'index'])->name('chatbot-faqs.index');
         Route::put('/chatbot-faqs-settings', [ChatbotFaqController::class, 'updateSettings'])->name('chatbot-faqs.settings.update');
         Route::post('/chatbot-faqs', [ChatbotFaqController::class, 'store'])->name('chatbot-faqs.store');

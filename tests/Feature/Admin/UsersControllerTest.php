@@ -49,22 +49,64 @@ class UsersControllerTest extends TestCase
 
     public function test_no_se_puede_banear_al_ultimo_super_admin(): void
     {
+        // El actor debe ser super_admin para pasar el middleware de la
+        // ruta, y el guard cuenta a TODOS los super_admin activos —
+        // incluido el propio actor. Para que $target quede como "el único
+        // activo" al momento del conteo sin que el actor deje de ser
+        // super_admin, el actor debe ser el propio $target: se prueba el
+        // caso vía HTTP como auto-baneo, que ya está cubierto por su propio
+        // guard (test_nadie_puede_banearse_a_si_misma), y aquí se confirma
+        // la regla de conteo directamente sobre el método del controlador.
         $onlySuperAdmin = User::factory()->create(['role' => 'super_admin']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $controller = app(\App\Http\Controllers\Admin\UsersController::class);
+        $method = new \ReflectionMethod($controller, 'wouldRemoveLastSuperAdmin');
+        $method->setAccessible(true);
 
-        $this->actingAs($admin)->patch("/admin/users/{$onlySuperAdmin->id}/ban");
+        $this->assertTrue($method->invoke($controller, $onlySuperAdmin));
 
-        $this->assertNull($onlySuperAdmin->fresh()->banned_at);
+        $secondSuperAdmin = User::factory()->create(['role' => 'super_admin']);
+        $this->assertFalse($method->invoke($controller, $onlySuperAdmin->fresh()));
     }
 
     public function test_no_se_puede_degradar_al_ultimo_super_admin(): void
     {
+        // La ruta ya exige que quien actúa sea super_admin, y degradarse a
+        // sí mismo está cubierto por su propio guard
+        // (test_no_se_puede_quitar_su_propio_rol_de_super_admin más abajo).
+        // Aquí se confirma la regla vía HTTP con dos super_admins activos
+        // (no bloquea) y con uno solo (si se intentara sobre sí mismo,
+        // bloquea por el guard de auto-degradación antes de llegar a este).
         $onlySuperAdmin = User::factory()->create(['role' => 'super_admin']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $secondSuperAdmin = User::factory()->create(['role' => 'super_admin']);
 
-        $this->actingAs($admin)->patch("/admin/users/{$onlySuperAdmin->id}/role", ['role' => 'editor']);
+        // Con dos activos, degradar a uno de ellos es válido.
+        $this->actingAs($onlySuperAdmin)->patch("/admin/users/{$secondSuperAdmin->id}/role", ['role' => 'editor']);
+        $this->assertSame('editor', $secondSuperAdmin->fresh()->role->value);
 
+        // Ahora sí es el único activo: intentar degradarse a sí mismo lo
+        // bloquea el guard de auto-degradación.
+        $this->actingAs($onlySuperAdmin)->patch("/admin/users/{$onlySuperAdmin->id}/role", ['role' => 'editor']);
         $this->assertSame('super_admin', $onlySuperAdmin->fresh()->role->value);
+    }
+
+    public function test_no_se_puede_quitar_su_propio_rol_de_super_admin(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        User::factory()->create(['role' => 'super_admin']); // otro activo, para aislar este guard del de "el último"
+
+        $this->actingAs($superAdmin)->patch("/admin/users/{$superAdmin->id}/role", ['role' => 'editor']);
+
+        $this->assertSame('super_admin', $superAdmin->fresh()->role->value);
+    }
+
+    public function test_un_administrador_normal_no_puede_ver_ni_gestionar_usuarios(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $target = User::factory()->create(['role' => 'patient']);
+
+        $this->actingAs($admin)->get('/admin/users')->assertForbidden();
+        $this->actingAs($admin)->patch("/admin/users/{$target->id}/ban")->assertForbidden();
+        $this->actingAs($admin)->patch("/admin/users/{$target->id}/role", ['role' => 'admin'])->assertForbidden();
     }
 
     public function test_se_puede_degradar_un_super_admin_si_hay_otro_activo(): void
