@@ -23,9 +23,21 @@ class PromotionControllerTest extends TestCase
         $this->actingAs($user)->get('/admin/promotions')->assertForbidden();
     }
 
-    public function test_administradora_puede_crear_una_promocion(): void
+    public function test_un_administrador_normal_no_puede_ver_ni_gestionar_promociones(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
+        $promotion = Promotion::create(['title' => 'x', 'price' => 10, 'description' => 'x', 'is_active' => true]);
+
+        $this->actingAs($admin)->get('/admin/promotions')->assertForbidden();
+        $this->actingAs($admin)->post('/admin/promotions', [
+            'title' => 'y', 'price' => 10, 'description' => 'y',
+        ])->assertForbidden();
+        $this->actingAs($admin)->patch("/admin/promotions/{$promotion->id}/toggle")->assertForbidden();
+    }
+
+    public function test_super_administradora_puede_crear_una_promocion(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
 
         $response = $this->actingAs($admin)->post('/admin/promotions', [
             'title' => 'Paquete de 4 sesiones',
@@ -41,9 +53,9 @@ class PromotionControllerTest extends TestCase
         ]);
     }
 
-    public function test_administradora_puede_editar_una_promocion(): void
+    public function test_super_administradora_puede_editar_una_promocion(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
         $promotion = Promotion::create(['title' => 'Vieja', 'price' => 10, 'description' => 'x', 'is_active' => true]);
 
         $response = $this->actingAs($admin)->put("/admin/promotions/{$promotion->id}", [
@@ -57,9 +69,9 @@ class PromotionControllerTest extends TestCase
         $this->assertEquals(20, $promotion->fresh()->price);
     }
 
-    public function test_administradora_puede_ocultar_una_promocion(): void
+    public function test_super_administradora_puede_ocultar_una_promocion(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
         $promotion = Promotion::create(['title' => 'x', 'price' => 10, 'description' => 'x', 'is_active' => true]);
 
         $this->actingAs($admin)->patch("/admin/promotions/{$promotion->id}/toggle");
@@ -67,9 +79,9 @@ class PromotionControllerTest extends TestCase
         $this->assertFalse($promotion->fresh()->is_active);
     }
 
-    public function test_administradora_puede_eliminar_una_promocion(): void
+    public function test_super_administradora_puede_eliminar_una_promocion(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
         $promotion = Promotion::create(['title' => 'x', 'price' => 10, 'description' => 'x', 'is_active' => true]);
 
         $this->actingAs($admin)->delete("/admin/promotions/{$promotion->id}");

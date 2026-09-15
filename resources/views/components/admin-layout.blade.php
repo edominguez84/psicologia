@@ -63,7 +63,6 @@
                             ['route' => 'admin.theme.edit', 'label' => 'Apariencia', 'icon' => 'palette'],
                             ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones', 'icon' => 'eye'],
                             ['route' => 'admin.custom-sections.index', 'label' => 'Secciones personalizadas', 'icon' => 'layout'],
-                            ['route' => 'admin.promotions.index', 'label' => 'Promociones y planes', 'icon' => 'card'],
                             ['route' => 'admin.logo.edit', 'label' => 'Logo', 'icon' => 'image'],
                             ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada', 'icon' => 'photo'],
                             ['route' => 'admin.gallery.edit', 'label' => 'Galería', 'icon' => 'grid'],
@@ -73,11 +72,12 @@
                             ['route' => 'admin.messages.index', 'label' => 'Mensajes', 'icon' => 'inbox'],
                             ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas', 'icon' => 'clock'],
                             ['route' => 'admin.appointments.index', 'label' => 'Citas', 'icon' => 'calendar'],
-                            ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'people'],
                             ['route' => 'admin.security.edit', 'label' => 'Seguridad', 'icon' => 'lock'],
                             ['route' => 'two-factor.edit', 'label' => 'Mi seguridad', 'icon' => 'shield-lock'],
                         ];
                         if (auth()->user()?->isSuperAdmin()) {
+                            $links[] = ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'people'];
+                            $links[] = ['route' => 'admin.promotions.index', 'label' => 'Promociones y planes', 'icon' => 'card'];
                             $links[] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot', 'icon' => 'chat'];
                             $links[] = ['route' => 'admin.staff.create', 'label' => 'Crear cuenta', 'icon' => 'user-plus'];
                             $links[] = ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'];
