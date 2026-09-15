@@ -24,7 +24,12 @@ class StoreRegistrationRequest extends FormRequest
             'sex' => ['required', Rule::in(['male', 'female', 'other'])],
             'department' => ['required', Rule::in(array_keys(ElSalvadorLocations::all()))],
             'municipality' => ['required', 'string'],
-            'password' => ['required', 'confirmed', Password::min(8)],
+            // Mínimo 10 caracteres, con mayúscula, minúscula, número y
+            // símbolo — mismo criterio que el medidor de fuerza que ve la
+            // persona en el formulario (resources/js/password-strength.js),
+            // para que el backend nunca acepte algo que el frontend ya
+            // habría marcado como "débil".
+            'password' => ['required', 'confirmed', Password::min(10)->mixedCase()->numbers()->symbols()],
         ];
     }
 
