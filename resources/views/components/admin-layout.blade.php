@@ -58,60 +58,138 @@
 
                 <nav class="flex flex-col gap-1">
                     @php
-                        $links = [
-                            ['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => 'home'],
-                            ['route' => 'admin.theme.edit', 'label' => 'Apariencia', 'icon' => 'palette'],
-                            ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones', 'icon' => 'eye'],
-                            ['route' => 'admin.custom-sections.index', 'label' => 'Secciones personalizadas', 'icon' => 'layout'],
-                            ['route' => 'admin.logo.edit', 'label' => 'Logo', 'icon' => 'image'],
-                            ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada', 'icon' => 'photo'],
-                            ['route' => 'admin.gallery.edit', 'label' => 'Galería', 'icon' => 'grid'],
-                            ['route' => 'admin.social.edit', 'label' => 'Redes sociales', 'icon' => 'share'],
-                            ['route' => 'admin.contact.edit', 'label' => 'Contacto', 'icon' => 'mail'],
-                            ['route' => 'admin.contact-form.edit', 'label' => 'Formulario de contacto', 'icon' => 'inbox'],
-                            ['route' => 'admin.messages.index', 'label' => 'Mensajes', 'icon' => 'inbox'],
-                            ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas', 'icon' => 'clock'],
-                            ['route' => 'admin.appointments.index', 'label' => 'Citas', 'icon' => 'calendar'],
-                            ['route' => 'admin.security.edit', 'label' => 'Seguridad', 'icon' => 'lock'],
-                            ['route' => 'two-factor.edit', 'label' => 'Mi seguridad', 'icon' => 'shield-lock'],
+                        // 'Panel' vive suelto arriba (es el destino por defecto,
+                        // no una categoría). El resto se agrupa por tipo de
+                        // tarea para que el menú no sea una lista plana de 20+
+                        // opciones — cada grupo se puede colapsar (Alpine,
+                        // estado recordado en localStorage por grupo).
+                        $groups = [
+                            'apariencia' => [
+                                'label' => 'Apariencia y contenido',
+                                'links' => [
+                                    ['route' => 'admin.theme.edit', 'label' => 'Apariencia', 'icon' => 'palette'],
+                                    ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones', 'icon' => 'eye'],
+                                    ['route' => 'admin.custom-sections.index', 'label' => 'Secciones personalizadas', 'icon' => 'layout'],
+                                    ['route' => 'admin.logo.edit', 'label' => 'Logo', 'icon' => 'image'],
+                                    ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada', 'icon' => 'photo'],
+                                    ['route' => 'admin.gallery.edit', 'label' => 'Galería', 'icon' => 'grid'],
+                                    ['route' => 'admin.social.edit', 'label' => 'Redes sociales', 'icon' => 'share'],
+                                    ['route' => 'admin.contact.edit', 'label' => 'Contacto', 'icon' => 'mail'],
+                                    ['route' => 'admin.contact-form.edit', 'label' => 'Formulario de contacto', 'icon' => 'inbox'],
+                                ],
+                            ],
+                            'operacion' => [
+                                'label' => 'Operación',
+                                'links' => [
+                                    ['route' => 'admin.messages.index', 'label' => 'Mensajes', 'icon' => 'inbox'],
+                                    ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas', 'icon' => 'clock'],
+                                    ['route' => 'admin.appointments.index', 'label' => 'Citas', 'icon' => 'calendar'],
+                                ],
+                            ],
+                            'sistema' => [
+                                'label' => 'Sistema y seguridad',
+                                'links' => [
+                                    ['route' => 'admin.security.edit', 'label' => 'Seguridad', 'icon' => 'lock'],
+                                    ['route' => 'two-factor.edit', 'label' => 'Mi seguridad', 'icon' => 'shield-lock'],
+                                ],
+                            ],
                         ];
+
                         if (auth()->user()?->isSuperAdmin()) {
-                            $links[] = ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'people'];
-                            $links[] = ['route' => 'admin.promotions.index', 'label' => 'Promociones y planes', 'icon' => 'card'];
-                            $links[] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot', 'icon' => 'chat'];
-                            $links[] = ['route' => 'admin.staff.create', 'label' => 'Crear cuenta', 'icon' => 'user-plus'];
-                            $links[] = ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'];
-                            $links[] = ['route' => 'admin.legal.edit', 'params' => ['page' => 'privacy'], 'label' => 'Páginas legales', 'icon' => 'document'];
-                            $links[] = ['route' => 'admin.activity-log.index', 'label' => 'Registro de auditoría', 'icon' => 'clipboard'];
-                            $links[] = ['route' => 'admin.system-log.index', 'label' => 'Logs del sistema', 'icon' => 'terminal'];
-                            $links[] = ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'];
-                            $links[] = ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'];
-                            $links[] = ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'];
-                            $links[] = ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'];
+                            $groups['apariencia']['links'][] = ['route' => 'admin.promotions.index', 'label' => 'Promociones y planes', 'icon' => 'card'];
+                            $groups['apariencia']['links'][] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot', 'icon' => 'chat'];
+                            $groups['apariencia']['links'][] = ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'];
+                            $groups['apariencia']['links'][] = ['route' => 'admin.legal.edit', 'params' => ['page' => 'privacy'], 'label' => 'Páginas legales', 'icon' => 'document'];
+
+                            $groups['operacion']['links'][] = ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'];
+
+                            $groups['sistema']['links'][] = ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'people'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.staff.create', 'label' => 'Crear cuenta', 'icon' => 'user-plus'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.activity-log.index', 'label' => 'Registro de auditoría', 'icon' => 'clipboard'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.system-log.index', 'label' => 'Logs del sistema', 'icon' => 'terminal'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'];
+                        }
+
+                        // Si la página activa está dentro de un grupo, ese grupo
+                        // empieza expandido aunque localStorage diga lo
+                        // contrario — nunca se abre el panel "escondiendo" la
+                        // sección en la que ya se está.
+                        $activeGroup = null;
+                        foreach ($groups as $key => $group) {
+                            foreach ($group['links'] as $link) {
+                                if (request()->routeIs($link['route'])) {
+                                    $activeGroup = $key;
+                                }
+                            }
                         }
                     @endphp
-                    @foreach ($links as $link)
-                        <a
-                            href="{{ route($link['route'], $link['params'] ?? []) }}"
-                            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs($link['route']) ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
-                        >
-                            @include('partials.admin-nav-icon', ['name' => $link['icon']])
-                            {{ $link['label'] }}
-                        </a>
+
+                    <a
+                        href="{{ route('admin.dashboard') }}"
+                        class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
+                    >
+                        @include('partials.admin-nav-icon', ['name' => 'home'])
+                        Panel
+                    </a>
+
+                    <div class="my-2 border-t border-paper-200"></div>
+
+                    @foreach ($groups as $key => $group)
+                        <div x-data="{ open: {{ $activeGroup === $key ? 'true' : "(localStorage.getItem('adminNavGroup:{$key}') ?? 'false') === 'true'" }} }" x-init="$watch('open', value => localStorage.setItem('adminNavGroup:{$key}', value))">
+                            <button
+                                type="button"
+                                @click="open = !open"
+                                class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider text-sky-500 hover:bg-sky-50"
+                            >
+                                {{ $group['label'] }}
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="shrink-0 transition-transform" :class="open ? 'rotate-180' : ''">
+                                    <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div x-show="open" x-transition>
+                                @foreach ($group['links'] as $link)
+                                    <a
+                                        href="{{ route($link['route'], $link['params'] ?? []) }}"
+                                        class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs($link['route']) ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
+                                    >
+                                        @include('partials.admin-nav-icon', ['name' => $link['icon']])
+                                        {{ $link['label'] }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
                     @endforeach
 
-                    <div class="my-3 border-t border-paper-200"></div>
+                    <div class="my-2 border-t border-paper-200"></div>
 
-                    <p class="px-3 text-xs font-bold uppercase tracking-wider text-sky-500">Contenido</p>
-                    @foreach (\App\Support\SiteContentSections::all() as $key => $section)
-                        <a
-                            href="{{ route('admin.content.edit', $key) }}"
-                            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs('admin.content.edit') && request()->route('section') === $key ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
+                    @php
+                        $contentActive = request()->routeIs('admin.content.edit');
+                    @endphp
+                    <div x-data="{ open: {{ $contentActive ? 'true' : "(localStorage.getItem('adminNavGroup:contenido') ?? 'false') === 'true'" }} }" x-init="$watch('open', value => localStorage.setItem('adminNavGroup:contenido', value))">
+                        <button
+                            type="button"
+                            @click="open = !open"
+                            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-bold uppercase tracking-wider text-sky-500 hover:bg-sky-50"
                         >
-                            @include('partials.admin-nav-icon', ['name' => 'layout'])
-                            {{ $section['label'] }}
-                        </a>
-                    @endforeach
+                            Contenido
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="shrink-0 transition-transform" :class="open ? 'rotate-180' : ''">
+                                <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition>
+                            @foreach (\App\Support\SiteContentSections::all() as $key => $section)
+                                <a
+                                    href="{{ route('admin.content.edit', $key) }}"
+                                    class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ request()->routeIs('admin.content.edit') && request()->route('section') === $key ? 'bg-sky-100 text-sky-800' : 'text-ink-soft hover:bg-sky-50' }}"
+                                >
+                                    @include('partials.admin-nav-icon', ['name' => 'layout'])
+                                    {{ $section['label'] }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
 
                     <div class="my-3 border-t border-paper-200"></div>
 
