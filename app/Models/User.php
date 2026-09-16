@@ -100,9 +100,7 @@ class User extends Authenticatable
      */
     public function defaultRedirectRouteName(): string
     {
-        return $this->isAdmin() || $this->role === UserRole::Editor
-            ? 'admin.dashboard'
-            : 'patient.profile.edit';
+        return $this->isAdmin() ? 'admin.dashboard' : 'patient.profile.edit';
     }
 
     public function loginCodes(): HasMany
@@ -130,9 +128,19 @@ class User extends Authenticatable
         return $this->hasMany(Appointment::class);
     }
 
+    /**
+     * Incluye 'editor' a propósito: el enum UserRole ya documenta que editor
+     * tiene el mismo acceso que admin ("hoy tiene el mismo acceso que admin
+     * porque ninguna ruta distingue permisos más finos todavía"), y
+     * defaultRedirectRouteName() ya compensaba la ausencia de editor aquí
+     * con una condición aparte — este método es el único punto real que
+     * decide si el middleware 'admin' deja pasar a alguien al panel, así
+     * que dejar editor fuera de aquí bloqueaba con 403 cualquier pantalla
+     * del panel para ese rol, contradiciendo lo ya documentado.
+     */
     public function isAdmin(): bool
     {
-        return in_array($this->role, [UserRole::SuperAdmin, UserRole::Admin], true);
+        return in_array($this->role, [UserRole::SuperAdmin, UserRole::Admin, UserRole::Editor], true);
     }
 
     public function isSuperAdmin(): bool
