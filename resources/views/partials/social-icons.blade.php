@@ -46,6 +46,7 @@
                     rel="noopener"
                     aria-label="{{ $network['name'] }}"
                     class="grid size-9 shrink-0 place-items-center rounded-full transition-colors {{ $circleClasses }}"
+                    onclick="navigator.sendBeacon && navigator.sendBeacon('{{ route('analytics.social-click') }}', new Blob([JSON.stringify({network: '{{ $network['icon'] }}', _token: '{{ csrf_token() }}'})], {type: 'application/json'}))"
                 >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         {!! $paths[$network['icon']] !!}

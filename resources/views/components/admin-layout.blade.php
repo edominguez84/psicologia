@@ -111,6 +111,7 @@
                             $groups['sistema']['links'][] = ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'];
                             $groups['sistema']['links'][] = ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'];
                             $groups['sistema']['links'][] = ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.analytics.index', 'label' => 'Dashboard analítico', 'icon' => 'clipboard'];
                         }
 
                         // Un ícono representativo por grupo, para que el header

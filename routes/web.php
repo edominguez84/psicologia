@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\ChatbotFaqController;
 use App\Http\Controllers\Api\ChatbotLeadController;
 use App\Http\Controllers\Api\CheckupController;
@@ -39,6 +40,12 @@ Route::post('/chatbot-lead', [ChatbotLeadController::class, 'store'])
 Route::get('/chatbot-faqs', [ChatbotFaqController::class, 'index'])
     ->middleware('throttle:30,1')
     ->name('chatbot-faqs.index');
+
+// Clic en un link de red social del footer, vía navigator.sendBeacon —
+// ver partials/social-icons.blade.php y App\Http\Controllers\Api\AnalyticsController.
+Route::post('/analytics/social-click', [AnalyticsController::class, 'socialClick'])
+    ->middleware('throttle:30,1')
+    ->name('analytics.social-click');
 
 // Notificación de pago de Wompi: ruta pública sin CSRF (excepción declarada
 // en bootstrap/app.php, viene de un servidor externo, no de un navegador con

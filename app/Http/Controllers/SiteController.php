@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AnalyticsEvent;
 use App\Models\CustomSection;
 use App\Models\Testimonial;
 use App\Services\SiteSettingsService;
 use App\Support\HtmlSanitizer;
+use Illuminate\Support\Facades\Session;
 
 class SiteController extends Controller
 {
@@ -18,6 +20,10 @@ class SiteController extends Controller
         // Modo demo (Netlify sin backend): sin BD, sin secciones
         // personalizadas ni testimonios de pacientes.
         $demoMode = (bool) config('site.demo_mode');
+
+        if (! $demoMode) {
+            $this->recordPageView();
+        }
 
         $customSections = $demoMode ? collect() : CustomSection::active()->ordered()->get();
 
@@ -95,6 +101,31 @@ class SiteController extends Controller
             <h2>Aviso importante</h2>
             <p>{$disclaimer}</p>
             HTML;
+    }
+
+    /**
+     * Registra una visita a la home, deduplicada por sesión: si esta misma
+     * sesión de navegador ya generó un page_view, no cuenta un refresco o
+     * navegación interna como visita nueva. No usa cookies de terceros ni
+     * guarda IP — solo el id de sesión de Laravel (ya existente para CSRF/
+     * auth), que rota cuando el navegador borra cookies o pasa el tiempo.
+     */
+    private function recordPageView(): void
+    {
+        if (Session::get('analytics_page_view_recorded')) {
+            return;
+        }
+
+        try {
+            AnalyticsEvent::create([
+                'type' => 'page_view',
+                'session_id' => Session::getId(),
+            ]);
+            Session::put('analytics_page_view_recorded', true);
+        } catch (\Throwable $e) {
+            // No debe romper la carga de la home si la tabla no existe
+            // todavía (instalación en frío antes de migrar) o la BD falla.
+        }
     }
 
     private function defaultTermsHtml(): string
