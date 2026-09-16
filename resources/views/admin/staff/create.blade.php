@@ -27,7 +27,7 @@
             <select name="role" id="role" required
                 class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
                 @foreach ($roles as $role)
-                    <option value="{{ $role->value }}" @selected(old('role') === $role->value)>{{ $role->label() }}</option>
+                    <option value="{{ $role->slug }}" @selected(old('role') === $role->slug)>{{ $role->name }}</option>
                 @endforeach
             </select>
             <x-input-error :messages="$errors->get('role')" class="mt-1" />

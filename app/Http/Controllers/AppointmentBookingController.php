@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AppointmentStatus;
-use App\Enums\UserRole;
 use App\Mail\AppointmentRequested;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
@@ -174,7 +173,7 @@ class AppointmentBookingController extends Controller
     private function notifySuperAdmins(Appointment $appointment): void
     {
         try {
-            $superAdmins = User::where('role', UserRole::SuperAdmin)->pluck('email');
+            $superAdmins = User::where('role', 'super_admin')->pluck('email');
             if ($superAdmins->isNotEmpty()) {
                 Mail::to($superAdmins->first())
                     ->cc($superAdmins->slice(1))

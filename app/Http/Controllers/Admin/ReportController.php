@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AppointmentStatus;
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\ContactMessage;
 use App\Models\EmotionalCheckup;
+use App\Models\Role;
 use App\Models\Testimonial;
 use App\Models\User;
 use App\Support\SystemLogReader;
@@ -47,8 +47,8 @@ class ReportController extends Controller
             'totalContacts' => ContactMessage::count(),
             'pendingTestimonials' => Testimonial::where('is_approved', false)->count(),
             'approvedTestimonials' => Testimonial::where('is_approved', true)->count(),
-            'usersByRole' => collect(UserRole::cases())
-                ->mapWithKeys(fn ($role) => [$role->label() => User::where('role', $role)->count()]),
+            'usersByRole' => Role::all()
+                ->mapWithKeys(fn ($role) => [$role->name => User::where('role', $role->slug)->count()]),
             'bannedUsers' => User::whereNotNull('banned_at')->count(),
             'checkupsThisMonth' => EmotionalCheckup::whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)

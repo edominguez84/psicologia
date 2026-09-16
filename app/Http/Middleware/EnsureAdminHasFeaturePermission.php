@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\SiteSettingsService;
+use App\Models\Role;
 use App\Support\AdminPermissions;
 use Closure;
 use Illuminate\Http\Request;
@@ -11,16 +11,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Bloquea con 403 el acceso a una feature del panel que el super_admin haya
- * desactivado para el rol 'admin' o 'editor'. Se registra en el grupo
- * general de rutas admin (después de 'admin', antes del subgrupo
- * 'super_admin') — super_admin nunca pasa por aquí, siempre ve todo.
+ * desactivado para el rol de quien la pide. Se registra en el grupo general
+ * de rutas admin — super_admin nunca pasa por aquí, siempre ve todo. Los
+ * permisos viven en roles.permissions (columna JSON), no en
+ * site_settings — cualquier rol de staff, incluidos los que el super_admin
+ * cree desde /admin/roles, queda cubierto automáticamente sin tocar este
+ * middleware.
  */
 class EnsureAdminHasFeaturePermission
 {
-    public function __construct(private SiteSettingsService $settings)
-    {
-    }
-
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
@@ -32,7 +31,7 @@ class EnsureAdminHasFeaturePermission
         $routeName = $request->route()?->getName();
         $feature = $this->featureForRoute($routeName);
 
-        if ($feature && ! $this->isEnabled($feature, $user->role->value)) {
+        if ($feature && ! $this->isEnabled($feature, $user->role)) {
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 
@@ -56,11 +55,13 @@ class EnsureAdminHasFeaturePermission
         return null;
     }
 
-    private function isEnabled(string $feature, string $role): bool
+    private function isEnabled(string $feature, string $roleSlug): bool
     {
-        $permissions = $this->settings->get('admin_role_permissions', []);
-        $rolePermissions = $permissions[$role] ?? AdminPermissions::defaultsFor($role);
+        $role = Role::where('slug', $roleSlug)->first();
 
-        return $rolePermissions[$feature] ?? true;
+        // Un rol sin fila (dato inconsistente) o sin permisos guardados aún
+        // se comporta como "todo habilitado" — mismo criterio que ya regía
+        // antes de que este sistema existiera.
+        return $role ? $role->hasFeature($feature) : true;
     }
 }

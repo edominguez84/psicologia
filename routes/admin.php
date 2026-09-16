@@ -22,7 +22,7 @@ use App\Http\Controllers\Admin\PaymentSettingsController;
 use App\Http\Controllers\Admin\ProfanityFilterController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\ReportController;
-use App\Http\Controllers\Admin\RolePermissionsController;
+use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
@@ -174,7 +174,11 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
         Route::get('/system-manual', [SystemManualController::class, 'index'])->name('system-manual.index');
         Route::get('/system-manual/download', [SystemManualController::class, 'downloadPdf'])->name('system-manual.download');
 
-        Route::get('/role-permissions', [RolePermissionsController::class, 'edit'])->name('role-permissions.edit');
-        Route::put('/role-permissions', [RolePermissionsController::class, 'update'])->name('role-permissions.update');
+        Route::get('/roles', [RoleManagementController::class, 'index'])->name('roles.index');
+        Route::get('/roles/create', [RoleManagementController::class, 'create'])->name('roles.create');
+        Route::post('/roles', [RoleManagementController::class, 'store'])->name('roles.store');
+        Route::get('/roles/{role}/edit', [RoleManagementController::class, 'edit'])->name('roles.edit');
+        Route::put('/roles/{role}', [RoleManagementController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}', [RoleManagementController::class, 'destroy'])->name('roles.destroy');
     });
 });

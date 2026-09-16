@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AppointmentStatus;
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\AnalyticsEvent;
 use App\Models\Appointment;
@@ -75,8 +74,8 @@ class AnalyticsDashboardController extends Controller
      */
     private function conversionFunnel(): array
     {
-        $registered = User::where('role', UserRole::Patient)->count();
-        $withAppointment = User::where('role', UserRole::Patient)->whereHas('appointments')->count();
+        $registered = User::where('role', 'patient')->count();
+        $withAppointment = User::where('role', 'patient')->whereHas('appointments')->count();
 
         return [
             'registered' => $registered,
@@ -94,13 +93,13 @@ class AnalyticsDashboardController extends Controller
     {
         $labels = ['male' => 'Hombres', 'female' => 'Mujeres', 'other' => 'Otro'];
 
-        $registered = User::where('role', UserRole::Patient)
+        $registered = User::where('role', 'patient')
             ->whereNotNull('sex')
             ->selectRaw('sex, count(*) as total')
             ->groupBy('sex')
             ->pluck('total', 'sex');
 
-        $withAppointment = User::where('role', UserRole::Patient)
+        $withAppointment = User::where('role', 'patient')
             ->whereNotNull('sex')
             ->whereHas('appointments')
             ->selectRaw('sex, count(*) as total')
@@ -122,7 +121,7 @@ class AnalyticsDashboardController extends Controller
     {
         $departmentLabels = collect(ElSalvadorLocations::all())->map(fn ($d) => $d['label']);
 
-        $counts = User::where('role', UserRole::Patient)
+        $counts = User::where('role', 'patient')
             ->whereNotNull('department')
             ->selectRaw('department, count(*) as total')
             ->groupBy('department')
@@ -147,7 +146,7 @@ class AnalyticsDashboardController extends Controller
      */
     private function municipalityBreakdown(): array
     {
-        $rows = User::where('role', UserRole::Patient)
+        $rows = User::where('role', 'patient')
             ->whereNotNull('municipality')
             ->selectRaw('municipality, count(*) as total')
             ->groupBy('municipality')

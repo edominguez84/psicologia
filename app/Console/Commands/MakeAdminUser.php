@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\UserRole;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -50,9 +50,9 @@ class MakeAdminUser extends Command
             return self::FAILURE;
         }
 
-        $role = UserRole::tryFrom($this->option('role'));
+        $role = Role::where('slug', $this->option('role'))->first();
         if (! $role) {
-            $this->error('Rol no válido. Usa: '.implode(', ', array_column(UserRole::cases(), 'value')));
+            $this->error('Rol no válido. Usa: '.Role::pluck('slug')->implode(', '));
 
             return self::FAILURE;
         }
@@ -62,7 +62,7 @@ class MakeAdminUser extends Command
             [
                 'name' => $name,
                 'password' => Hash::make($password),
-                'role' => $role,
+                'role' => $role->slug,
             ]
         );
         // email_verified_at no es mass-assignable (no está en $fillable), así
@@ -70,7 +70,7 @@ class MakeAdminUser extends Command
         // arriba — se setea explícitamente para que de verdad quede marcado.
         $user->forceFill(['email_verified_at' => now()])->save();
 
-        $this->info("Cuenta {$role->label()} lista: {$user->email}");
+        $this->info("Cuenta {$role->name} lista: {$user->email}");
 
         return self::SUCCESS;
     }

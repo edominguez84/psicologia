@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Enums\UserRole;
 use App\Mail\LoginCode;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -39,7 +38,7 @@ class RegistrationTest extends TestCase
 
         $user = User::where('email', 'ana@example.com')->first();
         $this->assertNotNull($user);
-        $this->assertSame(UserRole::Patient, $user->role);
+        $this->assertSame('patient', $user->role);
         $this->assertGuest();
         $response->assertRedirect(route('2fa.challenge'));
         Mail::assertSent(LoginCode::class);
@@ -56,7 +55,7 @@ class RegistrationTest extends TestCase
 
         $user = User::where('email', 'ana@example.com')->first();
         $this->assertNotNull($user);
-        $this->assertSame(UserRole::Patient, $user->role);
+        $this->assertSame('patient', $user->role);
         $this->assertFalse($user->isAdmin());
     }
 
