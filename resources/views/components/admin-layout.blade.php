@@ -76,6 +76,11 @@
                                     ['route' => 'admin.social.edit', 'label' => 'Redes sociales', 'icon' => 'share'],
                                     ['route' => 'admin.contact.edit', 'label' => 'Contacto', 'icon' => 'mail'],
                                     ['route' => 'admin.contact-form.edit', 'label' => 'Formulario de contacto', 'icon' => 'inbox'],
+                                    ['route' => 'admin.promotions.index', 'label' => 'Promociones y planes', 'icon' => 'card'],
+                                    ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot', 'icon' => 'chat'],
+                                    ['route' => 'admin.chatbot-channels.edit', 'label' => 'Canales del chatbot', 'icon' => 'chat'],
+                                    ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'],
+                                    ['route' => 'admin.legal.edit', 'params' => ['page' => 'privacy'], 'label' => 'Páginas legales', 'icon' => 'document'],
                                 ],
                             ],
                             'operacion' => [
@@ -85,6 +90,7 @@
                                     ['route' => 'admin.appointment-slots.index', 'label' => 'Horarios de citas', 'icon' => 'clock'],
                                     ['route' => 'admin.appointments.index', 'label' => 'Citas', 'icon' => 'calendar'],
                                     ['route' => 'admin.call-slots.index', 'label' => 'Horarios de llamada gratis', 'icon' => 'clock'],
+                                    ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'],
                                 ],
                             ],
                             'sistema' => [
@@ -92,35 +98,34 @@
                                 'links' => [
                                     ['route' => 'admin.security.edit', 'label' => 'Seguridad', 'icon' => 'lock'],
                                     ['route' => 'two-factor.edit', 'label' => 'Mi seguridad', 'icon' => 'shield-lock'],
+                                    ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'people'],
+                                    ['route' => 'admin.staff.create', 'label' => 'Crear cuenta', 'icon' => 'user-plus'],
+                                    ['route' => 'admin.activity-log.index', 'label' => 'Registro de auditoría', 'icon' => 'clipboard'],
+                                    ['route' => 'admin.system-log.index', 'label' => 'Logs del sistema', 'icon' => 'terminal'],
+                                    ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'],
+                                    ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'],
+                                    ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'],
+                                    ['route' => 'admin.analytics.index', 'label' => 'Dashboard analítico', 'icon' => 'clipboard'],
+                                    ['route' => 'admin.system-manual.index', 'label' => 'Manual del sistema', 'icon' => 'document'],
+                                    ['route' => 'admin.roles.index', 'label' => 'Roles', 'icon' => 'people'],
                                 ],
                             ],
                         ];
 
-                        if (auth()->user()?->isSuperAdmin()) {
-                            $groups['apariencia']['links'][] = ['route' => 'admin.promotions.index', 'label' => 'Promociones y planes', 'icon' => 'card'];
-                            $groups['apariencia']['links'][] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot', 'icon' => 'chat'];
-                            $groups['apariencia']['links'][] = ['route' => 'admin.chatbot-channels.edit', 'label' => 'Canales del chatbot', 'icon' => 'chat'];
-                            $groups['apariencia']['links'][] = ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'];
-                            $groups['apariencia']['links'][] = ['route' => 'admin.legal.edit', 'params' => ['page' => 'privacy'], 'label' => 'Páginas legales', 'icon' => 'document'];
+                        // 'Mi seguridad' (two-factor.edit) no está en el catálogo de
+                        // features — es una pantalla personal, no de administración
+                        // del sitio, así que nunca se filtra para nadie.
+                        $alwaysAllowedRoutes = ['two-factor.edit'];
 
-                            $groups['operacion']['links'][] = ['route' => 'admin.testimonials.index', 'label' => 'Testimonios', 'icon' => 'star'];
-
-                            $groups['sistema']['links'][] = ['route' => 'admin.users.index', 'label' => 'Usuarios', 'icon' => 'people'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.staff.create', 'label' => 'Crear cuenta', 'icon' => 'user-plus'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.activity-log.index', 'label' => 'Registro de auditoría', 'icon' => 'clipboard'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.system-log.index', 'label' => 'Logs del sistema', 'icon' => 'terminal'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.analytics.index', 'label' => 'Dashboard analítico', 'icon' => 'clipboard'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.system-manual.index', 'label' => 'Manual del sistema', 'icon' => 'document'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.roles.index', 'label' => 'Roles', 'icon' => 'people'];
-                        } else {
+                        if (! auth()->user()?->isSuperAdmin()) {
                             // Filtra las opciones de un rol de staff no-super_admin
                             // según sus permisos guardados en roles.permissions —
                             // mismo catálogo de features que aplica el middleware
                             // EnsureAdminHasFeaturePermission, así el nav nunca
-                            // muestra un enlace que terminaría en 403.
+                            // muestra un enlace que terminaría en 403. Cualquier
+                            // sección antes exclusiva de super_admin (usuarios,
+                            // roles, chatbot, pagos, etc.) solo aparece si el
+                            // super_admin se la delegó explícitamente a este rol.
                             $currentRole = \App\Models\Role::where('slug', auth()->user()->role)->first();
                             $rolePermissions = $currentRole
                                 ? $currentRole->permissionsOrDefault()
@@ -131,7 +136,10 @@
                                     $routeToFeature[$pattern] = $featureKey;
                                 }
                             }
-                            $isRouteAllowed = function (string $route) use ($routeToFeature, $rolePermissions) {
+                            $isRouteAllowed = function (string $route) use ($routeToFeature, $rolePermissions, $alwaysAllowedRoutes) {
+                                if (in_array($route, $alwaysAllowedRoutes, true)) {
+                                    return true;
+                                }
                                 foreach ($routeToFeature as $pattern => $featureKey) {
                                     if (\Illuminate\Support\Str::is($pattern, $route)) {
                                         return $rolePermissions[$featureKey] ?? true;

@@ -101,84 +101,85 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
     Route::put('/custom-sections-reorder', [CustomSectionController::class, 'reorder'])->name('custom-sections.reorder');
     Route::delete('/custom-sections/{customSection}', [CustomSectionController::class, 'destroy'])->name('custom-sections.destroy');
 
-    // A partir de aquí, todo reservado a la super administradora: gestión de
-    // usuarios (banear/cambiar rol), promociones y planes, preguntas del
-    // chatbot, alta de staff, páginas legales, auditoría/logs, pagos,
-    // testimonios y filtro de contenido, e informes.
-    Route::middleware('super_admin')->group(function () {
-        Route::get('/users', [UsersController::class, 'index'])->name('users.index');
-        Route::patch('/users/{user}/ban', [UsersController::class, 'ban'])->name('users.ban');
-        Route::patch('/users/{user}/unban', [UsersController::class, 'unban'])->name('users.unban');
-        Route::patch('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.role');
+    // A partir de aquí, secciones que antes eran exclusivas de la super
+    // administradora (gestión de usuarios, promociones, chatbot, pagos,
+    // testimonios, roles, etc.). super_admin las ve siempre, sin excepción
+    // (EnsureAdminHasFeaturePermission la deja pasar de largo); cualquier
+    // otro rol de staff solo entra si el super_admin le activó la feature
+    // correspondiente desde /admin/roles — apagadas de fábrica para todos
+    // los demás (ver AdminPermissions::all(), 'default' => false).
+    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/ban', [UsersController::class, 'ban'])->name('users.ban');
+    Route::patch('/users/{user}/unban', [UsersController::class, 'unban'])->name('users.unban');
+    Route::patch('/users/{user}/role', [UsersController::class, 'updateRole'])->name('users.role');
 
-        Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
-        Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
-        Route::put('/promotions/{promotion}', [PromotionController::class, 'update'])->name('promotions.update');
-        Route::patch('/promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
-        Route::put('/promotions-reorder', [PromotionController::class, 'reorder'])->name('promotions.reorder');
-        Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
+    Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
+    Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
+    Route::put('/promotions/{promotion}', [PromotionController::class, 'update'])->name('promotions.update');
+    Route::patch('/promotions/{promotion}/toggle', [PromotionController::class, 'toggle'])->name('promotions.toggle');
+    Route::put('/promotions-reorder', [PromotionController::class, 'reorder'])->name('promotions.reorder');
+    Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
 
-        Route::get('/chatbot-faqs', [ChatbotFaqController::class, 'index'])->name('chatbot-faqs.index');
-        Route::put('/chatbot-faqs-settings', [ChatbotFaqController::class, 'updateSettings'])->name('chatbot-faqs.settings.update');
-        Route::post('/chatbot-faqs', [ChatbotFaqController::class, 'store'])->name('chatbot-faqs.store');
-        Route::put('/chatbot-faqs/{chatbotFaq}', [ChatbotFaqController::class, 'update'])->name('chatbot-faqs.update');
-        Route::patch('/chatbot-faqs/{chatbotFaq}/toggle', [ChatbotFaqController::class, 'toggle'])->name('chatbot-faqs.toggle');
-        Route::put('/chatbot-faqs-reorder', [ChatbotFaqController::class, 'reorder'])->name('chatbot-faqs.reorder');
-        Route::delete('/chatbot-faqs/{chatbotFaq}', [ChatbotFaqController::class, 'destroy'])->name('chatbot-faqs.destroy');
+    Route::get('/chatbot-faqs', [ChatbotFaqController::class, 'index'])->name('chatbot-faqs.index');
+    Route::put('/chatbot-faqs-settings', [ChatbotFaqController::class, 'updateSettings'])->name('chatbot-faqs.settings.update');
+    Route::post('/chatbot-faqs', [ChatbotFaqController::class, 'store'])->name('chatbot-faqs.store');
+    Route::put('/chatbot-faqs/{chatbotFaq}', [ChatbotFaqController::class, 'update'])->name('chatbot-faqs.update');
+    Route::patch('/chatbot-faqs/{chatbotFaq}/toggle', [ChatbotFaqController::class, 'toggle'])->name('chatbot-faqs.toggle');
+    Route::put('/chatbot-faqs-reorder', [ChatbotFaqController::class, 'reorder'])->name('chatbot-faqs.reorder');
+    Route::delete('/chatbot-faqs/{chatbotFaq}', [ChatbotFaqController::class, 'destroy'])->name('chatbot-faqs.destroy');
 
-        // Alta manual de cuentas de staff (o pacientes) — reservado a la
-        // super administradora.
-        Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
-        Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+    // Alta manual de cuentas de staff (o pacientes).
+    Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
+    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
 
-        // Icono del sitio (favicon) — reservado a la super administradora.
-        Route::get('/favicon', [FaviconController::class, 'edit'])->name('favicon.edit');
-        Route::post('/favicon', [FaviconController::class, 'update'])->name('favicon.update');
-        Route::delete('/favicon', [FaviconController::class, 'destroy'])->name('favicon.destroy');
+    // Icono del sitio (favicon).
+    Route::get('/favicon', [FaviconController::class, 'edit'])->name('favicon.edit');
+    Route::post('/favicon', [FaviconController::class, 'update'])->name('favicon.update');
+    Route::delete('/favicon', [FaviconController::class, 'destroy'])->name('favicon.destroy');
 
-        // Páginas legales (privacidad, condiciones de uso) — reservado a la
-        // super administradora.
-        Route::get('/legal/{page}', [LegalPageController::class, 'edit'])->name('legal.edit');
-        Route::put('/legal/{page}', [LegalPageController::class, 'update'])->name('legal.update');
+    // Páginas legales (privacidad, condiciones de uso).
+    Route::get('/legal/{page}', [LegalPageController::class, 'edit'])->name('legal.edit');
+    Route::put('/legal/{page}', [LegalPageController::class, 'update'])->name('legal.update');
 
-        // Registro de auditoría y logs del sistema — reservado a la super
-        // administradora.
-        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
-        Route::get('/system-log', [SystemLogController::class, 'index'])->name('system-log.index');
+    // Registro de auditoría y logs del sistema.
+    Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+    Route::get('/system-log', [SystemLogController::class, 'index'])->name('system-log.index');
 
-        // Métodos de pago (Wompi/transferencia bancaria) — reservado a la
-        // super administradora.
-        Route::get('/payment-settings', [PaymentSettingsController::class, 'edit'])->name('payment-settings.edit');
-        Route::put('/payment-settings', [PaymentSettingsController::class, 'update'])->name('payment-settings.update');
-        Route::post('/payment-settings/test-wompi', [PaymentSettingsController::class, 'testWompi'])->name('payment-settings.test-wompi');
+    // Métodos de pago (Wompi/transferencia bancaria).
+    Route::get('/payment-settings', [PaymentSettingsController::class, 'edit'])->name('payment-settings.edit');
+    Route::put('/payment-settings', [PaymentSettingsController::class, 'update'])->name('payment-settings.update');
+    Route::post('/payment-settings/test-wompi', [PaymentSettingsController::class, 'testWompi'])->name('payment-settings.test-wompi');
 
-        // Aprobación de testimonios y filtro de contenido — reservado a la
-        // super administradora (antes cualquier admin podía aprobar).
-        Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
-        Route::patch('/testimonials/{testimonial}/approve', [TestimonialController::class, 'approve'])->name('testimonials.approve');
-        Route::patch('/testimonials/{testimonial}/unapprove', [TestimonialController::class, 'unapprove'])->name('testimonials.unapprove');
-        Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+    // Aprobación de testimonios y filtro de contenido.
+    Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
+    Route::patch('/testimonials/{testimonial}/approve', [TestimonialController::class, 'approve'])->name('testimonials.approve');
+    Route::patch('/testimonials/{testimonial}/unapprove', [TestimonialController::class, 'unapprove'])->name('testimonials.unapprove');
+    Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
 
-        Route::get('/profanity-filter', [ProfanityFilterController::class, 'edit'])->name('profanity-filter.edit');
-        Route::put('/profanity-filter', [ProfanityFilterController::class, 'update'])->name('profanity-filter.update');
+    Route::get('/profanity-filter', [ProfanityFilterController::class, 'edit'])->name('profanity-filter.edit');
+    Route::put('/profanity-filter', [ProfanityFilterController::class, 'update'])->name('profanity-filter.update');
 
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/download', [ReportController::class, 'downloadPdf'])->name('reports.download');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/download', [ReportController::class, 'downloadPdf'])->name('reports.download');
 
-        Route::get('/analytics', [AnalyticsDashboardController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics', [AnalyticsDashboardController::class, 'index'])->name('analytics.index');
 
-        Route::get('/chatbot-channels', [ChatbotChannelsController::class, 'edit'])->name('chatbot-channels.edit');
-        Route::put('/chatbot-channels', [ChatbotChannelsController::class, 'update'])->name('chatbot-channels.update');
-        Route::post('/chatbot-channels/test-telegram', [ChatbotChannelsController::class, 'testTelegram'])->name('chatbot-channels.test-telegram');
+    Route::get('/chatbot-channels', [ChatbotChannelsController::class, 'edit'])->name('chatbot-channels.edit');
+    Route::put('/chatbot-channels', [ChatbotChannelsController::class, 'update'])->name('chatbot-channels.update');
+    Route::post('/chatbot-channels/test-telegram', [ChatbotChannelsController::class, 'testTelegram'])->name('chatbot-channels.test-telegram');
 
-        Route::get('/system-manual', [SystemManualController::class, 'index'])->name('system-manual.index');
-        Route::get('/system-manual/download', [SystemManualController::class, 'downloadPdf'])->name('system-manual.download');
+    Route::get('/system-manual', [SystemManualController::class, 'index'])->name('system-manual.index');
+    Route::get('/system-manual/download', [SystemManualController::class, 'downloadPdf'])->name('system-manual.download');
 
-        Route::get('/roles', [RoleManagementController::class, 'index'])->name('roles.index');
-        Route::get('/roles/create', [RoleManagementController::class, 'create'])->name('roles.create');
-        Route::post('/roles', [RoleManagementController::class, 'store'])->name('roles.store');
-        Route::get('/roles/{role}/edit', [RoleManagementController::class, 'edit'])->name('roles.edit');
-        Route::put('/roles/{role}', [RoleManagementController::class, 'update'])->name('roles.update');
-        Route::delete('/roles/{role}', [RoleManagementController::class, 'destroy'])->name('roles.destroy');
-    });
+    // Gestión de roles — delegable en teoría (queda en el catálogo para que
+    // el super_admin decida), pero en la práctica solo tiene sentido para
+    // super_admin: solo super_admin edita permisos de super_admin (siempre
+    // ve todo) y solo alguien con esta feature activa puede, a su vez,
+    // activársela a otros — el propio catálogo es la puerta.
+    Route::get('/roles', [RoleManagementController::class, 'index'])->name('roles.index');
+    Route::get('/roles/create', [RoleManagementController::class, 'create'])->name('roles.create');
+    Route::post('/roles', [RoleManagementController::class, 'store'])->name('roles.store');
+    Route::get('/roles/{role}/edit', [RoleManagementController::class, 'edit'])->name('roles.edit');
+    Route::put('/roles/{role}', [RoleManagementController::class, 'update'])->name('roles.update');
+    Route::delete('/roles/{role}', [RoleManagementController::class, 'destroy'])->name('roles.destroy');
 });

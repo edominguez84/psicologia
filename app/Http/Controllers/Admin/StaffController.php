@@ -7,16 +7,19 @@ use App\Http\Requests\Admin\StoreStaffRequest;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class StaffController extends Controller
 {
     /**
-     * Alta manual de cuentas por la super administradora — a diferencia de
-     * UsersController (que gestiona transiciones sobre usuarios ya
-     * existentes: banear, cambiar rol), este controlador crea cuentas desde
-     * cero, con contraseña inicial. Reservado a 'super_admin' en las rutas.
+     * Alta manual de cuentas — a diferencia de UsersController (que gestiona
+     * transiciones sobre usuarios ya existentes: banear, cambiar rol), este
+     * controlador crea cuentas desde cero, con contraseña inicial. La
+     * feature 'staff' es delegable a un admin (ver AdminPermissions), pero
+     * dar de alta directamente una cuenta super_admin sigue reservado a la
+     * propia super administradora (ver store()).
      *
      * El <select> de rol ofrece los de staff (is_staff=true, incluidos los
      * que el super_admin cree desde /admin/roles) más 'patient' explícito —
@@ -28,6 +31,7 @@ class StaffController extends Controller
     {
         $roles = Role::query()
             ->where(fn ($q) => $q->where('is_staff', true)->orWhere('slug', 'patient'))
+            ->when(! Auth::user()->isSuperAdmin(), fn ($q) => $q->where('slug', '!=', 'super_admin'))
             ->orderByDesc('is_staff')
             ->orderBy('name')
             ->get();
@@ -40,6 +44,10 @@ class StaffController extends Controller
     public function store(StoreStaffRequest $request): RedirectResponse
     {
         $data = $request->validated();
+
+        if ($data['role'] === 'super_admin' && ! Auth::user()->isSuperAdmin()) {
+            abort(403, 'Solo la super administradora puede crear otra cuenta de super administradora.');
+        }
 
         $user = new User([
             'name' => $data['name'],
