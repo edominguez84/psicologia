@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AnalyticsDashboardController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\AppointmentSlotController;
 use App\Http\Controllers\Admin\CallSlotController;
+use App\Http\Controllers\Admin\ChatbotChannelsController;
 use App\Http\Controllers\Admin\ChatbotFaqController;
 use App\Http\Controllers\Admin\ContactFormSettingsController;
 use App\Http\Controllers\Admin\ContactSettingsController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\SystemLogController;
+use App\Http\Controllers\Admin\SystemManualController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UsersController;
@@ -71,6 +73,9 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
 
     Route::get('/security', [SecurityController::class, 'edit'])->name('security.edit');
     Route::put('/security', [SecurityController::class, 'update'])->name('security.update');
+
+    Route::get('/system-manual', [SystemManualController::class, 'index'])->name('system-manual.index');
+    Route::get('/system-manual/download', [SystemManualController::class, 'downloadPdf'])->name('system-manual.download');
 
     Route::get('/section-visibility', [SectionVisibilityController::class, 'edit'])->name('section-visibility.edit');
     Route::put('/section-visibility', [SectionVisibilityController::class, 'update'])->name('section-visibility.update');
@@ -163,5 +168,9 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
         Route::get('/reports/download', [ReportController::class, 'downloadPdf'])->name('reports.download');
 
         Route::get('/analytics', [AnalyticsDashboardController::class, 'index'])->name('analytics.index');
+
+        Route::get('/chatbot-channels', [ChatbotChannelsController::class, 'edit'])->name('chatbot-channels.edit');
+        Route::put('/chatbot-channels', [ChatbotChannelsController::class, 'update'])->name('chatbot-channels.update');
+        Route::post('/chatbot-channels/test-telegram', [ChatbotChannelsController::class, 'testTelegram'])->name('chatbot-channels.test-telegram');
     });
 });

@@ -92,6 +92,7 @@
                                 'links' => [
                                     ['route' => 'admin.security.edit', 'label' => 'Seguridad', 'icon' => 'lock'],
                                     ['route' => 'two-factor.edit', 'label' => 'Mi seguridad', 'icon' => 'shield-lock'],
+                                    ['route' => 'admin.system-manual.index', 'label' => 'Manual del sistema', 'icon' => 'document'],
                                 ],
                             ],
                         ];
@@ -99,6 +100,7 @@
                         if (auth()->user()?->isSuperAdmin()) {
                             $groups['apariencia']['links'][] = ['route' => 'admin.promotions.index', 'label' => 'Promociones y planes', 'icon' => 'card'];
                             $groups['apariencia']['links'][] = ['route' => 'admin.chatbot-faqs.index', 'label' => 'Preguntas del chatbot', 'icon' => 'chat'];
+                            $groups['apariencia']['links'][] = ['route' => 'admin.chatbot-channels.edit', 'label' => 'Canales del chatbot', 'icon' => 'chat'];
                             $groups['apariencia']['links'][] = ['route' => 'admin.favicon.edit', 'label' => 'Icono del sitio', 'icon' => 'browser'];
                             $groups['apariencia']['links'][] = ['route' => 'admin.legal.edit', 'params' => ['page' => 'privacy'], 'label' => 'Páginas legales', 'icon' => 'document'];
 
