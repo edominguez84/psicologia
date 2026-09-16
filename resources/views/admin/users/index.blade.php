@@ -24,8 +24,8 @@
                                 @method('PATCH')
                                 <select name="role" onchange="this.form.submit()"
                                     class="rounded-lg border border-paper-200 bg-paper-50 px-2 py-1.5 text-xs">
-                                    @foreach (\App\Enums\UserRole::cases() as $role)
-                                        <option value="{{ $role->value }}" @selected($user->role === $role)>{{ $role->label() }}</option>
+                                    @foreach ($roles as $role)
+                                        <option value="{{ $role->slug }}" @selected($user->role === $role->slug)>{{ $role->name }}</option>
                                     @endforeach
                                 </select>
                             </form>

@@ -114,16 +114,17 @@
                             $groups['sistema']['links'][] = ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'];
                             $groups['sistema']['links'][] = ['route' => 'admin.analytics.index', 'label' => 'Dashboard analítico', 'icon' => 'clipboard'];
                             $groups['sistema']['links'][] = ['route' => 'admin.system-manual.index', 'label' => 'Manual del sistema', 'icon' => 'document'];
-                            $groups['sistema']['links'][] = ['route' => 'admin.role-permissions.edit', 'label' => 'Permisos por rol', 'icon' => 'people'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.roles.index', 'label' => 'Roles', 'icon' => 'people'];
                         } else {
-                            // Filtra las opciones de admin/editor según lo que el
-                            // super_admin haya configurado en /admin/role-permissions
-                            // — mismo catálogo de features que aplica el middleware
+                            // Filtra las opciones de un rol de staff no-super_admin
+                            // según sus permisos guardados en roles.permissions —
+                            // mismo catálogo de features que aplica el middleware
                             // EnsureAdminHasFeaturePermission, así el nav nunca
                             // muestra un enlace que terminaría en 403.
-                            $rolePermissions = app(\App\Services\SiteSettingsService::class)
-                                ->get('admin_role_permissions', [])[auth()->user()->role->value]
-                                ?? \App\Support\AdminPermissions::defaultsFor(auth()->user()->role->value);
+                            $currentRole = \App\Models\Role::where('slug', auth()->user()->role)->first();
+                            $rolePermissions = $currentRole
+                                ? $currentRole->permissionsOrDefault()
+                                : \App\Support\AdminPermissions::defaultsFor(auth()->user()->role);
                             $routeToFeature = [];
                             foreach (\App\Support\AdminPermissions::all() as $featureKey => $feature) {
                                 foreach ($feature['routes'] as $pattern) {

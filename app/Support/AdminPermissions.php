@@ -3,17 +3,18 @@
 namespace App\Support;
 
 /**
- * Catálogo de "features" del panel de administración cuya visibilidad para
- * los roles 'admin' y 'editor' es configurable por el super_admin (ver
- * Admin\RolePermissionsController). Cada feature agrupa una o más rutas
- * bajo una sola llave — activar/desactivar una feature activa/desactiva
- * todas sus rutas juntas (p. ej. "Promociones" cubre listar, crear, editar,
+ * Catálogo de "features" del panel de administración cuya visibilidad por
+ * rol de staff es configurable por el super_admin (ver App\Models\Role,
+ * Admin\RoleManagementController). Cada feature agrupa una o más rutas bajo
+ * una sola llave — activar/desactivar una feature activa/desactiva todas
+ * sus rutas juntas (p. ej. "Promociones" cubre listar, crear, editar,
  * reordenar y eliminar con una sola llave, no cinco).
  *
  * 'super_admin' y las rutas fuera de este catálogo (ver, Mi seguridad, etc.)
  * nunca pasan por este sistema — siguen las reglas de acceso ya existentes
  * (middleware 'admin'/'super_admin'), este catálogo solo añade una capa
- * adicional de restricción para 'admin'/'editor' sobre lo que YA podían ver.
+ * adicional de restricción para roles de staff no-super_admin sobre lo que
+ * YA podían ver.
  */
 class AdminPermissions
 {

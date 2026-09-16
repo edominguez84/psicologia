@@ -3,9 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -63,12 +63,30 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class,
+            // 'role' ya no castea a un enum PHP fijo: los roles asignables
+            // viven como filas reales en la tabla roles (ver App\Models\Role)
+            // para que el super_admin pueda crear roles nuevos además de los
+            // 5 "de sistema" (super_admin/admin/editor/patient/user) que
+            // existían como enum antes de esta migración. Esta columna sigue
+            // guardando el mismo string ('super_admin', 'admin', etc.) que
+            // ya usaba — solo cambia de dónde viene la lista de valores
+            // válidos.
             'banned_at' => 'datetime',
             'two_factor_secret' => 'encrypted',
             'two_factor_confirmed_at' => 'datetime',
             'birth_date' => 'date',
         ];
+    }
+
+    /**
+     * Relación hacia la fila de Role cuyo slug coincide con este string —
+     * cacheada por instancia (Eloquent ya memoiza belongsTo mientras el
+     * modelo no se recargue) para no repetir la consulta en cada llamada a
+     * isAdmin()/isSuperAdmin() dentro del mismo request.
+     */
+    public function roleModel(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role', 'slug');
     }
 
     /**
@@ -87,7 +105,7 @@ class User extends Authenticatable
 
     public function isPatient(): bool
     {
-        return $this->role === UserRole::Patient;
+        return $this->role === 'patient';
     }
 
     /**
@@ -129,23 +147,25 @@ class User extends Authenticatable
     }
 
     /**
-     * Incluye 'editor' a propósito: el enum UserRole ya documenta que editor
-     * tiene el mismo acceso que admin ("hoy tiene el mismo acceso que admin
-     * porque ninguna ruta distingue permisos más finos todavía"), y
-     * defaultRedirectRouteName() ya compensaba la ausencia de editor aquí
-     * con una condición aparte — este método es el único punto real que
-     * decide si el middleware 'admin' deja pasar a alguien al panel, así
-     * que dejar editor fuera de aquí bloqueaba con 403 cualquier pantalla
-     * del panel para ese rol, contradiciendo lo ya documentado.
+     * "¿Entra al panel admin?" — ya no es una lista fija de 3 slugs
+     * (super_admin/admin/editor): cualquier Role con is_staff=true cuenta,
+     * incluidos los roles nuevos que el super_admin cree desde
+     * /admin/roles. super_admin siempre cuenta aunque, por alguna
+     * inconsistencia de datos, su fila de Role no exista o is_staff esté
+     * mal — es el único slug que nunca debe poder quedar fuera del panel.
      */
     public function isAdmin(): bool
     {
-        return in_array($this->role, [UserRole::SuperAdmin, UserRole::Admin, UserRole::Editor], true);
+        if ($this->role === 'super_admin') {
+            return true;
+        }
+
+        return (bool) ($this->roleModel?->is_staff ?? false);
     }
 
     public function isSuperAdmin(): bool
     {
-        return $this->role === UserRole::SuperAdmin;
+        return $this->role === 'super_admin';
     }
 
     public function isBanned(): bool

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Enum;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class UsersController extends Controller
@@ -23,6 +23,7 @@ class UsersController extends Controller
     {
         return view('admin.users.index', [
             'users' => User::orderBy('name')->get(),
+            'roles' => Role::orderByDesc('is_staff')->orderBy('name')->get(),
         ]);
     }
 
@@ -61,21 +62,23 @@ class UsersController extends Controller
 
     public function updateRole(Request $request, User $user): RedirectResponse
     {
-        $request->validate(['role' => ['required', new Enum(UserRole::class)]]);
+        $request->validate(['role' => ['required', Rule::exists('roles', 'slug')]]);
 
-        $newRole = UserRole::from($request->string('role')->toString());
+        $newRoleSlug = $request->string('role')->toString();
 
-        if ($user->id === Auth::id() && $newRole !== UserRole::SuperAdmin && $user->isSuperAdmin()) {
+        if ($user->id === Auth::id() && $newRoleSlug !== 'super_admin' && $user->isSuperAdmin()) {
             return back()->with('status', 'No puedes quitarte tu propio rol de super administradora.');
         }
 
-        if ($user->isSuperAdmin() && $newRole !== UserRole::SuperAdmin && $this->wouldRemoveLastSuperAdmin($user)) {
+        if ($user->isSuperAdmin() && $newRoleSlug !== 'super_admin' && $this->wouldRemoveLastSuperAdmin($user)) {
             return back()->with('status', 'No puedes degradar al único super administrador activo.');
         }
 
-        $user->update(['role' => $newRole]);
+        $user->update(['role' => $newRoleSlug]);
 
-        return back()->with('status', "Rol de {$user->name} actualizado a {$newRole->label()}.");
+        $roleName = Role::where('slug', $newRoleSlug)->value('name') ?? $newRoleSlug;
+
+        return back()->with('status', "Rol de {$user->name} actualizado a {$roleName}.");
     }
 
     /**
@@ -108,7 +111,7 @@ class UsersController extends Controller
             return false;
         }
 
-        $activeSuperAdmins = User::where('role', UserRole::SuperAdmin)
+        $activeSuperAdmins = User::where('role', 'super_admin')
             ->whereNull('banned_at')
             ->count();
 

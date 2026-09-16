@@ -81,12 +81,12 @@ class UsersControllerTest extends TestCase
 
         // Con dos activos, degradar a uno de ellos es válido.
         $this->actingAs($onlySuperAdmin)->patch("/admin/users/{$secondSuperAdmin->id}/role", ['role' => 'editor']);
-        $this->assertSame('editor', $secondSuperAdmin->fresh()->role->value);
+        $this->assertSame('editor', $secondSuperAdmin->fresh()->role);
 
         // Ahora sí es el único activo: intentar degradarse a sí mismo lo
         // bloquea el guard de auto-degradación.
         $this->actingAs($onlySuperAdmin)->patch("/admin/users/{$onlySuperAdmin->id}/role", ['role' => 'editor']);
-        $this->assertSame('super_admin', $onlySuperAdmin->fresh()->role->value);
+        $this->assertSame('super_admin', $onlySuperAdmin->fresh()->role);
     }
 
     public function test_no_se_puede_quitar_su_propio_rol_de_super_admin(): void
@@ -96,7 +96,7 @@ class UsersControllerTest extends TestCase
 
         $this->actingAs($superAdmin)->patch("/admin/users/{$superAdmin->id}/role", ['role' => 'editor']);
 
-        $this->assertSame('super_admin', $superAdmin->fresh()->role->value);
+        $this->assertSame('super_admin', $superAdmin->fresh()->role);
     }
 
     public function test_un_administrador_normal_no_puede_ver_ni_gestionar_usuarios(): void
@@ -116,7 +116,7 @@ class UsersControllerTest extends TestCase
 
         $this->actingAs($superAdmin1)->patch("/admin/users/{$superAdmin2->id}/role", ['role' => 'admin']);
 
-        $this->assertSame('admin', $superAdmin2->fresh()->role->value);
+        $this->assertSame('admin', $superAdmin2->fresh()->role);
     }
 
     public function test_no_se_puede_banear_a_un_usuario_con_sesion_activa(): void

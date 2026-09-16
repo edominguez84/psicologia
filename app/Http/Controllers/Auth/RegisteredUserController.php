@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\StoreRegistrationRequest;
 use App\Models\Promotion;
@@ -41,7 +40,7 @@ class RegisteredUserController extends Controller
             'department' => $data['department'],
             'municipality' => $data['municipality'],
             'password' => Hash::make($data['password']),
-            'role' => UserRole::Patient,
+            'role' => 'patient',
         ]);
 
         // Mismo flujo que el login normal: no se autentica todavía, se exige
