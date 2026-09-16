@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'super_admin' => \App\Http\Middleware\EnsureUserIsSuperAdmin::class,
             'banned' => \App\Http\Middleware\EnsureUserIsNotBanned::class,
             'session.idle' => \App\Http\Middleware\EnsureSessionIsActive::class,
+            'admin.feature' => \App\Http\Middleware\EnsureAdminHasFeaturePermission::class,
         ]);
 
         // Resuelve el idioma del contenido de fábrica (config('site')) en

@@ -92,7 +92,6 @@
                                 'links' => [
                                     ['route' => 'admin.security.edit', 'label' => 'Seguridad', 'icon' => 'lock'],
                                     ['route' => 'two-factor.edit', 'label' => 'Mi seguridad', 'icon' => 'shield-lock'],
-                                    ['route' => 'admin.system-manual.index', 'label' => 'Manual del sistema', 'icon' => 'document'],
                                 ],
                             ],
                         ];
@@ -114,6 +113,38 @@
                             $groups['sistema']['links'][] = ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'];
                             $groups['sistema']['links'][] = ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'];
                             $groups['sistema']['links'][] = ['route' => 'admin.analytics.index', 'label' => 'Dashboard analítico', 'icon' => 'clipboard'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.system-manual.index', 'label' => 'Manual del sistema', 'icon' => 'document'];
+                            $groups['sistema']['links'][] = ['route' => 'admin.role-permissions.edit', 'label' => 'Permisos por rol', 'icon' => 'people'];
+                        } else {
+                            // Filtra las opciones de admin/editor según lo que el
+                            // super_admin haya configurado en /admin/role-permissions
+                            // — mismo catálogo de features que aplica el middleware
+                            // EnsureAdminHasFeaturePermission, así el nav nunca
+                            // muestra un enlace que terminaría en 403.
+                            $rolePermissions = app(\App\Services\SiteSettingsService::class)
+                                ->get('admin_role_permissions', [])[auth()->user()->role->value]
+                                ?? \App\Support\AdminPermissions::defaultsFor(auth()->user()->role->value);
+                            $routeToFeature = [];
+                            foreach (\App\Support\AdminPermissions::all() as $featureKey => $feature) {
+                                foreach ($feature['routes'] as $pattern) {
+                                    $routeToFeature[$pattern] = $featureKey;
+                                }
+                            }
+                            $isRouteAllowed = function (string $route) use ($routeToFeature, $rolePermissions) {
+                                foreach ($routeToFeature as $pattern => $featureKey) {
+                                    if (\Illuminate\Support\Str::is($pattern, $route)) {
+                                        return $rolePermissions[$featureKey] ?? true;
+                                    }
+                                }
+
+                                return true;
+                            };
+                            foreach ($groups as $groupKey => $group) {
+                                $groups[$groupKey]['links'] = array_values(array_filter(
+                                    $group['links'],
+                                    fn ($link) => $isRouteAllowed($link['route'])
+                                ));
+                            }
                         }
 
                         // Un ícono representativo por grupo, para que el header
@@ -136,19 +167,22 @@
                             }
                         }
                         $contentActive = request()->routeIs('admin.content.edit');
-                        $groups['contenido'] = [
-                            'label' => 'Contenido',
-                            'icon' => 'layout',
-                            'links' => collect(\App\Support\SiteContentSections::all())->map(fn ($section, $key) => [
-                                'route' => 'admin.content.edit',
-                                'params' => [$key],
-                                'label' => $section['label'],
+                        $canSeeContent = auth()->user()?->isSuperAdmin() || ! isset($isRouteAllowed) || $isRouteAllowed('admin.content.edit');
+                        if ($canSeeContent) {
+                            $groups['contenido'] = [
+                                'label' => 'Contenido',
                                 'icon' => 'layout',
-                                'activeCheck' => fn () => request()->routeIs('admin.content.edit') && request()->route('section') === $key,
-                            ])->values()->all(),
-                        ];
-                        if ($contentActive) {
-                            $activeGroup = 'contenido';
+                                'links' => collect(\App\Support\SiteContentSections::all())->map(fn ($section, $key) => [
+                                    'route' => 'admin.content.edit',
+                                    'params' => [$key],
+                                    'label' => $section['label'],
+                                    'icon' => 'layout',
+                                    'activeCheck' => fn () => request()->routeIs('admin.content.edit') && request()->route('section') === $key,
+                                ])->values()->all(),
+                            ];
+                            if ($contentActive) {
+                                $activeGroup = 'contenido';
+                            }
                         }
                     @endphp
 

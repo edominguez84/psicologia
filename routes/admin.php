@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\PaymentSettingsController;
 use App\Http\Controllers\Admin\ProfanityFilterController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\RolePermissionsController;
 use App\Http\Controllers\Admin\SectionVisibilityController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SocialLinksController;
@@ -33,7 +34,7 @@ use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UsersController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/theme', [ThemeController::class, 'edit'])->name('theme.edit');
@@ -73,9 +74,6 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
 
     Route::get('/security', [SecurityController::class, 'edit'])->name('security.edit');
     Route::put('/security', [SecurityController::class, 'update'])->name('security.update');
-
-    Route::get('/system-manual', [SystemManualController::class, 'index'])->name('system-manual.index');
-    Route::get('/system-manual/download', [SystemManualController::class, 'downloadPdf'])->name('system-manual.download');
 
     Route::get('/section-visibility', [SectionVisibilityController::class, 'edit'])->name('section-visibility.edit');
     Route::put('/section-visibility', [SectionVisibilityController::class, 'update'])->name('section-visibility.update');
@@ -172,5 +170,11 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
         Route::get('/chatbot-channels', [ChatbotChannelsController::class, 'edit'])->name('chatbot-channels.edit');
         Route::put('/chatbot-channels', [ChatbotChannelsController::class, 'update'])->name('chatbot-channels.update');
         Route::post('/chatbot-channels/test-telegram', [ChatbotChannelsController::class, 'testTelegram'])->name('chatbot-channels.test-telegram');
+
+        Route::get('/system-manual', [SystemManualController::class, 'index'])->name('system-manual.index');
+        Route::get('/system-manual/download', [SystemManualController::class, 'downloadPdf'])->name('system-manual.download');
+
+        Route::get('/role-permissions', [RolePermissionsController::class, 'edit'])->name('role-permissions.edit');
+        Route::put('/role-permissions', [RolePermissionsController::class, 'update'])->name('role-permissions.update');
     });
 });
