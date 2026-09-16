@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'webhooks/wompi',
             'analytics/social-click',
+            'webhooks/telegram',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ChatbotLeadController;
 use App\Http\Controllers\Api\CheckupController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\SiteController;
+use App\Http\Controllers\Webhooks\TelegramWebhookController;
 use App\Http\Controllers\Webhooks\WompiWebhookController;
 use App\Http\Middleware\ResolveSiteLocale;
 use Illuminate\Support\Facades\Route;
@@ -52,6 +53,9 @@ Route::post('/analytics/social-click', [AnalyticsController::class, 'socialClick
 // sesión) — se autentica verificando el header 'wompi_hash' dentro del
 // propio controlador. Ver App\Http\Controllers\Webhooks\WompiWebhookController.
 Route::post('/webhooks/wompi', WompiWebhookController::class)->name('webhooks.wompi');
+
+// Mensajes entrantes del bot de Telegram — ver App\Http\Controllers\Webhooks\TelegramWebhookController.
+Route::post('/webhooks/telegram', TelegramWebhookController::class)->name('webhooks.telegram');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
