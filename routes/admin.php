@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AboutPhotoController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AnalyticsDashboardController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\AppointmentSlotController;
 use App\Http\Controllers\Admin\CallSlotController;
@@ -160,5 +161,7 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle'])->prefix('admin')-
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/download', [ReportController::class, 'downloadPdf'])->name('reports.download');
+
+        Route::get('/analytics', [AnalyticsDashboardController::class, 'index'])->name('analytics.index');
     });
 });

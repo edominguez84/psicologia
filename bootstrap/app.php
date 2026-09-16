@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // App\Http\Controllers\Webhooks\WompiWebhookController).
         $middleware->validateCsrfTokens(except: [
             'webhooks/wompi',
+            'analytics/social-click',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
