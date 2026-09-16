@@ -34,12 +34,19 @@ class Role extends Model
     /**
      * super_admin no guarda permissions (siempre ve todo, sin excepción) —
      * cualquier otro rol de staff sin fila de permisos guardada aún se
-     * comporta como "todo habilitado", igual que antes de que este sistema
-     * existiera.
+     * comporta como "todo habilitado para lo que ya se veía antes de este
+     * sistema, apagado para lo que era exclusivo de super_admin" (ver el
+     * 'default' de cada feature en AdminPermissions::all()). Una feature
+     * guardada explícitamente en el JSON del rol siempre gana sobre su
+     * default de fábrica.
      */
     public function permissionsOrDefault(): array
     {
-        return $this->permissions ?? array_fill_keys(array_keys(AdminPermissions::all()), true);
+        $saved = $this->permissions ?? [];
+
+        return collect(AdminPermissions::all())
+            ->map(fn ($feature, $key) => $saved[$key] ?? $feature['default'])
+            ->all();
     }
 
     public function hasFeature(string $feature): bool

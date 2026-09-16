@@ -1,6 +1,5 @@
 <?php
 
-use App\Support\AdminPermissions;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -41,8 +40,22 @@ return new class extends Migration
         // Siembra los 5 roles que ya existían como enum — cualquier cuenta
         // con esos valores en users.role sigue funcionando exactamente
         // igual, ahora contra una fila real en vez de un caso de enum.
+        //
+        // La lista de features va fija aquí (no App\Support\AdminPermissions
+        // ::all()) a propósito: una migración congela el momento en que se
+        // escribió. Estas son exactamente las 15 secciones que ya eran
+        // visibles para 'admin'/'editor' en el momento en que este sistema
+        // de permisos por rol nació. Si el catálogo crece después con
+        // secciones nuevas (delegables, apagadas de fábrica), esta siembra
+        // histórica no debe adoptarlas retroactivamente en 'true' — el
+        // default de cada feature nueva (ver AdminPermissions::all()) ya se
+        // encarga de eso vía Role::permissionsOrDefault().
         $now = now();
-        $allFeatures = array_fill_keys(array_keys(AdminPermissions::all()), true);
+        $allFeatures = array_fill_keys([
+            'theme', 'section-visibility', 'custom-sections', 'logo', 'about-photo',
+            'gallery', 'social', 'contact', 'contact-form', 'content', 'messages',
+            'appointment-slots', 'appointments', 'call-slots', 'security',
+        ], true);
 
         DB::table('roles')->insert([
             ['slug' => 'super_admin', 'name' => 'Super administrador', 'is_system' => true, 'is_staff' => true, 'permissions' => null, 'created_at' => $now, 'updated_at' => $now],

@@ -66,6 +66,14 @@ class UsersController extends Controller
 
         $newRoleSlug = $request->string('role')->toString();
 
+        // La feature 'users' es delegable a un admin (ver AdminPermissions),
+        // pero ascender a alguien a super_admin sigue siendo un acto que
+        // solo la propia super administradora puede hacer — de lo contrario
+        // un admin con esta feature activada podría autoascenderse.
+        if ($newRoleSlug === 'super_admin' && ! Auth::user()->isSuperAdmin()) {
+            return back()->with('status', 'Solo la super administradora puede asignar el rol de super administradora.');
+        }
+
         if ($user->id === Auth::id() && $newRoleSlug !== 'super_admin' && $user->isSuperAdmin()) {
             return back()->with('status', 'No puedes quitarte tu propio rol de super administradora.');
         }
