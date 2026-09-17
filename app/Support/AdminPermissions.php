@@ -61,6 +61,7 @@ class AdminPermissions
             'reports' => ['label' => 'Informes', 'routes' => ['admin.reports.*'], 'default' => false],
             'analytics' => ['label' => 'Panel de analíticas', 'routes' => ['admin.analytics.*'], 'default' => false],
             'system-manual' => ['label' => 'Manual del sistema', 'routes' => ['admin.system-manual.*'], 'default' => false],
+            'vapi-settings' => ['label' => 'Llamadas automáticas de confirmación (VAPI)', 'routes' => ['admin.vapi-settings.*'], 'default' => false],
         ];
     }
 

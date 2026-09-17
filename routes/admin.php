@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemManualController;
 use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\Admin\VapiSettingsController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UsersController;
 use Illuminate\Support\Facades\Route;
@@ -149,6 +150,12 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
     Route::get('/payment-settings', [PaymentSettingsController::class, 'edit'])->name('payment-settings.edit');
     Route::put('/payment-settings', [PaymentSettingsController::class, 'update'])->name('payment-settings.update');
     Route::post('/payment-settings/test-wompi', [PaymentSettingsController::class, 'testWompi'])->name('payment-settings.test-wompi');
+
+    // Llamadas automáticas de confirmación de cita (VAPI).
+    Route::get('/vapi-settings', [VapiSettingsController::class, 'edit'])->name('vapi-settings.edit');
+    Route::put('/vapi-settings', [VapiSettingsController::class, 'update'])->name('vapi-settings.update');
+    Route::post('/vapi-settings/regenerate-webhook-secret', [VapiSettingsController::class, 'regenerateWebhookSecret'])->name('vapi-settings.regenerate-webhook-secret');
+    Route::post('/vapi-settings/test-connection', [VapiSettingsController::class, 'testConnection'])->name('vapi-settings.test-connection');
 
     // Aprobación de testimonios y filtro de contenido.
     Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');

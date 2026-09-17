@@ -21,12 +21,17 @@ class Appointment extends Model
         // decidir (aprobar/rechazar), o en el propio modelo al cancelar.
         // payment_status/payment_reference tampoco: se setean explícitamente
         // (el paciente nunca puede marcar su propio pago como "confirmed").
+        // vapi_call_* tampoco: los setea App\Services\VapiCallService y
+        // Webhooks\VapiWebhookController, nunca a partir de un request del
+        // paciente.
     ];
 
     protected $casts = [
         'status' => AppointmentStatus::class,
         'decided_at' => 'datetime',
         'amount' => 'decimal:2',
+        'vapi_called_at' => 'datetime',
+        'vapi_call_result' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -52,6 +57,22 @@ class Appointment extends Model
     public function scopePending($query)
     {
         return $query->where('status', AppointmentStatus::Pending);
+    }
+
+    /**
+     * Citas aprobadas cuyo horario cae dentro de la ventana de aviso
+     * configurada (site_settings.vapi.hours_before) y que todavía no
+     * recibieron la llamada automática de VAPI — usado por
+     * App\Console\Commands\SendAppointmentCallReminders. $windowStart y
+     * $windowEnd delimitan ese rango de starts_at.
+     */
+    public function scopeReadyForVapiCall($query, \DateTimeInterface $windowStart, \DateTimeInterface $windowEnd)
+    {
+        return $query->where('status', AppointmentStatus::Approved)
+            ->whereNull('vapi_call_status')
+            ->whereHas('appointmentSlot', function ($slotQuery) use ($windowStart, $windowEnd) {
+                $slotQuery->whereBetween('starts_at', [$windowStart, $windowEnd]);
+            });
     }
 
     public function getActivitylogOptions(): LogOptions

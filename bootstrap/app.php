@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/wompi',
             'analytics/social-click',
             'webhooks/telegram',
+            'webhooks/vapi',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
