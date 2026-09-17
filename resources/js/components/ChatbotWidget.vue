@@ -6,6 +6,12 @@ const props = defineProps({
     botTagline: { type: String, default: 'Asistente virtual' },
     avatar: { type: String, default: null },
     endpoint: { type: String, default: null },
+    // Chat en vivo con IA (ver Api\ChatbotMessageController) — mismo motor
+    // que el bot de Telegram. Si aiEnabled es false, el widget usa el flujo
+    // de siempre (recoger datos por formulario + FAQ por botones), sin
+    // llamar a este endpoint.
+    chatEndpoint: { type: String, default: null },
+    aiEnabled: { type: Boolean, default: false },
     // Modo demo (sin backend, p.ej. Netlify): no guarda el lead, solo simula.
     demoMode: { type: Boolean, default: false },
     whatsapp: { type: String, default: '' },
@@ -14,8 +20,10 @@ const props = defineProps({
     faqs: { type: Array, default: () => [] },
 });
 
-// Pasos del flujo: recoger datos de contacto antes de dejar conversar.
+// Pasos del flujo sin IA: recoger datos de contacto antes de dejar conversar.
 // 'name' -> 'email' -> 'phone' -> 'chat' (respuestas predefinidas por botones rápidos).
+// Con IA activa ('chat-ai'), se conversa libremente desde el primer mensaje —
+// es la propia IA quien pide nombre/correo/teléfono en la conversación.
 const step = ref('intro');
 const open = ref(false);
 const sending = ref(false);
@@ -36,8 +44,13 @@ function pushMessage(from, text) {
 function toggle() {
     open.value = !open.value;
     if (open.value && step.value === 'intro') {
-        step.value = 'name';
-        pushMessage('bot', `¡Hola! 🌿 Soy ${props.botName}, asistente virtual. ¿Con quién tengo el gusto?`);
+        if (props.aiEnabled && !props.demoMode) {
+            step.value = 'chat-ai';
+            pushMessage('bot', `¡Hola! 🌿 Soy ${props.botName}, asistente virtual. ¿En qué te puedo ayudar hoy?`);
+        } else {
+            step.value = 'name';
+            pushMessage('bot', `¡Hola! 🌿 Soy ${props.botName}, asistente virtual. ¿Con quién tengo el gusto?`);
+        }
     }
 }
 
@@ -106,6 +119,22 @@ function sendDraft() {
     pushMessage('bot', `Gracias por contarme. Le paso este mensaje a la psicóloga y te contactaremos pronto a ${lead.email || 'tu correo'}. Si prefieres una respuesta inmediata, escríbenos por WhatsApp.`);
 }
 
+async function sendAiMessage() {
+    const text = draft.value.trim();
+    if (!text || sending.value) return;
+    pushMessage('user', text);
+    draft.value = '';
+    sending.value = true;
+    try {
+        const { data } = await window.axios.post(props.chatEndpoint, { message: text });
+        pushMessage('bot', data.reply);
+    } catch (e) {
+        pushMessage('bot', 'Disculpa, tuve un problema respondiendo. Intenta de nuevo o escríbenos por WhatsApp.');
+    } finally {
+        sending.value = false;
+    }
+}
+
 </script>
 
 <template>
@@ -138,6 +167,12 @@ function sendDraft() {
                             :class="m.from === 'user' ? 'bg-sky-600 text-on-dark' : 'border border-paper-200 bg-card-fixed text-on-card-fixed'"
                         >
                             {{ m.text }}
+                        </div>
+                    </div>
+
+                    <div v-if="step === 'chat-ai' && sending" class="flex justify-start">
+                        <div class="rounded-2xl border border-paper-200 bg-card-fixed px-4 py-2.5 text-sm text-on-card-fixed-soft">
+                            Escribiendo…
                         </div>
                     </div>
 
@@ -188,6 +223,14 @@ function sendDraft() {
                         <input v-model="draft" type="text" placeholder="Escribe tu mensaje…"
                             class="w-full rounded-full border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" />
                         <button type="submit" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-on-dark hover:bg-sky-700">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>
+                        </button>
+                    </form>
+
+                    <form v-else-if="step === 'chat-ai'" class="flex gap-2" @submit.prevent="sendAiMessage">
+                        <input v-model="draft" type="text" placeholder="Escribe tu mensaje…" :disabled="sending"
+                            class="w-full rounded-full border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400 disabled:opacity-60" />
+                        <button type="submit" :disabled="sending" class="grid size-10 shrink-0 place-items-center rounded-full bg-sky-600 text-on-dark hover:bg-sky-700 disabled:opacity-60">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>
                         </button>
                     </form>

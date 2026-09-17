@@ -1,8 +1,9 @@
 <x-admin-layout title="Canales del chatbot">
     <h1 class="text-2xl font-serif text-sky-800">Canales del chatbot</h1>
     <p class="mt-2 text-sm text-ink-soft">
-        Conecta el chatbot a canales de mensajería reales. Telegram ya tiene integración completa
-        con IA (Claude, de Anthropic) para responder dudas de pacientes en lenguaje natural.
+        Conecta el chatbot a canales de mensajería reales. Telegram y el chat del propio sitio
+        responden con preguntas frecuentes por defecto, y pasan a responder con IA (Claude, de
+        Anthropic) en cuanto activas el interruptor de IA más abajo y guardas una llave válida.
         WhatsApp Business y Facebook Messenger quedan con la configuración lista para cuando
         tengas esas cuentas de desarrollador.
     </p>
@@ -14,7 +15,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.chatbot-channels.update') }}" class="mt-8 max-w-2xl space-y-10">
+    <form method="POST" action="{{ route('admin.chatbot-channels.update') }}" class="mt-8 max-w-2xl space-y-10" x-data>
         @csrf
         @method('PUT')
 
@@ -22,7 +23,9 @@
         <div class="rounded-2xl border border-paper-200 p-5">
             <div class="flex items-center justify-between gap-4">
                 <h2 class="font-serif text-lg text-sky-800">Telegram</h2>
-                <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">IA activa</span>
+                <span class="rounded-full {{ $channels['anthropic']['enabled'] ? 'bg-emerald-100 text-emerald-700' : 'bg-paper-200 text-ink-soft' }} px-2.5 py-1 text-xs font-bold">
+                    {{ $channels['anthropic']['enabled'] ? 'IA activa' : 'Modo preguntas frecuentes' }}
+                </span>
             </div>
             <p class="mt-1 text-sm text-ink-soft">
                 Crea un bot con <a href="https://t.me/BotFather" target="_blank" rel="noopener" class="font-semibold text-sky-700 underline">@BotFather</a>
@@ -51,21 +54,39 @@
         <div class="rounded-2xl border border-paper-200 p-5">
             <h2 class="font-serif text-lg text-sky-800">Inteligencia artificial (Anthropic / Claude)</h2>
             <p class="mt-1 text-sm text-ink-soft">
-                Motor que genera las respuestas del bot de Telegram. Crea una llave en
+                Motor que genera las respuestas del bot de Telegram y del chat en vivo del sitio.
+                Mientras esté apagada o sin llave, ambos canales responden con las preguntas
+                frecuentes configuradas en <a href="{{ route('admin.chatbot-faqs.index') }}" class="font-semibold text-sky-700 underline">Preguntas del chatbot</a>.
+                Crea una llave en
                 <a href="https://console.anthropic.com" target="_blank" rel="noopener" class="font-semibold text-sky-700 underline">console.anthropic.com</a>.
             </p>
+
+            <label class="mt-4 flex items-center gap-3 rounded-xl border border-paper-200 bg-paper-50 px-4 py-3 text-sm">
+                <input type="checkbox" name="anthropic_enabled" value="1" @checked($channels['anthropic']['enabled']) class="accent-sky-600">
+                Usar IA para responder (si está apagado, se usan solo las preguntas frecuentes)
+            </label>
 
             <div class="mt-4">
                 <label for="anthropic_api_key" class="mb-1.5 block text-sm font-semibold text-sky-700">API key</label>
                 <input type="password" name="anthropic_api_key" id="anthropic_api_key" value="{{ old('anthropic_api_key', $channels['anthropic']['api_key']) }}"
                     class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" autocomplete="off" placeholder="sk-ant-...">
-                <p class="mt-1 text-xs text-ink-soft">Sin esta llave, el bot de Telegram responderá que el asistente todavía no está activo.</p>
+                <p class="mt-1 text-xs text-ink-soft">Sin esta llave (o con la IA apagada), se responde con preguntas frecuentes.</p>
             </div>
 
             <div class="mt-4">
                 <label for="anthropic_model" class="mb-1.5 block text-sm font-semibold text-sky-700">Modelo</label>
                 <input type="text" name="anthropic_model" id="anthropic_model" value="{{ old('anthropic_model', $channels['anthropic']['model']) }}"
                     class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+            </div>
+
+            <div class="mt-4">
+                <label for="anthropic_temperature" class="mb-1.5 block text-sm font-semibold text-sky-700">
+                    Temperatura: <span x-text="$refs.temperatureValue?.value ?? '{{ old('anthropic_temperature', $channels['anthropic']['temperature']) }}'"></span>
+                </label>
+                <input type="range" name="anthropic_temperature" id="anthropic_temperature" x-ref="temperatureValue"
+                    min="0" max="1" step="0.1" value="{{ old('anthropic_temperature', $channels['anthropic']['temperature']) }}"
+                    class="w-full accent-sky-600">
+                <p class="mt-1 text-xs text-ink-soft">0 = respuestas más consistentes y predecibles. 1 = respuestas más variadas y creativas.</p>
             </div>
         </div>
 
@@ -143,12 +164,46 @@
         <button type="submit" class="btn btn-primary">Guardar configuración</button>
     </form>
 
-    {{-- Formulario aparte del principal a propósito: HTML no permite un
+    {{-- Documento fuente (PDF) — formulario propio, con enctype de subida de
+         archivo, fuera del form principal a propósito (ver nota más abajo). --}}
+    <div class="mt-8 max-w-2xl rounded-2xl border border-paper-200 p-5">
+        <h2 class="font-serif text-lg text-sky-800">Documento fuente (PDF)</h2>
+        <p class="mt-1 text-sm text-ink-soft">
+            Sube un PDF (tarifario, folleto de servicios, etc.) y la IA lo usará como información
+            adicional, junto con las preguntas frecuentes, al responder.
+        </p>
+
+        @if (! empty($channels['anthropic']['pdf_source_name']))
+            <div class="mt-4 flex items-center justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+                <span>📄 {{ $channels['anthropic']['pdf_source_name'] }}</span>
+                <button type="submit" form="chatbot-pdf-delete-form" class="font-semibold text-clay-600 underline">Quitar</button>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('admin.chatbot-channels.pdf-source.update') }}" enctype="multipart/form-data" class="mt-4 flex flex-wrap items-center gap-3">
+            @csrf
+            <input type="file" name="pdf_source" accept="application/pdf" required
+                class="text-sm file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-on-dark hover:file:bg-sky-700">
+            <button type="submit" class="btn btn-ghost text-sm">Subir PDF</button>
+        </form>
+        @error('pdf_source')
+            <p class="mt-1 text-xs font-semibold text-clay-600">{{ $message }}</p>
+        @enderror
+    </div>
+
+    {{-- Formularios aparte del principal a propósito: HTML no permite un
          <form> anidado dentro de otro (ver el mismo patrón en
          admin/payment-settings/edit.blade.php). --}}
     @if (! empty($channels['telegram']['bot_token']))
         <form id="telegram-test-form" method="POST" action="{{ route('admin.chatbot-channels.test-telegram') }}" class="hidden">
             @csrf
+        </form>
+    @endif
+
+    @if (! empty($channels['anthropic']['pdf_source_name']))
+        <form id="chatbot-pdf-delete-form" method="POST" action="{{ route('admin.chatbot-channels.pdf-source.destroy') }}" class="hidden">
+            @csrf
+            @method('DELETE')
         </form>
     @endif
 </x-admin-layout>

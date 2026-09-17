@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ChatbotConversation;
+use App\Models\ChatbotFaq;
 use App\Services\SiteSettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -17,7 +18,7 @@ class TelegramWebhookControllerTest extends TestCase
         parent::setUp();
         app(SiteSettingsService::class)->set('chatbot_channels', [
             'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
-            'anthropic' => ['api_key' => 'sk-ant-test', 'model' => 'claude-3-5-haiku-latest'],
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'model' => 'claude-3-5-haiku-latest'],
         ]);
     }
 
@@ -29,10 +30,18 @@ class TelegramWebhookControllerTest extends TestCase
         ]), json_encode($payload));
     }
 
+    private function fakeAiReply(string $text): array
+    {
+        return [
+            'content' => [['type' => 'text', 'text' => $text]],
+            'stop_reason' => 'end_turn',
+        ];
+    }
+
     public function test_responde_un_mensaje_con_ia_y_lo_guarda_en_el_historial(): void
     {
         Http::fake([
-            'api.anthropic.com/*' => Http::response(['content' => [['text' => 'Las sesiones duran 50 minutos.']]], 200),
+            'api.anthropic.com/*' => Http::response($this->fakeAiReply('Las sesiones duran 50 minutos.'), 200),
             'api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200),
         ]);
 
@@ -69,24 +78,53 @@ class TelegramWebhookControllerTest extends TestCase
         $this->assertDatabaseCount('chatbot_conversations', 0);
     }
 
-    public function test_avisa_que_el_asistente_no_esta_activo_sin_api_key_de_ia(): void
+    public function test_sin_api_key_responde_con_faq_en_vez_de_ia(): void
     {
         app(SiteSettingsService::class)->set('chatbot_channels', [
             'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
-            'anthropic' => ['api_key' => ''],
+            'anthropic' => ['enabled' => false, 'api_key' => ''],
+        ]);
+        ChatbotFaq::create(['question' => '¿Cuánto dura una sesión?', 'answer' => 'Las sesiones duran 50 minutos.', 'is_active' => true]);
+        Http::fake(['api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200)]);
+
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => '¿Cuánto dura una sesión?']]);
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && str_contains($request['text'] ?? '', 'Las sesiones duran 50 minutos.'));
+    }
+
+    public function test_si_la_ia_esta_apagada_manualmente_responde_con_faq_aunque_haya_api_key(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'anthropic' => ['enabled' => false, 'api_key' => 'sk-ant-test'],
         ]);
         Http::fake(['api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200)]);
 
         $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => 'Hola']]);
 
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.anthropic.com'));
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage'));
+    }
+
+    public function test_si_la_ia_falla_en_el_momento_cae_a_faq_en_vez_de_dejar_sin_respuesta(): void
+    {
+        ChatbotFaq::create(['question' => '¿Cuánto dura una sesión?', 'answer' => 'Las sesiones duran 50 minutos.', 'is_active' => true]);
+        Http::fake([
+            'api.anthropic.com/*' => Http::response(['error' => ['message' => 'rate_limited']], 429),
+            'api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => '¿Cuánto dura una sesión?']]);
+
         Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
-            && str_contains($request['text'] ?? '', 'todavía no está activo'));
+            && str_contains($request['text'] ?? '', 'Las sesiones duran 50 minutos.'));
     }
 
     public function test_mantiene_el_historial_entre_mensajes_de_la_misma_conversacion(): void
     {
         Http::fake([
-            'api.anthropic.com/*' => Http::response(['content' => [['text' => 'Respuesta']]], 200),
+            'api.anthropic.com/*' => Http::response($this->fakeAiReply('Respuesta'), 200),
             'api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200),
         ]);
 

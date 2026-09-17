@@ -89,13 +89,18 @@
             ? []
             : \App\Models\ChatbotFaq::active()->ordered()->get(['id', 'question', 'answer'])->toArray();
         $chatbotProps = [
-            'botName'    => $chatbotName,
-            'botTagline' => 'Asistente virtual de '.$chatbotOwnerFirstName,
-            'avatar'     => $chatbotAvatar,
-            'endpoint'   => $chatbotDemoMode ? null : route('chatbot-lead.store'),
-            'demoMode'   => $chatbotDemoMode,
-            'whatsapp'   => $chatbotWhatsapp,
-            'faqs'       => $chatbotFaqs,
+            'botName'     => $chatbotName,
+            'botTagline'  => 'Asistente virtual de '.$chatbotOwnerFirstName,
+            'avatar'      => $chatbotAvatar,
+            'endpoint'    => $chatbotDemoMode ? null : route('chatbot-lead.store'),
+            'chatEndpoint' => $chatbotDemoMode ? null : route('chatbot-message.store'),
+            'demoMode'    => $chatbotDemoMode,
+            'whatsapp'    => $chatbotWhatsapp,
+            'faqs'        => $chatbotFaqs,
+            // Si la IA está activa y configurada, el widget conversa en vivo
+            // en vez del flujo fijo de nombre→correo→teléfono→FAQ por
+            // botones (ver App\Services\ChatbotAiService::isUsable()).
+            'aiEnabled'   => $chatbotDemoMode ? false : app(\App\Services\ChatbotAiService::class)->isUsable(),
         ];
     @endphp
     <div data-vue="ChatbotWidget" data-props="{{ json_encode($chatbotProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>
