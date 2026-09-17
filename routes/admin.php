@@ -156,6 +156,7 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
     Route::put('/vapi-settings', [VapiSettingsController::class, 'update'])->name('vapi-settings.update');
     Route::post('/vapi-settings/regenerate-webhook-secret', [VapiSettingsController::class, 'regenerateWebhookSecret'])->name('vapi-settings.regenerate-webhook-secret');
     Route::post('/vapi-settings/test-connection', [VapiSettingsController::class, 'testConnection'])->name('vapi-settings.test-connection');
+    Route::post('/vapi-settings/send-test-call', [VapiSettingsController::class, 'sendTestCall'])->name('vapi-settings.send-test-call');
 
     // Aprobación de testimonios y filtro de contenido.
     Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
