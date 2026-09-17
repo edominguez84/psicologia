@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\SiteSettingsService;
 use App\Services\TelegramBotService;
+use App\Support\AnthropicModels;
 use App\Support\PdfTextExtractor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class ChatbotChannelsController extends Controller
             // del pedido: activar/desactivar el uso de IA).
             'enabled' => false,
             'api_key' => '',
-            'model' => 'claude-haiku-4-5-20251001',
+            'model' => AnthropicModels::DEFAULT_MODEL,
             // 0 = respuestas más consistentes/predecibles, 1 = más
             // creativas/variadas. Anthropic acepta hasta 1.0.
             'temperature' => 0.3,
@@ -41,6 +42,20 @@ class ChatbotChannelsController extends Controller
             'pdf_source_path' => null,
             'pdf_source_name' => null,
             'pdf_source_text' => '',
+            // Personalización de "cómo se comporta" el bot — texto libre
+            // para educar tono/estilo (amable, serio, con modismos
+            // salvadoreños, etc.), nombre propio, saludo inicial, y qué
+            // datos pedir — todo se inyecta en el system prompt tal cual lo
+            // escriba el super_admin.
+            'bot_name' => 'Alexa',
+            'personality' => '',
+            'greeting' => '',
+            'data_to_request' => 'Nombre completo, correo electrónico y teléfono.',
+            // Límite de mensajes de IA por conversación por día — protege
+            // el gasto de la API ante abuso (cientos de mensajes seguidos
+            // de un mismo visitante/chat). No limita el modo FAQ, que no
+            // cuesta nada.
+            'daily_message_limit' => 60,
         ],
     ];
 
@@ -54,6 +69,7 @@ class ChatbotChannelsController extends Controller
 
         return view('admin.chatbot-channels.edit', [
             'channels' => $channels,
+            'models' => AnthropicModels::all(),
         ]);
     }
 
@@ -74,6 +90,11 @@ class ChatbotChannelsController extends Controller
             'anthropic_api_key' => ['nullable', 'string', 'max:255'],
             'anthropic_model' => ['nullable', 'string', 'max:100'],
             'anthropic_temperature' => ['nullable', 'numeric', 'min:0', 'max:1'],
+            'anthropic_bot_name' => ['nullable', 'string', 'max:60'],
+            'anthropic_personality' => ['nullable', 'string', 'max:2000'],
+            'anthropic_greeting' => ['nullable', 'string', 'max:500'],
+            'anthropic_data_to_request' => ['nullable', 'string', 'max:500'],
+            'anthropic_daily_message_limit' => ['nullable', 'integer', 'min:1', 'max:1000'],
         ]);
 
         $current = array_replace_recursive(self::DEFAULTS, $this->settings->get('chatbot_channels', []));
@@ -105,6 +126,11 @@ class ChatbotChannelsController extends Controller
                 // número JSON real (rechazaba la request completa, cayendo
                 // siempre al modo FAQ aunque la API key fuera válida).
                 'temperature' => isset($data['anthropic_temperature']) ? (float) $data['anthropic_temperature'] : self::DEFAULTS['anthropic']['temperature'],
+                'bot_name' => $data['anthropic_bot_name'] ?? self::DEFAULTS['anthropic']['bot_name'],
+                'personality' => $data['anthropic_personality'] ?? '',
+                'greeting' => $data['anthropic_greeting'] ?? '',
+                'data_to_request' => $data['anthropic_data_to_request'] ?? self::DEFAULTS['anthropic']['data_to_request'],
+                'daily_message_limit' => isset($data['anthropic_daily_message_limit']) ? (int) $data['anthropic_daily_message_limit'] : self::DEFAULTS['anthropic']['daily_message_limit'],
                 // El PDF fuente se administra con su propio formulario
                 // (updatePdfSource/destroyPdfSource) — se conserva tal cual
                 // estaba al guardar el resto de esta configuración.

@@ -25,13 +25,16 @@ class ChatbotMessageController extends Controller
         $text = $request->string('message')->toString();
         $sessionId = $request->session()->getId();
 
-        if (! $ai->isUsable()) {
-            return response()->json(['mode' => 'faq', 'reply' => $this->faqReply($text)]);
-        }
-
         $conversation = ChatbotConversation::firstOrCreate(
             ['channel' => 'web', 'external_chat_id' => $sessionId],
         );
+
+        // isUsable($conversation) también cae a FAQ si esta conversación ya
+        // alcanzó el límite diario de mensajes de IA configurado — protege
+        // el gasto de la API ante abuso (el modo FAQ no cuesta nada).
+        if (! $ai->isUsable($conversation)) {
+            return response()->json(['mode' => 'faq', 'reply' => $this->faqReply($text)]);
+        }
 
         $conversation->appendMessage('user', $text);
 
@@ -42,6 +45,7 @@ class ChatbotMessageController extends Controller
                 fn () => $conversation->update(['lead_captured' => true]),
             );
             $conversation->appendMessage('assistant', $reply);
+            $conversation->incrementAiMessageCount();
 
             return response()->json(['mode' => 'ai', 'reply' => $reply]);
         } catch (\Throwable $e) {

@@ -49,7 +49,7 @@ class ChatbotAiServiceTest extends TestCase
         $reply = app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => '¿Cuánto dura la sesión?']]);
 
         $this->assertSame('Las sesiones duran 50 minutos.', $reply);
-        Http::assertSent(fn ($request) => str_contains($request['system'], '¿Cuánto dura una sesión?'));
+        Http::assertSent(fn ($request) => str_contains($request['system'][0]['text'], '¿Cuánto dura una sesión?'));
     }
 
     public function test_lanza_excepcion_sin_api_key(): void
@@ -255,6 +255,134 @@ class ChatbotAiServiceTest extends TestCase
 
         app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Hola']]);
 
-        Http::assertSent(fn ($request) => str_contains($request['system'], 'Tarifario especial: consulta $40.'));
+        Http::assertSent(fn ($request) => str_contains($request['system'][0]['text'], 'Tarifario especial: consulta $40.'));
+    }
+
+    public function test_marca_el_system_prompt_y_las_tools_con_cache_control_para_prompt_caching(): void
+    {
+        $this->configureCredentials();
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'content' => [['type' => 'text', 'text' => 'Ok.']],
+                'stop_reason' => 'end_turn',
+            ], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Hola']]);
+
+        Http::assertSent(function ($request) {
+            $systemHasCacheControl = ($request['system'][0]['cache_control']['type'] ?? null) === 'ephemeral';
+            $lastTool = collect($request['tools'])->last();
+            $toolsHaveCacheControl = ($lastTool['cache_control']['type'] ?? null) === 'ephemeral';
+
+            return $systemHasCacheControl && $toolsHaveCacheControl;
+        });
+    }
+
+    public function test_incluye_el_nombre_personalizado_del_bot_en_el_system_prompt(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'bot_name' => 'Sofía'],
+        ]);
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'content' => [['type' => 'text', 'text' => 'Ok.']],
+                'stop_reason' => 'end_turn',
+            ], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Hola']]);
+
+        Http::assertSent(fn ($request) => str_contains($request['system'][0]['text'], 'Te llamas Sofía'));
+    }
+
+    public function test_incluye_la_personalidad_configurada_en_el_system_prompt(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'personality' => 'Usa modismos salvadoreños como "va pues".'],
+        ]);
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'content' => [['type' => 'text', 'text' => 'Ok.']],
+                'stop_reason' => 'end_turn',
+            ], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Hola']]);
+
+        Http::assertSent(fn ($request) => str_contains($request['system'][0]['text'], 'va pues'));
+    }
+
+    public function test_incluye_el_saludo_configurado_en_el_system_prompt(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'greeting' => '¡Qué tal! Soy tu asistente.'],
+        ]);
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'content' => [['type' => 'text', 'text' => 'Ok.']],
+                'stop_reason' => 'end_turn',
+            ], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Hola']]);
+
+        Http::assertSent(fn ($request) => str_contains($request['system'][0]['text'], '¡Qué tal! Soy tu asistente.'));
+    }
+
+    public function test_incluye_los_datos_a_solicitar_configurados_en_el_system_prompt(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'data_to_request' => 'Solo el nombre y el número de WhatsApp.'],
+        ]);
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'content' => [['type' => 'text', 'text' => 'Ok.']],
+                'stop_reason' => 'end_turn',
+            ], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Hola']]);
+
+        Http::assertSent(fn ($request) => str_contains($request['system'][0]['text'], 'Solo el nombre y el número de WhatsApp.'));
+    }
+
+    public function test_no_es_usable_si_la_conversacion_alcanzo_el_limite_diario(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'daily_message_limit' => 3],
+        ]);
+        $conversation = \App\Models\ChatbotConversation::create([
+            'channel' => 'telegram', 'external_chat_id' => '1',
+            'ai_message_count' => 3, 'ai_message_count_date' => now()->toDateString(),
+        ]);
+
+        $this->assertFalse(app(ChatbotAiService::class)->isUsable($conversation));
+    }
+
+    public function test_es_usable_si_el_limite_diario_es_de_un_dia_anterior(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'daily_message_limit' => 3],
+        ]);
+        $conversation = \App\Models\ChatbotConversation::create([
+            'channel' => 'telegram', 'external_chat_id' => '1',
+            'ai_message_count' => 3, 'ai_message_count_date' => now()->subDay()->toDateString(),
+        ]);
+
+        $this->assertTrue(app(ChatbotAiService::class)->isUsable($conversation));
+    }
+
+    public function test_es_usable_por_debajo_del_limite_diario(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'daily_message_limit' => 3],
+        ]);
+        $conversation = \App\Models\ChatbotConversation::create([
+            'channel' => 'telegram', 'external_chat_id' => '1',
+            'ai_message_count' => 2, 'ai_message_count_date' => now()->toDateString(),
+        ]);
+
+        $this->assertTrue(app(ChatbotAiService::class)->isUsable($conversation));
     }
 }

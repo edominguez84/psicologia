@@ -102,6 +102,37 @@ class ChatbotChannelsControllerTest extends TestCase
         $this->assertSame(0.8, $channels['anthropic']['temperature']);
     }
 
+    public function test_guarda_la_personalidad_nombre_saludo_datos_y_limite_diario(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+        $this->actingAs($superAdmin)->put('/admin/chatbot-channels', [
+            'anthropic_bot_name' => 'Sofía',
+            'anthropic_personality' => 'Sé amable y usa modismos salvadoreños.',
+            'anthropic_greeting' => '¡Qué tal! Soy Sofía.',
+            'anthropic_data_to_request' => 'Solo nombre y WhatsApp.',
+            'anthropic_daily_message_limit' => '25',
+        ]);
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertSame('Sofía', $channels['anthropic']['bot_name']);
+        $this->assertSame('Sé amable y usa modismos salvadoreños.', $channels['anthropic']['personality']);
+        $this->assertSame('¡Qué tal! Soy Sofía.', $channels['anthropic']['greeting']);
+        $this->assertSame('Solo nombre y WhatsApp.', $channels['anthropic']['data_to_request']);
+        $this->assertSame(25, $channels['anthropic']['daily_message_limit']);
+    }
+
+    public function test_la_pantalla_de_edicion_lista_el_catalogo_completo_de_modelos(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+        $response = $this->actingAs($superAdmin)->get('/admin/chatbot-channels');
+
+        $response->assertOk();
+        $response->assertSee('Claude Haiku 4.5', false);
+        $response->assertSee('Claude Opus 5', false);
+    }
+
     public function test_guardar_configuracion_no_borra_el_pdf_fuente_ya_cargado(): void
     {
         $superAdmin = User::factory()->create(['role' => 'super_admin']);

@@ -75,8 +75,13 @@
 
             <div class="mt-4">
                 <label for="anthropic_model" class="mb-1.5 block text-sm font-semibold text-sky-700">Modelo</label>
-                <input type="text" name="anthropic_model" id="anthropic_model" value="{{ old('anthropic_model', $channels['anthropic']['model']) }}"
+                <select name="anthropic_model" id="anthropic_model"
                     class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+                    @foreach ($models as $modelId => $modelLabel)
+                        <option value="{{ $modelId }}" @selected(old('anthropic_model', $channels['anthropic']['model']) === $modelId)>{{ $modelLabel }}</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-ink-soft">Los modelos más económicos (Haiku) son suficientes para responder preguntas del sitio y agendar. Los más avanzados (Opus, Fable, Sonnet) cuestan más por mensaje.</p>
             </div>
 
             <div class="mt-4">
@@ -87,6 +92,54 @@
                     min="0" max="1" step="0.1" value="{{ old('anthropic_temperature', $channels['anthropic']['temperature']) }}"
                     class="w-full accent-sky-600">
                 <p class="mt-1 text-xs text-ink-soft">0 = respuestas más consistentes y predecibles. 1 = respuestas más variadas y creativas.</p>
+            </div>
+
+            <div class="mt-4">
+                <label for="anthropic_daily_message_limit" class="mb-1.5 block text-sm font-semibold text-sky-700">Límite de mensajes de IA por conversación al día</label>
+                <input type="number" name="anthropic_daily_message_limit" id="anthropic_daily_message_limit" min="1" max="1000"
+                    value="{{ old('anthropic_daily_message_limit', $channels['anthropic']['daily_message_limit']) }}"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+                <p class="mt-1 text-xs text-ink-soft">Protege el gasto de la API: si un mismo chat supera este número de mensajes en un día, sigue respondiendo con preguntas frecuentes en vez de IA hasta el día siguiente.</p>
+            </div>
+        </div>
+
+        {{-- Personalidad del bot --}}
+        <div class="rounded-2xl border border-paper-200 p-5">
+            <h2 class="font-serif text-lg text-sky-800">Personalidad del bot</h2>
+            <p class="mt-1 text-sm text-ink-soft">
+                Cómo se comporta y presenta el asistente. Las reglas de seguridad del sistema (no
+                salirse de temas del sitio, no revelar información interna) siempre se mantienen,
+                sin importar lo que escribas aquí.
+            </p>
+
+            <div class="mt-4">
+                <label for="anthropic_bot_name" class="mb-1.5 block text-sm font-semibold text-sky-700">Nombre del asistente</label>
+                <input type="text" name="anthropic_bot_name" id="anthropic_bot_name" maxlength="60"
+                    value="{{ old('anthropic_bot_name', $channels['anthropic']['bot_name']) }}" placeholder="Alexa"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+            </div>
+
+            <div class="mt-4">
+                <label for="anthropic_greeting" class="mb-1.5 block text-sm font-semibold text-sky-700">Saludo inicial</label>
+                <textarea name="anthropic_greeting" id="anthropic_greeting" rows="2" maxlength="500"
+                    placeholder="¡Hola! Soy Alexa, la asistente de Erika. ¿En qué te puedo ayudar hoy?"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">{{ old('anthropic_greeting', $channels['anthropic']['greeting']) }}</textarea>
+                <p class="mt-1 text-xs text-ink-soft">Cómo saluda al iniciar una conversación nueva. Déjalo vacío para que el bot elija un saludo natural por su cuenta.</p>
+            </div>
+
+            <div class="mt-4">
+                <label for="anthropic_personality" class="mb-1.5 block text-sm font-semibold text-sky-700">Cómo debe comportarse (tono, estilo)</label>
+                <textarea name="anthropic_personality" id="anthropic_personality" rows="5" maxlength="2000"
+                    placeholder="Ejemplo: Sé amable y cercana, usa un tono relajado. Puedes usar palabras salvadoreñas comunes como 'va pues', 'qué onda' o 'cheque' de vez en cuando, sin exagerar. Muestra empatía genuina y evita sonar robótica."
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">{{ old('anthropic_personality', $channels['anthropic']['personality']) }}</textarea>
+                <p class="mt-1 text-xs text-ink-soft">Texto libre: describe el tono (amable, serio, alegre), modismos o expresiones que puede usar, y cualquier otro matiz de cómo quieres que se comporte.</p>
+            </div>
+
+            <div class="mt-4">
+                <label for="anthropic_data_to_request" class="mb-1.5 block text-sm font-semibold text-sky-700">Qué datos debe solicitar al paciente</label>
+                <textarea name="anthropic_data_to_request" id="anthropic_data_to_request" rows="2" maxlength="500"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">{{ old('anthropic_data_to_request', $channels['anthropic']['data_to_request']) }}</textarea>
+                <p class="mt-1 text-xs text-ink-soft">Qué le pide al paciente antes de agendar o dar más información (por defecto: nombre, correo y teléfono). El nombre y el correo siempre son obligatorios para guardarlo como cliente potencial.</p>
             </div>
         </div>
 
