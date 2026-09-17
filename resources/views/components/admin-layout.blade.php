@@ -103,6 +103,7 @@
                                     ['route' => 'admin.activity-log.index', 'label' => 'Registro de auditoría', 'icon' => 'clipboard'],
                                     ['route' => 'admin.system-log.index', 'label' => 'Logs del sistema', 'icon' => 'terminal'],
                                     ['route' => 'admin.payment-settings.edit', 'label' => 'Métodos de pago', 'icon' => 'card'],
+                                    ['route' => 'admin.vapi-settings.edit', 'label' => 'Llamadas de confirmación', 'icon' => 'chat'],
                                     ['route' => 'admin.profanity-filter.edit', 'label' => 'Filtro de contenido', 'icon' => 'shield-lock'],
                                     ['route' => 'admin.reports.index', 'label' => 'Informe del sistema', 'icon' => 'document'],
                                     ['route' => 'admin.analytics.index', 'label' => 'Dashboard analítico', 'icon' => 'clipboard'],

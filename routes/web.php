@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CheckupController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Webhooks\TelegramWebhookController;
+use App\Http\Controllers\Webhooks\VapiWebhookController;
 use App\Http\Controllers\Webhooks\WompiWebhookController;
 use App\Http\Middleware\ResolveSiteLocale;
 use Illuminate\Support\Facades\Route;
@@ -69,6 +70,10 @@ Route::post('/webhooks/wompi', WompiWebhookController::class)->name('webhooks.wo
 // El límite de uso de IA real es por conversación individual, ver
 // App\Models\ChatbotConversation::hasReachedDailyAiLimit().
 Route::post('/webhooks/telegram', TelegramWebhookController::class)->name('webhooks.telegram');
+
+// Resultado de las llamadas automáticas de confirmación de cita (VAPI) —
+// ver App\Http\Controllers\Webhooks\VapiWebhookController.
+Route::post('/webhooks/vapi', VapiWebhookController::class)->name('webhooks.vapi');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
