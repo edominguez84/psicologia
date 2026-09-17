@@ -83,6 +83,19 @@
 
         <div class="flex flex-wrap gap-3">
             <button type="submit" class="btn btn-primary">Guardar configuración</button>
+        </div>
+    </form>
+
+    {{-- Botones de acción con su propio <form> aparte del principal a
+         propósito: HTML no permite un <form> anidado dentro de otro (ver el
+         mismo patrón en admin/payment-settings/edit.blade.php). Se sacan
+         fuera de la etiqueta <form> del formulario principal por completo
+         (no solo usan el atributo form=) — un <button type="submit"> físicamente
+         anidado dentro de otro <form> puede terminar enviando el formulario
+         contenedor en algunos navegadores en vez del referenciado por
+         form=, sobre todo combinado con onclick="confirm(...)". --}}
+    @if (! empty($vapi['api_key']))
+        <div class="mt-4 flex max-w-xl flex-wrap gap-3">
             @if (! empty($vapi['api_key']))
                 <button type="submit" form="vapi-test-form" class="btn btn-ghost text-sm">Probar conexión</button>
             @endif
@@ -93,11 +106,8 @@
                 </button>
             @endif
         </div>
-    </form>
+    @endif
 
-    {{-- Formularios aparte del principal a propósito: HTML no permite un
-         <form> anidado dentro de otro (ver el mismo patrón en
-         admin/payment-settings/edit.blade.php). --}}
     @if (! empty($vapi['api_key']))
         <form id="vapi-test-form" method="POST" action="{{ route('admin.vapi-settings.test-connection') }}" class="hidden">
             @csrf
