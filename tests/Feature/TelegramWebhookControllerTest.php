@@ -164,4 +164,40 @@ class TelegramWebhookControllerTest extends TestCase
         Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
             && str_contains($request['text'] ?? '', 'Sí, con paquete.'));
     }
+
+    public function test_en_modo_faq_sin_coincidencia_arranca_la_captura_de_datos_en_vez_del_menu(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'anthropic' => ['enabled' => false, 'api_key' => ''],
+        ]);
+        Http::fake(['api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200)]);
+
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => 'algo que no coincide con ninguna faq']]);
+
+        $conversation = ChatbotConversation::where('external_chat_id', '555')->first();
+        $this->assertSame('name', $conversation->faq_capture_step);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && str_contains($request['text'] ?? '', 'nombre completo'));
+    }
+
+    public function test_en_modo_faq_completa_la_captura_de_datos_a_lo_largo_de_varios_mensajes(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'anthropic' => ['enabled' => false, 'api_key' => ''],
+        ]);
+        Http::fake(['api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200)]);
+
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => 'no coincide con nada']]);
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => 'Elian Domínguez']]);
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => 'elian@example.com']]);
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => '77778888']]);
+
+        $this->assertDatabaseHas('chatbot_leads', ['name' => 'Elian Domínguez', 'email' => 'elian@example.com', 'phone' => '77778888']);
+        $conversation = ChatbotConversation::where('external_chat_id', '555')->first();
+        $this->assertTrue($conversation->lead_captured);
+        // El sistema en modo FAQ nunca agenda nada — solo captura el contacto.
+        $this->assertDatabaseCount('appointments', 0);
+    }
 }

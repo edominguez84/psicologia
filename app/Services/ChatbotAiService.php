@@ -230,7 +230,7 @@ class ChatbotAiService
         return json_encode([
             'citas_disponibles' => $appointmentSlots->values()->all(),
             'llamadas_gratis_disponibles' => $callSlots->values()->all(),
-            'nota' => 'Estos son los únicos horarios reales disponibles ahora mismo. No inventes ni ofrezcas otros. Si ambas listas están vacías, dilo con honestidad y sugiere escribir por WhatsApp. Las llamadas gratuitas de 15 minutos no se agendan con book_appointment (esa tool es solo para citas de sesión completa) — para la llamada gratis, sugiere escribir por WhatsApp para coordinarla.',
+            'nota' => 'Estos son los únicos horarios reales disponibles ahora mismo. No inventes ni ofrezcas otros. Trata cada lista de forma independiente: si "citas_disponibles" está vacía, no menciones en absoluto la posibilidad de agendar una cita de pago (ni digas que no hay, simplemente no la ofrezcas). Si "llamadas_gratis_disponibles" está vacía, no menciones en absoluto la llamada gratuita de 15 minutos. Si ambas están vacías, dilo con honestidad y sugiere escribir por WhatsApp. Las llamadas gratuitas de 15 minutos no se agendan con book_appointment (esa tool es solo para citas de sesión completa, de pago) — para la llamada gratis, sugiere escribir por WhatsApp para coordinarla.',
         ], JSON_UNESCAPED_UNICODE);
     }
 
@@ -362,7 +362,34 @@ class ChatbotAiService
             ? ' Se creó una cuenta nueva para él/ella y se le envió por correo su contraseña temporal para poder ingresar después.'
             : ' Ya tenía una cuenta con ese correo, se usó la existente.';
 
-        return "Cita reservada correctamente en estado pendiente de confirmación (queda sujeta a que el super_admin la apruebe, como cualquier cita del sitio).{$accountNote} Confírmale al paciente el horario reservado y que revisará su correo para más detalles.";
+        $paymentInfo = $this->booking->paymentInfoFor($appointment);
+        $paymentSection = $this->describePaymentInfo($paymentInfo);
+
+        return "Cita reservada correctamente en estado pendiente de confirmación (queda sujeta a que el super_admin la apruebe, como cualquier cita del sitio).{$accountNote} Confírmale al paciente el horario reservado.\n\n{$paymentSection}";
+    }
+
+    /**
+     * Convierte lo que devuelve AppointmentBookingService::paymentInfoFor()
+     * en instrucciones que la IA le pasa tal cual al paciente — con Wompi le
+     * da el enlace de pago real y le pide avisar por WhatsApp con captura si
+     * hiciera falta enviar comprobante; con transferencia le da los datos de
+     * la cuenta bancaria y le pide tomar captura del comprobante y enviarla
+     * por WhatsApp, que es como se confirma manualmente el pago en este
+     * sitio.
+     */
+    private function describePaymentInfo(array $paymentInfo): string
+    {
+        if ($paymentInfo['method'] === 'wompi') {
+            if ($paymentInfo['status'] === 'wompi_unavailable') {
+                return 'Indícale al paciente que el pago en línea no está disponible en este momento, y que debe escribir por WhatsApp para coordinar cómo pagar.';
+            }
+
+            return "Indícale al paciente este enlace para completar el pago en línea: {$paymentInfo['payment_url']}. Pídele que, una vez pagado, tome una captura de pantalla del comprobante y la envíe por WhatsApp, por si hiciera falta confirmar el pago manualmente.";
+        }
+
+        $bankDetails = trim("Banco: {$paymentInfo['bank_name']}. Cuenta: {$paymentInfo['account_number']}. A nombre de: {$paymentInfo['account_holder']}.");
+
+        return "Indícale al paciente estos datos para realizar la transferencia bancaria: {$bankDetails} {$paymentInfo['instructions']} Pídele explícitamente que tome una captura de pantalla del comprobante de pago y la envíe por WhatsApp — así es como se confirma el pago en este sitio.";
     }
 
     private function isValidPastDate(string $date): bool
@@ -488,16 +515,21 @@ class ChatbotAiService
               menos el nombre y el correo, guárdalos con la herramienta save_lead. No reserves nada
               todavía.
             - Quiere agendar de verdad y ya confirmó un horario específico de los que le mostraste:
-              usa la herramienta book_appointment en vez de save_lead — esta sí reserva la cita real
-              (queda pendiente de confirmación del super_admin, nunca digas que está "confirmada").
-              Para poder llamarla necesitas TODOS estos datos del paciente, pídelos con naturalidad
-              si te faltan: nombre completo, correo, teléfono, fecha de nacimiento (puedes convertir
-              lo que diga a formato AAAA-MM-DD), sexo, departamento y municipio de El Salvador donde
-              vive. Los departamentos válidos (usa el slug antes del "=", no el nombre) son:
-              {$departments}. El municipio va como el paciente lo escriba, siempre que pertenezca al
-              departamento elegido. No llames a book_appointment hasta tener todos estos datos y el
-              id exacto del horario (de get_available_slots) que el paciente confirmó — nunca
-              inventes ni asumas un id.
+              antes de pedirle datos, explícale brevemente en qué consiste la sesión (duración,
+              modalidad por videollamada) usando las FAQs de abajo como base. Luego usa la
+              herramienta book_appointment en vez de save_lead — esta sí reserva la cita real (queda
+              pendiente de confirmación del super_admin, nunca digas que está "confirmada"). Para
+              poder llamarla necesitas TODOS estos datos del paciente, pídelos con naturalidad si te
+              faltan: nombre completo, correo, teléfono, fecha de nacimiento (puedes convertir lo que
+              diga a formato AAAA-MM-DD), sexo, departamento y municipio de El Salvador donde vive.
+              Los departamentos válidos (usa el slug antes del "=", no el nombre) son: {$departments}.
+              El municipio va como el paciente lo escriba, siempre que pertenezca al departamento
+              elegido. No llames a book_appointment hasta tener todos estos datos y el id exacto del
+              horario (de get_available_slots) que el paciente confirmó — nunca inventes ni asumas un
+              id. Cuando la herramienta responda con éxito, va a incluir instrucciones de pago
+              (enlace de pago en línea, o datos de transferencia bancaria) — pásaselas al paciente
+              tal cual se te indican, sin omitir el enlace ni el pedido de enviar captura del
+              comprobante por WhatsApp.
 
             Si el paciente ya dio estos datos antes en esta misma conversación, no los vuelvas a
             pedir ni a guardar/reservar de nuevo.

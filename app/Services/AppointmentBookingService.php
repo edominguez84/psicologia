@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Lógica de reservar un slot para un usuario ya identificado — extraída de
@@ -22,6 +23,10 @@ use Illuminate\Support\Facades\Mail;
  */
 class AppointmentBookingService
 {
+    public function __construct(private SiteSettingsService $settings, private WompiPaymentService $wompi)
+    {
+    }
+
     public function book(User $user, int $appointmentSlotId, string $paymentMethod, ?int $promotionId = null, ?string $patientNote = null): ?Appointment
     {
         $promotion = $promotionId ? Promotion::active()->find($promotionId) : null;
@@ -62,6 +67,61 @@ class AppointmentBookingService
         }
 
         return $appointment;
+    }
+
+    /**
+     * Información de pago para una cita ya creada: si el método es Wompi,
+     * intenta generar el enlace de pago real (y lo guarda como
+     * payment_reference); si es transferencia, devuelve los datos bancarios
+     * e instrucciones ya configuradas por el super_admin. Usado tanto por
+     * Admin\AppointmentBookingController (redirige al enlace) como por la
+     * tool book_appointment de ChatbotAiService (le pasa el texto/link al
+     * paciente dentro de la conversación, sin poder redirigir).
+     *
+     * Nunca lanza si Wompi falla — la cita ya está creada y no debe
+     * perderse por un error de la pasarela; en ese caso devuelve
+     * 'wompi_unavailable' para que el llamador informe con honestidad.
+     */
+    public function paymentInfoFor(Appointment $appointment): array
+    {
+        if ($appointment->payment_method === 'wompi') {
+            if (! $this->wompi->isConfigured()) {
+                return ['method' => 'wompi', 'status' => 'wompi_unavailable'];
+            }
+
+            try {
+                $link = $this->wompi->createPaymentLink(
+                    amount: (float) $appointment->amount,
+                    reference: "cita-{$appointment->id}",
+                    productName: 'Cita psicológica - '.($appointment->promotion?->title ?? 'Consulta'),
+                    redirectUrl: route('patient.appointments.index'),
+                    webhookUrl: route('webhooks.wompi'),
+                );
+
+                $appointment->forceFill(['payment_reference' => $link['idEnlace'] ?? null])->save();
+
+                return ['method' => 'wompi', 'status' => 'ok', 'payment_url' => $link['urlEnlace'] ?? null];
+            } catch (\Throwable $e) {
+                Log::error('No se pudo generar el enlace de pago de Wompi: '.$e->getMessage());
+
+                return ['method' => 'wompi', 'status' => 'wompi_unavailable'];
+            }
+        }
+
+        $bankTransfer = array_replace(
+            ['bank_name' => '', 'account_number' => '', 'account_holder' => '', 'instructions' => '', 'account_image_path' => null],
+            $this->settings->get('payment', [])['bank_transfer'] ?? []
+        );
+
+        return [
+            'method' => 'bank_transfer',
+            'status' => 'ok',
+            'bank_name' => $bankTransfer['bank_name'],
+            'account_number' => $bankTransfer['account_number'],
+            'account_holder' => $bankTransfer['account_holder'],
+            'instructions' => $bankTransfer['instructions'],
+            'account_image_url' => $bankTransfer['account_image_path'] ? Storage::url($bankTransfer['account_image_path']) : null,
+        ];
     }
 
     /**
