@@ -53,6 +53,24 @@ class ChatbotAiService
     }
 
     /**
+     * Nombre y saludo configurados para el bot con IA (ver
+     * /admin/chatbot-channels) — única fuente de verdad para cómo se llama
+     * el asistente, usada tanto por el system prompt como por el saludo que
+     * ve el paciente al abrir el widget web (ver layouts/app.blade.php), así
+     * ambos coinciden siempre en vez de mostrar un nombre distinto al que
+     * la IA usa para presentarse.
+     */
+    public function presentation(): array
+    {
+        $credentials = $this->credentials();
+
+        return [
+            'name' => filled($credentials['bot_name']) ? $credentials['bot_name'] : 'Alexa',
+            'greeting' => $credentials['greeting'] ?: null,
+        ];
+    }
+
+    /**
      * ¿Debe usarse la IA ahora mismo? Requiere el interruptor manual
      * activado (activar/desactivar el uso de IA, independiente de si hay o
      * no llave guardada) además de la API key. Si se pasa $conversation y

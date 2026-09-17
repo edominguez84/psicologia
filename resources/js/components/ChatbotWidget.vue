@@ -12,6 +12,11 @@ const props = defineProps({
     // llamar a este endpoint.
     chatEndpoint: { type: String, default: null },
     aiEnabled: { type: Boolean, default: false },
+    // Saludo configurado en /admin/chatbot-channels (App\Services\
+    // ChatbotAiService::presentation()) — solo aplica con aiEnabled, para
+    // que el primer mensaje que ve el paciente coincida con el que la IA
+    // usaría si se lo preguntaran. Null si no se configuró uno.
+    greeting: { type: String, default: null },
     // Modo demo (sin backend, p.ej. Netlify): no guarda el lead, solo simula.
     demoMode: { type: Boolean, default: false },
     whatsapp: { type: String, default: '' },
@@ -46,7 +51,7 @@ function toggle() {
     if (open.value && step.value === 'intro') {
         if (props.aiEnabled && !props.demoMode) {
             step.value = 'chat-ai';
-            pushMessage('bot', `¡Hola! 🌿 Soy ${props.botName}, asistente virtual. ¿En qué te puedo ayudar hoy?`);
+            pushMessage('bot', props.greeting || `¡Hola! 🌿 Soy ${props.botName}, asistente virtual. ¿En qué te puedo ayudar hoy?`);
         } else {
             step.value = 'name';
             pushMessage('bot', `¡Hola! 🌿 Soy ${props.botName}, asistente virtual. ¿Con quién tengo el gusto?`);

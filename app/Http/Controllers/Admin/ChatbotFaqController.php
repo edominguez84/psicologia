@@ -24,10 +24,17 @@ class ChatbotFaqController extends Controller
         ]);
     }
 
+    /**
+     * Solo administra la imagen del bot — el nombre y el saludo se
+     * configuran en Admin\ChatbotChannelsController (ver
+     * ChatbotAiService::presentation()). El campo 'name' aquí guardado ya
+     * no se edita desde este formulario, pero se conserva como fallback
+     * para el nombre mostrado en modo FAQ (IA apagada), donde no aplica la
+     * configuración de la IA.
+     */
     public function updateSettings(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:60'],
             'avatar' => ['nullable', 'image', 'max:2048', 'dimensions:max_width=1000,max_height=1000'],
         ], [
             'avatar.image' => 'Debe ser una imagen (PNG, JPG o similar).',
@@ -44,11 +51,9 @@ class ChatbotFaqController extends Controller
             $settings['avatar_path'] = $request->file('avatar')->store('chatbot', 'public');
         }
 
-        $settings['name'] = $data['name'];
-
         $this->settings->set('chatbot', $settings);
 
-        return back()->with('status', 'Configuración del chatbot actualizada.');
+        return back()->with('status', 'Imagen del chatbot actualizada.');
     }
 
     public function store(Request $request): RedirectResponse

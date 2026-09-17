@@ -7,7 +7,12 @@
     </p>
 
     <div class="mt-8 max-w-lg rounded-2xl border border-paper-200 bg-paper-alt p-5">
-        <h2 class="mb-3 font-serif text-lg text-sky-800">Nombre e imagen del bot</h2>
+        <h2 class="mb-3 font-serif text-lg text-sky-800">Imagen del bot</h2>
+        <p class="mb-3 text-xs text-ink-soft">
+            El nombre y el saludo del asistente se configuran en
+            <a href="{{ route('admin.chatbot-channels.edit') }}" class="font-semibold text-sky-700 underline">Canales del chatbot</a>
+            — aquí solo se administra su imagen.
+        </p>
 
         <div class="flex items-center gap-4">
             <div class="grid size-16 shrink-0 place-items-center overflow-hidden rounded-full border border-paper-200 bg-paper-100">
@@ -21,13 +26,6 @@
             <form method="POST" action="{{ route('admin.chatbot-faqs.settings.update') }}" enctype="multipart/form-data" class="flex-1 space-y-3">
                 @csrf
                 @method('PUT')
-                <div>
-                    <label for="chatbot_name" class="mb-1 block text-xs font-semibold text-sky-700">Nombre del bot</label>
-                    <input type="text" name="name" id="chatbot_name" maxlength="60" required
-                        value="{{ old('name', $chatbotSettings['name'] ?? 'Rebecca') }}"
-                        class="w-full rounded-lg border border-paper-200 bg-paper-50 px-3 py-2 text-sm outline-none focus:border-sky-400">
-                    @error('name')<p class="mt-1 text-xs font-semibold text-clay-500">{{ $message }}</p>@enderror
-                </div>
                 <div>
                     <label for="chatbot_avatar" class="mb-1 block text-xs font-semibold text-sky-700">Imagen del bot (opcional)</label>
                     <input type="file" name="avatar" id="chatbot_avatar" accept="image/*"

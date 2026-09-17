@@ -70,8 +70,23 @@
     @php
         $chatbotDemoMode = (bool) config('site.demo_mode');
         $chatbotWhatsapp = 'https://wa.me/'.config('site.contact.whatsapp').'?text='.rawurlencode(config('site.whatsapp_prefill'));
+        $chatbotAiService = app(\App\Services\ChatbotAiService::class);
+        $chatbotAiEnabled = $chatbotDemoMode ? false : $chatbotAiService->isUsable();
+        // Nombre y saludo: mientras la IA está activa, ChatbotAiService::
+        // presentation() (configurado en /admin/chatbot-channels) es la
+        // única fuente de verdad — así el nombre que ve el paciente al abrir
+        // el widget siempre coincide con el que la IA usa para presentarse.
+        // Con la IA apagada, se usa el nombre configurado en
+        // /admin/chatbot-faqs (histórico, solo aplica al modo FAQ).
         $chatbotSettings = app(\App\Services\SiteSettingsService::class)->get('chatbot', ['name' => 'Rebecca']);
-        $chatbotName = $chatbotSettings['name'] ?? 'Rebecca';
+        if ($chatbotAiEnabled) {
+            $chatbotPresentation = $chatbotAiService->presentation();
+            $chatbotName = $chatbotPresentation['name'];
+            $chatbotGreeting = $chatbotPresentation['greeting'];
+        } else {
+            $chatbotName = $chatbotSettings['name'] ?? 'Rebecca';
+            $chatbotGreeting = null;
+        }
         // Si no se subió una imagen propia del bot, se usa la foto de "Sobre
         // mí" como respaldo (comportamiento anterior), nunca una imagen rota.
         $chatbotAvatar = ! empty($chatbotSettings['avatar_path'])
@@ -91,6 +106,7 @@
         $chatbotProps = [
             'botName'     => $chatbotName,
             'botTagline'  => 'Asistente virtual de '.$chatbotOwnerFirstName,
+            'greeting'    => $chatbotGreeting,
             'avatar'      => $chatbotAvatar,
             'endpoint'    => $chatbotDemoMode ? null : route('chatbot-lead.store'),
             'chatEndpoint' => $chatbotDemoMode ? null : route('chatbot-message.store'),
@@ -100,7 +116,7 @@
             // Si la IA está activa y configurada, el widget conversa en vivo
             // en vez del flujo fijo de nombre→correo→teléfono→FAQ por
             // botones (ver App\Services\ChatbotAiService::isUsable()).
-            'aiEnabled'   => $chatbotDemoMode ? false : app(\App\Services\ChatbotAiService::class)->isUsable(),
+            'aiEnabled'   => $chatbotAiEnabled,
         ];
     @endphp
     <div data-vue="ChatbotWidget" data-props="{{ json_encode($chatbotProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>

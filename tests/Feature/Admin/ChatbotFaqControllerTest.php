@@ -27,26 +27,12 @@ class ChatbotFaqControllerTest extends TestCase
         $this->actingAs($admin)->get('/admin/chatbot-faqs')->assertForbidden();
     }
 
-    public function test_super_admin_puede_actualizar_el_nombre_del_bot(): void
-    {
-        $superAdmin = User::factory()->create(['role' => 'super_admin']);
-
-        $response = $this->actingAs($superAdmin)->put('/admin/chatbot-faqs-settings', [
-            'name' => 'Sofía',
-        ]);
-
-        $response->assertRedirect();
-        $settings = SiteSetting::where('key', 'chatbot')->first()->value;
-        $this->assertSame('Sofía', $settings['name']);
-    }
-
     public function test_super_admin_puede_subir_una_imagen_para_el_bot(): void
     {
         $superAdmin = User::factory()->create(['role' => 'super_admin']);
         $file = UploadedFile::fake()->image('bot.jpg', 500, 500);
 
         $response = $this->actingAs($superAdmin)->put('/admin/chatbot-faqs-settings', [
-            'name' => 'Rebecca',
             'avatar' => $file,
         ]);
 
@@ -61,7 +47,6 @@ class ChatbotFaqControllerTest extends TestCase
         $file = UploadedFile::fake()->image('bot.jpg', 2000, 2000);
 
         $response = $this->actingAs($superAdmin)->put('/admin/chatbot-faqs-settings', [
-            'name' => 'Rebecca',
             'avatar' => $file,
         ]);
 
