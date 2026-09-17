@@ -99,7 +99,12 @@ class ChatbotChannelsController extends Controller
                 'enabled' => $request->boolean('anthropic_enabled'),
                 'api_key' => $data['anthropic_api_key'] ?? '',
                 'model' => $data['anthropic_model'] ?? self::DEFAULTS['anthropic']['model'],
-                'temperature' => $data['anthropic_temperature'] ?? self::DEFAULTS['anthropic']['temperature'],
+                // Cast explícito a float: la validación 'numeric' acepta el
+                // string "0.3" tal cual llega del <input type="range"> sin
+                // convertirlo, y Anthropic rechaza temperature si no es un
+                // número JSON real (rechazaba la request completa, cayendo
+                // siempre al modo FAQ aunque la API key fuera válida).
+                'temperature' => isset($data['anthropic_temperature']) ? (float) $data['anthropic_temperature'] : self::DEFAULTS['anthropic']['temperature'],
                 // El PDF fuente se administra con su propio formulario
                 // (updatePdfSource/destroyPdfSource) — se conserva tal cual
                 // estaba al guardar el resto de esta configuración.

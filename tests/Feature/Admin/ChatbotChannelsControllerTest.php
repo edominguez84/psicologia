@@ -96,7 +96,10 @@ class ChatbotChannelsControllerTest extends TestCase
 
         $channels = app(SiteSettingsService::class)->get('chatbot_channels');
         $this->assertTrue($channels['anthropic']['enabled']);
-        $this->assertEquals(0.8, $channels['anthropic']['temperature']);
+        // assertSame (no assertEquals): el bug real era que se guardaba el
+        // string "0.8" tal cual llegaba del <input type="range">, y
+        // Anthropic rechaza temperature si no es un número JSON real.
+        $this->assertSame(0.8, $channels['anthropic']['temperature']);
     }
 
     public function test_guardar_configuracion_no_borra_el_pdf_fuente_ya_cargado(): void
