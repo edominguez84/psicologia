@@ -123,4 +123,34 @@ class VapiCallServiceTest extends TestCase
         $this->assertFalse($service->verifyWebhookSecret('otro-valor'));
         $this->assertFalse($service->verifyWebhookSecret(null));
     }
+
+    /**
+     * callRaw() — usado por el botón de "llamada de prueba" del panel, que
+     * permite escribir un nombre y teléfono cualquiera sin depender de que
+     * exista una cuenta/cita real con ese teléfono cargado.
+     */
+    public function test_call_raw_dispara_la_llamada_sin_necesitar_appointment_ni_user(): void
+    {
+        $this->configureCredentials();
+        Http::fake(['api.vapi.ai/call' => Http::response(['id' => 'call-raw-1'], 200)]);
+
+        $callId = app(VapiCallService::class)->callRaw(
+            phoneNumber: '77778888',
+            patientName: 'Juan Pérez',
+            appointmentTime: 'lunes 21 de septiembre a las 10:00 AM',
+        );
+
+        $this->assertSame('call-raw-1', $callId);
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.vapi.ai/call'
+            && $request['customer']['number'] === '+50377778888'
+            && $request['assistantOverrides']['variableValues']['nombrePaciente'] === 'Juan Pérez'
+            && $request['assistantOverrides']['variableValues']['horarioCita'] === 'lunes 21 de septiembre a las 10:00 AM');
+    }
+
+    public function test_call_raw_lanza_excepcion_si_no_esta_configurado(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        app(VapiCallService::class)->callRaw('77778888', 'Juan Pérez', 'mañana');
+    }
 }

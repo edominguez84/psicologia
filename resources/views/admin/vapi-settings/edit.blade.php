@@ -39,13 +39,6 @@
         </ol>
     </div>
 
-    <div class="mt-4 max-w-2xl rounded-2xl border border-sky-200 bg-sky-50 p-5 text-sm text-ink">
-        <p><strong>¿Ya tienes las tres credenciales cargadas?</strong> Guárdalas primero y va a aparecer un botón
-        "Hacer una llamada de prueba a mi teléfono" — genera una cita de demostración a tu propio nombre
-        y te llama de inmediato a tu teléfono registrado, sin esperar al horario ni al interruptor de
-        activación. Necesitas tener un teléfono guardado en tu perfil.</p>
-    </div>
-
     <form method="POST" action="{{ route('admin.vapi-settings.update') }}" class="mt-8 max-w-xl space-y-6">
         @csrf
         @method('PUT')
@@ -83,31 +76,15 @@
 
         <div class="flex flex-wrap gap-3">
             <button type="submit" class="btn btn-primary">Guardar configuración</button>
-        </div>
-    </form>
-
-    {{-- Botones de acción con su propio <form> aparte del principal a
-         propósito: HTML no permite un <form> anidado dentro de otro (ver el
-         mismo patrón en admin/payment-settings/edit.blade.php). Se sacan
-         fuera de la etiqueta <form> del formulario principal por completo
-         (no solo usan el atributo form=) — un <button type="submit"> físicamente
-         anidado dentro de otro <form> puede terminar enviando el formulario
-         contenedor en algunos navegadores en vez del referenciado por
-         form=, sobre todo combinado con onclick="confirm(...)". --}}
-    @if (! empty($vapi['api_key']))
-        <div class="mt-4 flex max-w-xl flex-wrap gap-3">
             @if (! empty($vapi['api_key']))
                 <button type="submit" form="vapi-test-form" class="btn btn-ghost text-sm">Probar conexión</button>
             @endif
-            @if (! empty($vapi['api_key']) && ! empty($vapi['assistant_id']) && ! empty($vapi['phone_number_id']))
-                <button type="submit" form="vapi-send-test-call-form" class="btn btn-ghost text-sm"
-                    onclick="return confirm('Esto va a llamar de verdad a tu propio teléfono (el de tu cuenta) para probar el guion del asistente. ¿Continuar?')">
-                    📞 Hacer una llamada de prueba a mi teléfono
-                </button>
-            @endif
         </div>
-    @endif
+    </form>
 
+    {{-- Formulario aparte del principal a propósito: HTML no permite un
+         <form> anidado dentro de otro (ver el mismo patrón en
+         admin/payment-settings/edit.blade.php). --}}
     @if (! empty($vapi['api_key']))
         <form id="vapi-test-form" method="POST" action="{{ route('admin.vapi-settings.test-connection') }}" class="hidden">
             @csrf
@@ -115,9 +92,31 @@
     @endif
 
     @if (! empty($vapi['api_key']) && ! empty($vapi['assistant_id']) && ! empty($vapi['phone_number_id']))
-        <form id="vapi-send-test-call-form" method="POST" action="{{ route('admin.vapi-settings.send-test-call') }}" class="hidden">
-            @csrf
-        </form>
+        <div class="mt-8 max-w-xl rounded-2xl border border-sky-200 bg-sky-50 p-5">
+            <h2 class="mb-2 font-serif text-lg text-sky-800">📞 Llamada de prueba</h2>
+            <p class="mb-4 text-sm text-ink-soft">
+                Escribe cualquier nombre y teléfono para probar el guion del asistente ahora mismo —
+                no necesita corresponder a ninguna cuenta ni cita real del sitio.
+            </p>
+            <form method="POST" action="{{ route('admin.vapi-settings.send-test-call') }}" class="space-y-4"
+                onsubmit="return confirm('Esto va a llamar de verdad al teléfono indicado. ¿Continuar?')">
+                @csrf
+                <div>
+                    <label for="test_name" class="mb-1.5 block text-sm font-semibold text-sky-700">Nombre a mencionar</label>
+                    <input type="text" name="test_name" id="test_name" required maxlength="100"
+                        value="{{ old('test_name') }}" placeholder="Ej. Emerson Domínguez"
+                        class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+                </div>
+                <div>
+                    <label for="test_phone" class="mb-1.5 block text-sm font-semibold text-sky-700">Teléfono a llamar</label>
+                    <input type="tel" name="test_phone" id="test_phone" required maxlength="30"
+                        value="{{ old('test_phone') }}" placeholder="Ej. 61079711 o +50361079711"
+                        class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+                    <p class="mt-1 text-xs text-ink-soft">Sin código de país se asume El Salvador (+503).</p>
+                </div>
+                <button type="submit" class="btn btn-primary text-sm">Llamar ahora</button>
+            </form>
+        </div>
     @endif
 
     <form method="POST" action="{{ route('admin.vapi-settings.regenerate-webhook-secret') }}" class="mt-4 max-w-xl">
