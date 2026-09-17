@@ -4,7 +4,9 @@ namespace Tests\Feature\Admin;
 
 use App\Services\SiteSettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use App\Models\User;
 
@@ -79,5 +81,76 @@ class ChatbotChannelsControllerTest extends TestCase
         $response = $this->actingAs($superAdmin)->post('/admin/chatbot-channels/test-telegram');
 
         $response->assertSessionHas('telegram_test_result', fn ($result) => $result['ok'] === false);
+    }
+
+    public function test_guarda_el_interruptor_de_ia_y_la_temperatura(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+        $this->actingAs($superAdmin)->put('/admin/chatbot-channels', [
+            'anthropic_enabled' => '1',
+            'anthropic_api_key' => 'sk-ant-test',
+            'anthropic_model' => 'claude-3-5-haiku-latest',
+            'anthropic_temperature' => '0.8',
+        ]);
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertTrue($channels['anthropic']['enabled']);
+        $this->assertEquals(0.8, $channels['anthropic']['temperature']);
+    }
+
+    public function test_guardar_configuracion_no_borra_el_pdf_fuente_ya_cargado(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['pdf_source_path' => 'chatbot-sources/existente.pdf', 'pdf_source_name' => 'existente.pdf', 'pdf_source_text' => 'Texto ya extraído.'],
+        ]);
+
+        $this->actingAs($superAdmin)->put('/admin/chatbot-channels', ['anthropic_api_key' => 'sk-ant-test']);
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertSame('existente.pdf', $channels['anthropic']['pdf_source_name']);
+        $this->assertSame('Texto ya extraído.', $channels['anthropic']['pdf_source_text']);
+    }
+
+    public function test_super_admin_puede_subir_un_pdf_fuente_y_se_extrae_su_texto(): void
+    {
+        Storage::fake('public');
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        $pdf = new UploadedFile(base_path('tests/fixtures/sample.pdf'), 'tarifario.pdf', 'application/pdf', null, true);
+
+        $response = $this->actingAs($superAdmin)->post('/admin/chatbot-channels/pdf-source', ['pdf_source' => $pdf]);
+
+        $response->assertRedirect();
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertSame('tarifario.pdf', $channels['anthropic']['pdf_source_name']);
+        $this->assertStringContainsString('Tarifario especial', $channels['anthropic']['pdf_source_text']);
+        Storage::disk('public')->assertExists($channels['anthropic']['pdf_source_path']);
+    }
+
+    public function test_super_admin_puede_quitar_el_pdf_fuente(): void
+    {
+        Storage::fake('public');
+        $path = Storage::disk('public')->put('chatbot-sources', new UploadedFile(base_path('tests/fixtures/sample.pdf'), 'x.pdf', 'application/pdf', null, true));
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['pdf_source_path' => $path, 'pdf_source_name' => 'x.pdf', 'pdf_source_text' => 'algo'],
+        ]);
+
+        $response = $this->actingAs($superAdmin)->delete('/admin/chatbot-channels/pdf-source');
+
+        $response->assertRedirect();
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertNull($channels['anthropic']['pdf_source_name']);
+        $this->assertSame('', $channels['anthropic']['pdf_source_text']);
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_un_administrador_normal_no_puede_subir_pdf_fuente(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $pdf = new UploadedFile(base_path('tests/fixtures/sample.pdf'), 'x.pdf', 'application/pdf', null, true);
+
+        $this->actingAs($admin)->post('/admin/chatbot-channels/pdf-source', ['pdf_source' => $pdf])->assertForbidden();
     }
 }

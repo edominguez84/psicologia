@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\ChatbotFaqController;
 use App\Http\Controllers\Api\ChatbotLeadController;
+use App\Http\Controllers\Api\ChatbotMessageController;
 use App\Http\Controllers\Api\CheckupController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\SiteController;
@@ -41,6 +42,13 @@ Route::post('/chatbot-lead', [ChatbotLeadController::class, 'store'])
 Route::get('/chatbot-faqs', [ChatbotFaqController::class, 'index'])
     ->middleware('throttle:30,1')
     ->name('chatbot-faqs.index');
+
+// Chat en vivo con IA del widget web (ver ChatbotWidget.vue) — mismo motor
+// (ChatbotAiService) que usa el bot de Telegram, identificando al visitante
+// por su sesión de navegador en vez de un chat_id externo.
+Route::post('/chatbot-mensaje', [ChatbotMessageController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('chatbot-message.store');
 
 // Clic en un link de red social del footer, vía navigator.sendBeacon —
 // ver partials/social-icons.blade.php y App\Http\Controllers\Api\AnalyticsController.

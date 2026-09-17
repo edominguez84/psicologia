@@ -167,6 +167,8 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
     Route::get('/chatbot-channels', [ChatbotChannelsController::class, 'edit'])->name('chatbot-channels.edit');
     Route::put('/chatbot-channels', [ChatbotChannelsController::class, 'update'])->name('chatbot-channels.update');
     Route::post('/chatbot-channels/test-telegram', [ChatbotChannelsController::class, 'testTelegram'])->name('chatbot-channels.test-telegram');
+    Route::post('/chatbot-channels/pdf-source', [ChatbotChannelsController::class, 'updatePdfSource'])->name('chatbot-channels.pdf-source.update');
+    Route::delete('/chatbot-channels/pdf-source', [ChatbotChannelsController::class, 'destroyPdfSource'])->name('chatbot-channels.pdf-source.destroy');
 
     Route::get('/system-manual', [SystemManualController::class, 'index'])->name('system-manual.index');
     Route::get('/system-manual/download', [SystemManualController::class, 'downloadPdf'])->name('system-manual.download');

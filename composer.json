@@ -13,6 +13,7 @@
         "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
         "pragmarx/google2fa": "*",
+        "smalot/pdfparser": "^2.12",
         "socialiteproviders/microsoft": "*",
         "spatie/laravel-activitylog": "*"
     },
