@@ -39,6 +39,33 @@ class ChatbotAiServiceTest extends TestCase
         $this->assertTrue(app(ChatbotAiService::class)->isConfigured());
     }
 
+    /**
+     * Regresión: el widget web mostraba un nombre de bot distinto al que la
+     * IA usaba para presentarse (uno venía de site_settings.chatbot.name,
+     * el otro de chatbot_channels.anthropic.bot_name — nunca sincronizados).
+     * presentation() es ahora la única fuente de verdad para el nombre/saludo
+     * mientras la IA está activa (ver layouts/app.blade.php).
+     */
+    public function test_presentation_devuelve_el_nombre_y_saludo_configurados(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['bot_name' => 'Cortana', 'greeting' => '¡Hola! Soy Cortana.'],
+        ]);
+
+        $presentation = app(ChatbotAiService::class)->presentation();
+
+        $this->assertSame('Cortana', $presentation['name']);
+        $this->assertSame('¡Hola! Soy Cortana.', $presentation['greeting']);
+    }
+
+    public function test_presentation_usa_alexa_por_defecto_sin_nombre_configurado(): void
+    {
+        $presentation = app(ChatbotAiService::class)->presentation();
+
+        $this->assertSame('Alexa', $presentation['name']);
+        $this->assertNull($presentation['greeting']);
+    }
+
     public function test_reply_incluye_las_faqs_activas_en_el_system_prompt(): void
     {
         $this->configureCredentials();
