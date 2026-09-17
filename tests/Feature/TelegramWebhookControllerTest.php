@@ -18,7 +18,7 @@ class TelegramWebhookControllerTest extends TestCase
         parent::setUp();
         app(SiteSettingsService::class)->set('chatbot_channels', [
             'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
-            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'model' => 'claude-3-5-haiku-latest'],
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'model' => 'claude-haiku-4-5-20251001'],
         ]);
     }
 

@@ -32,7 +32,7 @@ class ChatbotChannelsController extends Controller
             // del pedido: activar/desactivar el uso de IA).
             'enabled' => false,
             'api_key' => '',
-            'model' => 'claude-3-5-haiku-latest',
+            'model' => 'claude-haiku-4-5-20251001',
             // 0 = respuestas más consistentes/predecibles, 1 = más
             // creativas/variadas. Anthropic acepta hasta 1.0.
             'temperature' => 0.3,
