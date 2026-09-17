@@ -3,26 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AppointmentStatus;
-use App\Mail\AppointmentRequested;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Models\Promotion;
-use App\Models\User;
+use App\Services\AppointmentBookingService;
 use App\Services\SiteSettingsService;
 use App\Services\WompiPaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AppointmentBookingController extends Controller
 {
-    public function __construct(private SiteSettingsService $settings, private WompiPaymentService $wompi)
-    {
+    public function __construct(
+        private SiteSettingsService $settings,
+        private WompiPaymentService $wompi,
+        private AppointmentBookingService $booking,
+    ) {
     }
 
     /**
@@ -64,48 +64,17 @@ class AppointmentBookingController extends Controller
             'promotion_id' => ['nullable', 'integer', 'exists:promotions,id'],
         ]);
 
-        $promotion = ! empty($data['promotion_id']) ? Promotion::active()->find($data['promotion_id']) : null;
-
-        $appointment = DB::transaction(function () use ($data, $promotion) {
-            // lockForUpdate evita la condición de carrera de dos pacientes
-            // reservando el mismo slot casi simultáneamente — la validación
-            // de scopeAvailable() en el listado no es suficiente por sí sola
-            // (TOCTOU) sin este lock dentro de la transacción.
-            $slot = AppointmentSlot::where('id', $data['appointment_slot_id'])->lockForUpdate()->first();
-
-            $alreadyTaken = $slot === null || ! $slot->is_active || $slot->starts_at->isPast()
-                || $slot->appointments()->whereIn('status', [AppointmentStatus::Pending->value, AppointmentStatus::Approved->value])->exists();
-
-            if ($alreadyTaken) {
-                return null;
-            }
-
-            $appointment = Appointment::create([
-                'user_id' => Auth::id(),
-                'appointment_slot_id' => $slot->id,
-                'patient_note' => $data['patient_note'] ?? null,
-                'payment_method' => $data['payment_method'],
-                'amount' => $promotion?->price,
-                'promotion_id' => $promotion?->id,
-            ]);
-
-            // payment_status no es mass-assignable (ver Appointment::$fillable):
-            // con transferencia se asume "avisada" — el paciente confirma el
-            // pago por WhatsApp y el super_admin lo valida manualmente desde
-            // Admin\AppointmentController. Con Wompi queda "unpaid" hasta que
-            // exista integración real de cobro.
-            if ($data['payment_method'] === 'bank_transfer') {
-                $appointment->forceFill(['payment_status' => 'reported'])->save();
-            }
-
-            return $appointment;
-        });
+        $appointment = $this->booking->book(
+            user: Auth::user(),
+            appointmentSlotId: $data['appointment_slot_id'],
+            paymentMethod: $data['payment_method'],
+            promotionId: $data['promotion_id'] ?? null,
+            patientNote: $data['patient_note'] ?? null,
+        );
 
         if (! $appointment) {
             return back()->withErrors(['appointment_slot_id' => 'Ese horario ya no está disponible, elige otro.']);
         }
-
-        $this->notifySuperAdmins($appointment);
 
         if ($data['payment_method'] === 'wompi' && $appointment->amount > 0) {
             return $this->redirectToWompiPaymentLink($appointment);
@@ -164,23 +133,5 @@ class AppointmentBookingController extends Controller
         $appointment->forceFill(['status' => AppointmentStatus::Cancelled])->save();
 
         return back()->with('status', 'Cita cancelada.');
-    }
-
-    /**
-     * Avisa a TODAS las cuentas super_admin de la solicitud nueva — no
-     * bloquea la respuesta si falla el envío.
-     */
-    private function notifySuperAdmins(Appointment $appointment): void
-    {
-        try {
-            $superAdmins = User::where('role', 'super_admin')->pluck('email');
-            if ($superAdmins->isNotEmpty()) {
-                Mail::to($superAdmins->first())
-                    ->cc($superAdmins->slice(1))
-                    ->send(new AppointmentRequested($appointment));
-            }
-        } catch (\Throwable $e) {
-            Log::warning('No se pudo notificar la nueva solicitud de cita: '.$e->getMessage());
-        }
     }
 }

@@ -2,14 +2,20 @@
 
 namespace App\Services;
 
+use App\Mail\AccountCreatedByChatbot;
 use App\Models\AppointmentSlot;
 use App\Models\CallSlot;
 use App\Models\ChatbotConversation;
 use App\Models\ChatbotFaq;
 use App\Models\ChatbotLead;
+use App\Models\User;
 use App\Support\AnthropicModels;
+use App\Support\ElSalvadorLocations;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -33,7 +39,7 @@ class ChatbotAiService
     private const API_VERSION = '2023-06-01';
     private const MAX_TOOL_ROUNDS = 3;
 
-    public function __construct(private SiteSettingsService $settings)
+    public function __construct(private SiteSettingsService $settings, private AppointmentBookingService $booking)
     {
     }
 
@@ -199,6 +205,7 @@ class ChatbotAiService
             return match ($name) {
                 'get_available_slots' => $this->toolGetAvailableSlots(),
                 'save_lead' => $this->toolSaveLead($input, $leadContext, $onLeadCaptured),
+                'book_appointment' => $this->toolBookAppointment($input, $leadContext, $onLeadCaptured),
                 default => 'Herramienta desconocida.',
             };
         } catch (\Throwable $e) {
@@ -210,16 +217,20 @@ class ChatbotAiService
 
     private function toolGetAvailableSlots(): string
     {
+        // 'id' se incluye para que book_appointment pueda reservar el
+        // horario exacto que se le mostró al paciente — no se muestra el id
+        // en la conversación, es solo para que la IA lo use internamente al
+        // llamar a la otra tool.
         $appointmentSlots = AppointmentSlot::available()->ordered()->limit(10)->get()
-            ->map(fn ($slot) => $slot->starts_at->translatedFormat('l j \d\e F, g:i A'));
+            ->map(fn ($slot) => ['id' => $slot->id, 'fecha_hora' => $slot->starts_at->translatedFormat('l j \d\e F, g:i A')]);
 
         $callSlots = CallSlot::available()->ordered()->limit(10)->get()
-            ->map(fn ($slot) => $slot->starts_at->translatedFormat('l j \d\e F, g:i A'));
+            ->map(fn ($slot) => ['id' => $slot->id, 'fecha_hora' => $slot->starts_at->translatedFormat('l j \d\e F, g:i A')]);
 
         return json_encode([
             'citas_disponibles' => $appointmentSlots->values()->all(),
             'llamadas_gratis_disponibles' => $callSlots->values()->all(),
-            'nota' => 'Estos son los únicos horarios reales disponibles ahora mismo. No inventes ni ofrezcas otros. Si ambas listas están vacías, dilo con honestidad y sugiere escribir por WhatsApp.',
+            'nota' => 'Estos son los únicos horarios reales disponibles ahora mismo. No inventes ni ofrezcas otros. Si ambas listas están vacías, dilo con honestidad y sugiere escribir por WhatsApp. Las llamadas gratuitas de 15 minutos no se agendan con book_appointment (esa tool es solo para citas de sesión completa) — para la llamada gratis, sugiere escribir por WhatsApp para coordinarla.',
         ], JSON_UNESCAPED_UNICODE);
     }
 
@@ -253,6 +264,120 @@ class ChatbotAiService
         return 'Datos guardados correctamente como cliente potencial. Agradece al paciente y continúa ayudándole.';
     }
 
+    /**
+     * Reserva de verdad una cita (crea una cuenta de paciente si el correo
+     * no existe todavía, y un Appointment real en estado "pendiente" — la
+     * misma tabla y el mismo flujo que si la persona se hubiera registrado y
+     * agendado por el formulario normal del sitio). Antes de esto, la IA
+     * solo podía mostrar horarios y guardar datos de contacto; sin esta
+     * tool, decirle al paciente "ya quedaste agendado" habría sido falso.
+     *
+     * Todos los campos del registro estándar son obligatorios aquí también
+     * (teléfono, fecha de nacimiento, sexo, departamento, municipio) — una
+     * cuenta creada por el chatbot debe quedar tan completa como una
+     * registrada por el formulario, no con datos inventados o vacíos.
+     */
+    private function toolBookAppointment(array $input, array $leadContext, ?callable $onLeadCaptured): string
+    {
+        $name = trim((string) ($input['name'] ?? ''));
+        $email = trim((string) ($input['email'] ?? ''));
+        $phone = trim((string) ($input['phone'] ?? ''));
+        $birthDate = trim((string) ($input['birth_date'] ?? ''));
+        $sex = trim((string) ($input['sex'] ?? ''));
+        $department = trim((string) ($input['department'] ?? ''));
+        $municipality = trim((string) ($input['municipality'] ?? ''));
+        $appointmentSlotId = (int) ($input['appointment_slot_id'] ?? 0);
+
+        $missing = array_keys(array_filter([
+            'nombre' => $name === '',
+            'correo' => ! filter_var($email, FILTER_VALIDATE_EMAIL),
+            'teléfono' => $phone === '',
+            'fecha de nacimiento (formato AAAA-MM-DD)' => ! $this->isValidPastDate($birthDate),
+            'sexo (male, female u other)' => ! in_array($sex, ['male', 'female', 'other'], true),
+            'departamento' => ! array_key_exists($department, ElSalvadorLocations::all()),
+        ]));
+
+        if ($appointmentSlotId <= 0) {
+            $missing[] = 'horario a reservar (usa el id devuelto por get_available_slots)';
+        } elseif (! in_array($municipality, ElSalvadorLocations::municipalitiesFor($department), true)) {
+            $missing[] = 'municipio válido para ese departamento';
+        }
+
+        if (! empty($missing)) {
+            return 'Faltan o son inválidos estos datos: '.implode(', ', $missing).'. Pídelos con naturalidad antes de volver a intentar — no llames de nuevo a esta herramienta hasta tenerlos todos.';
+        }
+
+        // Chequeo previo (no bloqueante) antes de crear una cuenta nueva: si
+        // el horario claramente ya no está disponible, evita el trabajo de
+        // dar de alta al paciente para nada. El chequeo real y definitivo
+        // contra condiciones de carrera sigue siendo el lockForUpdate dentro
+        // de AppointmentBookingService::book() más abajo.
+        if (! AppointmentSlot::available()->whereKey($appointmentSlotId)->exists()) {
+            return 'Ese horario ya no está disponible — usa get_available_slots de nuevo para ofrecer otro.';
+        }
+
+        $user = User::where('email', $email)->first();
+        $temporaryPassword = null;
+
+        if (! $user) {
+            $temporaryPassword = Str::password(14);
+            $user = User::create([
+                'name' => $name,
+                'email' => $email,
+                'phone_number' => $phone,
+                'birth_date' => $birthDate,
+                'sex' => $sex,
+                'department' => $department,
+                'municipality' => $municipality,
+                'password' => Hash::make($temporaryPassword),
+                'role' => 'patient',
+            ]);
+        }
+
+        $paymentMethod = $this->settings->get('payment', [])['method'] ?? 'bank_transfer';
+
+        $appointment = $this->booking->book(
+            user: $user,
+            appointmentSlotId: $appointmentSlotId,
+            paymentMethod: $paymentMethod,
+        );
+
+        if (! $appointment) {
+            return 'Ese horario ya no está disponible (alguien más lo tomó justo ahora) — usa get_available_slots de nuevo para ofrecer otro.';
+        }
+
+        if ($temporaryPassword) {
+            try {
+                Mail::to($user->email)->send(new AccountCreatedByChatbot($user, $temporaryPassword, $appointment));
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo enviar el correo de cuenta creada por el chatbot: '.$e->getMessage());
+            }
+        }
+
+        if ($onLeadCaptured) {
+            $onLeadCaptured();
+        }
+
+        $accountNote = $temporaryPassword
+            ? ' Se creó una cuenta nueva para él/ella y se le envió por correo su contraseña temporal para poder ingresar después.'
+            : ' Ya tenía una cuenta con ese correo, se usó la existente.';
+
+        return "Cita reservada correctamente en estado pendiente de confirmación (queda sujeta a que el super_admin la apruebe, como cualquier cita del sitio).{$accountNote} Confírmale al paciente el horario reservado y que revisará su correo para más detalles.";
+    }
+
+    private function isValidPastDate(string $date): bool
+    {
+        if ($date === '' || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return false;
+        }
+
+        try {
+            return \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $date)->isPast();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     private function tools(): array
     {
         return [
@@ -266,7 +391,7 @@ class ChatbotAiService
             ],
             [
                 'name' => 'save_lead',
-                'description' => 'Guarda el nombre, correo electrónico y teléfono de un paciente potencial como cliente interesado. Debes pedir estos tres datos (nombre completo, correo electrónico válido, y número de teléfono) en algún momento natural de la conversación —por ejemplo, cuando quiera agendar una cita o pida más información— y llamar a esta herramienta en cuanto los tengas. El teléfono puede omitirse si el paciente prefiere no darlo, pero nombre y correo son obligatorios.',
+                'description' => 'Guarda el nombre, correo electrónico y teléfono de un paciente potencial como cliente interesado. Debes pedir estos tres datos (nombre completo, correo electrónico válido, y número de teléfono) en algún momento natural de la conversación —por ejemplo, cuando quiera agendar una cita o pida más información— y llamar a esta herramienta en cuanto los tengas. El teléfono puede omitirse si el paciente prefiere no darlo, pero nombre y correo son obligatorios. No uses esta tool si el paciente ya va a reservar una cita con book_appointment en el mismo intercambio — en ese caso solo usa book_appointment, que ya guarda estos mismos datos.',
                 'input_schema' => [
                     'type' => 'object',
                     'properties' => [
@@ -275,6 +400,24 @@ class ChatbotAiService
                         'phone' => ['type' => 'string', 'description' => 'Teléfono del paciente, si lo dio.'],
                     ],
                     'required' => ['name', 'email'],
+                ],
+            ],
+            [
+                'name' => 'book_appointment',
+                'description' => 'Reserva de verdad una cita de sesión completa (no la llamada gratuita de 15 minutos, esa se coordina por WhatsApp) en el horario elegido. SIEMPRE llama primero a get_available_slots para obtener el id real del horario — nunca inventes un id. Antes de llamar a esta herramienta, debes tener TODOS estos datos del paciente (pídelos de forma natural y conversacional si aún no los tienes, uno a la vez): nombre completo, correo electrónico, teléfono, fecha de nacimiento, sexo, departamento y municipio de El Salvador donde vive. Solo llama a esta herramienta cuando tengas absolutamente todos los datos y el paciente haya confirmado el horario exacto que quiere — no reserves un horario que el paciente no confirmó explícitamente. Tras llamarla, informa al paciente que su cita quedó registrada como solicitud pendiente de confirmación (nunca digas que la cita está "confirmada" — el super_admin debe aprobarla primero).',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'name' => ['type' => 'string', 'description' => 'Nombre completo del paciente.'],
+                        'email' => ['type' => 'string', 'description' => 'Correo electrónico del paciente.'],
+                        'phone' => ['type' => 'string', 'description' => 'Teléfono del paciente.'],
+                        'birth_date' => ['type' => 'string', 'description' => 'Fecha de nacimiento en formato AAAA-MM-DD.'],
+                        'sex' => ['type' => 'string', 'enum' => ['male', 'female', 'other'], 'description' => 'Sexo del paciente.'],
+                        'department' => ['type' => 'string', 'description' => 'Slug del departamento de El Salvador (ej. "san-salvador"), tal como lo devuelve get_available_slots o como lo infieras del nombre que diga el paciente.'],
+                        'municipality' => ['type' => 'string', 'description' => 'Nombre del municipio dentro del departamento elegido, tal cual lo dice el paciente.'],
+                        'appointment_slot_id' => ['type' => 'integer', 'description' => 'El id del horario exacto (de los que devolvió get_available_slots) que el paciente confirmó.'],
+                    ],
+                    'required' => ['name', 'email', 'phone', 'birth_date', 'sex', 'department', 'municipality', 'appointment_slot_id'],
                 ],
                 // Marca el punto de corte del caché de prompt para 'tools' —
                 // Anthropic cachea este bloque completo (todas las tools
@@ -311,6 +454,10 @@ class ChatbotAiService
             ? "\n\nSaludo inicial: la primera vez que respondas en una conversación nueva, usa este saludo (adaptándolo mínimamente si hace falta, pero conservando su espíritu): \"{$credentials['greeting']}\""
             : '';
 
+        $departments = collect(ElSalvadorLocations::all())
+            ->map(fn ($dept, $slug) => "{$slug} = {$dept['label']}")
+            ->implode(', ');
+
         return <<<PROMPT
             Te llamas {$botName} y eres el asistente virtual de {$siteName}, un sitio de terapia
             psicológica online. Respondes dudas de pacientes actuales o potenciales en español, en
@@ -333,17 +480,27 @@ class ChatbotAiService
             agendar una cita o escribir por WhatsApp para casos urgentes.
 
             Cuando el paciente pregunte por horarios o quiera agendar, usa la herramienta
-            get_available_slots para consultar los horarios reales — nunca inventes uno. Antes o
-            justo después de mostrarle los horarios, pídele los siguientes datos (puede ser uno a la
-            vez, de forma conversacional, no como un formulario): {$dataToRequest} — esto es
-            obligatorio siempre que el paciente muestre intención real de agendar o pida horarios, no
-            opcional. También pide estos mismos datos si pregunta precios o pide más información
-            general sobre el proceso, aunque no haya mencionado horarios todavía. En cuanto tengas al
-            menos el nombre y el correo electrónico, guárdalos de inmediato con la herramienta
-            save_lead, sin esperar a tener el resto de los datos ni a que la conversación termine
-            (nombre y correo son los únicos obligatorios para guardar; el resto, si lo pediste, es
-            complementario). Si el paciente ya dio estos datos antes en esta misma conversación, no
-            los vuelvas a pedir ni a guardar de nuevo.
+            get_available_slots para consultar los horarios reales — nunca inventes uno.
+
+            Hay dos niveles de interés, no los confundas:
+            - Interés general (quiere más información, pregunta precios, o todavía no confirmó un
+              horario exacto): pídele {$dataToRequest} de forma conversacional, y en cuanto tengas al
+              menos el nombre y el correo, guárdalos con la herramienta save_lead. No reserves nada
+              todavía.
+            - Quiere agendar de verdad y ya confirmó un horario específico de los que le mostraste:
+              usa la herramienta book_appointment en vez de save_lead — esta sí reserva la cita real
+              (queda pendiente de confirmación del super_admin, nunca digas que está "confirmada").
+              Para poder llamarla necesitas TODOS estos datos del paciente, pídelos con naturalidad
+              si te faltan: nombre completo, correo, teléfono, fecha de nacimiento (puedes convertir
+              lo que diga a formato AAAA-MM-DD), sexo, departamento y municipio de El Salvador donde
+              vive. Los departamentos válidos (usa el slug antes del "=", no el nombre) son:
+              {$departments}. El municipio va como el paciente lo escriba, siempre que pertenezca al
+              departamento elegido. No llames a book_appointment hasta tener todos estos datos y el
+              id exacto del horario (de get_available_slots) que el paciente confirmó — nunca
+              inventes ni asumas un id.
+
+            Si el paciente ya dio estos datos antes en esta misma conversación, no los vuelvas a
+            pedir ni a guardar/reservar de nuevo.
 
             Información ya publicada por la psicóloga que debes usar como base (no inventes datos
             distintos a estos sobre precios, duración de sesiones o el proceso):

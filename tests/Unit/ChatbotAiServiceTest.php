@@ -2,13 +2,17 @@
 
 namespace Tests\Unit;
 
+use App\Mail\AccountCreatedByChatbot;
+use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Models\ChatbotFaq;
 use App\Models\ChatbotLead;
+use App\Models\User;
 use App\Services\ChatbotAiService;
 use App\Services\SiteSettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -384,5 +388,154 @@ class ChatbotAiServiceTest extends TestCase
         ]);
 
         $this->assertTrue(app(ChatbotAiService::class)->isUsable($conversation));
+    }
+
+    private function bookAppointmentToolUseResponse(array $input): array
+    {
+        return [
+            'stop_reason' => 'tool_use',
+            'content' => [['type' => 'tool_use', 'id' => 'tool_1', 'name' => 'book_appointment', 'input' => $input]],
+        ];
+    }
+
+    private function validAppointmentInput(int $slotId): array
+    {
+        return [
+            'name' => 'Elian Domínguez',
+            'email' => 'elian@example.com',
+            'phone' => '77778888',
+            'birth_date' => '1995-05-20',
+            'sex' => 'male',
+            'department' => 'san-salvador',
+            'municipality' => 'San Salvador',
+            'appointment_slot_id' => $slotId,
+        ];
+    }
+
+    public function test_book_appointment_crea_cuenta_nueva_y_cita_pendiente(): void
+    {
+        Mail::fake();
+        $this->configureCredentials();
+        $slot = AppointmentSlot::create(['starts_at' => now()->addDays(2), 'ends_at' => now()->addDays(2)->addHour(), 'is_active' => true]);
+
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push($this->bookAppointmentToolUseResponse($this->validAppointmentInput($slot->id)), 200)
+                ->push(['stop_reason' => 'end_turn', 'content' => [['type' => 'text', 'text' => 'Listo, tu cita quedó pendiente.']]], 200),
+        ]);
+
+        $reply = app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Quiero agendar']]);
+
+        $this->assertSame('Listo, tu cita quedó pendiente.', $reply);
+        $user = User::where('email', 'elian@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertSame('patient', $user->role);
+        $this->assertSame('77778888', $user->phone_number);
+
+        $appointment = Appointment::where('user_id', $user->id)->first();
+        $this->assertNotNull($appointment);
+        $this->assertSame($slot->id, $appointment->appointment_slot_id);
+        $this->assertSame('pending', $appointment->status->value);
+
+        Mail::assertSent(AccountCreatedByChatbot::class, fn ($mail) => $mail->hasTo('elian@example.com'));
+    }
+
+    public function test_book_appointment_reutiliza_la_cuenta_si_el_correo_ya_existe(): void
+    {
+        Mail::fake();
+        $this->configureCredentials();
+        $existingUser = User::factory()->create(['email' => 'elian@example.com', 'role' => 'patient']);
+        $slot = AppointmentSlot::create(['starts_at' => now()->addDays(2), 'ends_at' => now()->addDays(2)->addHour(), 'is_active' => true]);
+
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push($this->bookAppointmentToolUseResponse($this->validAppointmentInput($slot->id)), 200)
+                ->push(['stop_reason' => 'end_turn', 'content' => [['type' => 'text', 'text' => 'Listo.']]], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Quiero agendar']]);
+
+        $this->assertSame(1, User::where('email', 'elian@example.com')->count());
+        $appointment = Appointment::where('user_id', $existingUser->id)->first();
+        $this->assertNotNull($appointment);
+        // No se crea cuenta nueva, así que no se manda correo de credenciales.
+        Mail::assertNotSent(AccountCreatedByChatbot::class);
+    }
+
+    public function test_book_appointment_no_reserva_si_faltan_datos(): void
+    {
+        Mail::fake();
+        $this->configureCredentials();
+        $slot = AppointmentSlot::create(['starts_at' => now()->addDays(2), 'ends_at' => now()->addDays(2)->addHour(), 'is_active' => true]);
+        $incompleteInput = ['name' => 'Elian', 'email' => 'elian@example.com', 'appointment_slot_id' => $slot->id];
+
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push($this->bookAppointmentToolUseResponse($incompleteInput), 200)
+                ->push(['stop_reason' => 'end_turn', 'content' => [['type' => 'text', 'text' => '¿Me das tu teléfono?']]], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Quiero agendar']]);
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('appointments', 0);
+    }
+
+    public function test_book_appointment_rechaza_un_departamento_invalido(): void
+    {
+        Mail::fake();
+        $this->configureCredentials();
+        $slot = AppointmentSlot::create(['starts_at' => now()->addDays(2), 'ends_at' => now()->addDays(2)->addHour(), 'is_active' => true]);
+        $input = array_merge($this->validAppointmentInput($slot->id), ['department' => 'no-existe']);
+
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push($this->bookAppointmentToolUseResponse($input), 200)
+                ->push(['stop_reason' => 'end_turn', 'content' => [['type' => 'text', 'text' => 'Ok.']]], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Quiero agendar']]);
+
+        $this->assertDatabaseCount('appointments', 0);
+    }
+
+    public function test_book_appointment_rechaza_un_municipio_que_no_pertenece_al_departamento(): void
+    {
+        Mail::fake();
+        $this->configureCredentials();
+        $slot = AppointmentSlot::create(['starts_at' => now()->addDays(2), 'ends_at' => now()->addDays(2)->addHour(), 'is_active' => true]);
+        $input = array_merge($this->validAppointmentInput($slot->id), ['department' => 'san-salvador', 'municipality' => 'Ahuachapán']);
+
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push($this->bookAppointmentToolUseResponse($input), 200)
+                ->push(['stop_reason' => 'end_turn', 'content' => [['type' => 'text', 'text' => 'Ok.']]], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Quiero agendar']]);
+
+        $this->assertDatabaseCount('appointments', 0);
+    }
+
+    public function test_book_appointment_no_reserva_un_horario_ya_tomado(): void
+    {
+        Mail::fake();
+        $this->configureCredentials();
+        $slot = AppointmentSlot::create(['starts_at' => now()->addDays(2), 'ends_at' => now()->addDays(2)->addHour(), 'is_active' => true]);
+        $existingUser = User::factory()->create(['role' => 'patient']);
+        Appointment::create(['user_id' => $existingUser->id, 'appointment_slot_id' => $slot->id, 'payment_method' => 'bank_transfer']);
+
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push($this->bookAppointmentToolUseResponse($this->validAppointmentInput($slot->id)), 200)
+                ->push(['stop_reason' => 'end_turn', 'content' => [['type' => 'text', 'text' => 'Ese horario ya no está disponible.']]], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Quiero agendar']]);
+
+        // Solo el usuario ya existente (el que reservó el slot en el setup)
+        // — no se crea una cuenta nueva para el correo de validAppointmentInput().
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseMissing('users', ['email' => 'elian@example.com']);
     }
 }
