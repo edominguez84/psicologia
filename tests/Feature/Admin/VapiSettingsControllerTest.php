@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Models\Appointment;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\SiteSettingsService;
@@ -110,7 +109,7 @@ class VapiSettingsControllerTest extends TestCase
 
     private function configureVapi(): User
     {
-        $superAdmin = User::factory()->create(['role' => 'super_admin', 'phone_number' => '77778888']);
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
         app(SiteSettingsService::class)->set('vapi', [
             'api_key' => 'vapi-key', 'assistant_id' => 'assistant-1', 'phone_number_id' => 'phone-1',
         ]);
@@ -118,59 +117,44 @@ class VapiSettingsControllerTest extends TestCase
         return $superAdmin;
     }
 
-    public function test_llamada_de_prueba_crea_cita_demo_y_dispara_la_llamada(): void
+    public function test_llamada_de_prueba_dispara_la_llamada_con_los_datos_escritos_a_mano(): void
     {
         $superAdmin = $this->configureVapi();
         Http::fake(['api.vapi.ai/call' => Http::response(['id' => 'call-demo-1'], 200)]);
 
-        $response = $this->actingAs($superAdmin)->post('/admin/vapi-settings/send-test-call');
+        $response = $this->actingAs($superAdmin)->post('/admin/vapi-settings/send-test-call', [
+            'test_name' => 'Juan Pérez',
+            'test_phone' => '77778888',
+        ]);
 
         $response->assertSessionHas('vapi_test_result', fn ($result) => $result['ok'] === true);
         Http::assertSent(fn ($request) => $request->url() === 'https://api.vapi.ai/call'
-            && $request['assistantOverrides']['variableValues']['nombrePaciente'] === $superAdmin->name);
+            && $request['assistantOverrides']['variableValues']['nombrePaciente'] === 'Juan Pérez'
+            && $request['customer']['number'] === '+50377778888');
 
-        $appointment = Appointment::where('user_id', $superAdmin->id)->first();
-        $this->assertNotNull($appointment);
-        $this->assertSame('approved', $appointment->status->value);
-        $this->assertSame('scheduled', $appointment->vapi_call_status);
-        $this->assertSame('call-demo-1', $appointment->vapi_call_id);
-    }
-
-    public function test_llamada_de_prueba_falla_ordenadamente_sin_telefono_en_el_perfil(): void
-    {
-        $superAdmin = User::factory()->create(['role' => 'super_admin', 'phone_number' => null]);
-        app(SiteSettingsService::class)->set('vapi', [
-            'api_key' => 'vapi-key', 'assistant_id' => 'assistant-1', 'phone_number_id' => 'phone-1',
-        ]);
-
-        $response = $this->actingAs($superAdmin)->post('/admin/vapi-settings/send-test-call');
-
-        $response->assertSessionHas('vapi_test_result', fn ($result) => $result['ok'] === false);
+        // No depende de ninguna cuenta ni cita real — no se crea nada en esas tablas.
         $this->assertDatabaseCount('appointments', 0);
+        $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_llamada_de_prueba_no_deja_basura_si_vapi_rechaza_la_solicitud(): void
+    public function test_llamada_de_prueba_requiere_nombre_y_telefono(): void
+    {
+        $superAdmin = $this->configureVapi();
+
+        $this->actingAs($superAdmin)->post('/admin/vapi-settings/send-test-call', [])
+            ->assertSessionHasErrors(['test_name', 'test_phone']);
+    }
+
+    public function test_llamada_de_prueba_reporta_error_si_vapi_rechaza_la_solicitud(): void
     {
         $superAdmin = $this->configureVapi();
         Http::fake(['api.vapi.ai/call' => Http::response(['message' => 'error'], 500)]);
 
-        $response = $this->actingAs($superAdmin)->post('/admin/vapi-settings/send-test-call');
+        $response = $this->actingAs($superAdmin)->post('/admin/vapi-settings/send-test-call', [
+            'test_name' => 'Juan Pérez',
+            'test_phone' => '77778888',
+        ]);
 
         $response->assertSessionHas('vapi_test_result', fn ($result) => $result['ok'] === false);
-        $this->assertDatabaseCount('appointments', 0);
-        $this->assertDatabaseCount('appointment_slots', 0);
-    }
-
-    public function test_las_citas_demo_anteriores_se_borran_al_volver_a_entrar_a_la_pantalla(): void
-    {
-        $superAdmin = $this->configureVapi();
-        Http::fake(['api.vapi.ai/call' => Http::response(['id' => 'call-demo-1'], 200)]);
-        $this->actingAs($superAdmin)->post('/admin/vapi-settings/send-test-call');
-        $this->assertDatabaseCount('appointments', 1);
-
-        $this->actingAs($superAdmin)->get('/admin/vapi-settings');
-
-        $this->assertDatabaseCount('appointments', 0);
-        $this->assertDatabaseCount('appointment_slots', 0);
     }
 }

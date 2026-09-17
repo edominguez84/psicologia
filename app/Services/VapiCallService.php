@@ -65,34 +65,53 @@ class VapiCallService
      */
     public function callForAppointment(Appointment $appointment): string
     {
-        $credentials = $this->credentials();
-
-        if (! $this->isConfigured()) {
-            throw new RuntimeException('VAPI no tiene configuradas todas las credenciales necesarias.');
-        }
-
         $patient = $appointment->user;
         $slot = $appointment->appointmentSlot;
 
-        $response = Http::withToken($credentials['api_key'])->post(self::API_URL, [
-            'assistantId' => $credentials['assistant_id'],
-            'phoneNumberId' => $credentials['phone_number_id'],
-            'customer' => [
-                'number' => $this->normalizePhoneNumber($patient->phone_number),
-            ],
-            'assistantOverrides' => [
-                'variableValues' => [
-                    'nombrePaciente' => $patient->name,
-                    'horarioCita' => $slot->starts_at->translatedFormat('l j \d\e F \a \l\a\s g:i A'),
-                ],
-            ],
-            'metadata' => [
+        return $this->callRaw(
+            phoneNumber: $patient->phone_number,
+            patientName: $patient->name,
+            appointmentTime: $slot->starts_at->translatedFormat('l j \d\e F \a \l\a\s g:i A'),
+            metadata: [
                 // Recuperado tal cual en el webhook de fin de llamada, para
                 // saber a qué cita corresponde sin depender de buscar por
                 // número de teléfono (que no es único: un paciente puede
                 // tener más de una cita).
                 'appointment_id' => $appointment->id,
             ],
+        );
+    }
+
+    /**
+     * Dispara una llamada saliente con datos sueltos, sin necesitar un
+     * Appointment/User reales — usado por el botón de demo del panel
+     * (Admin\VapiSettingsController::sendTestCall()), que permite escribir
+     * un nombre y teléfono cualquiera al momento para probar el guion del
+     * asistente sin depender de que exista una cuenta con ese teléfono
+     * cargado. $appointmentTime ya debe venir formateado como texto legible
+     * (mismo formato que usa callForAppointment()).
+     */
+    public function callRaw(string $phoneNumber, string $patientName, string $appointmentTime, array $metadata = []): string
+    {
+        $credentials = $this->credentials();
+
+        if (! $this->isConfigured()) {
+            throw new RuntimeException('VAPI no tiene configuradas todas las credenciales necesarias.');
+        }
+
+        $response = Http::withToken($credentials['api_key'])->post(self::API_URL, [
+            'assistantId' => $credentials['assistant_id'],
+            'phoneNumberId' => $credentials['phone_number_id'],
+            'customer' => [
+                'number' => $this->normalizePhoneNumber($phoneNumber),
+            ],
+            'assistantOverrides' => [
+                'variableValues' => [
+                    'nombrePaciente' => $patientName,
+                    'horarioCita' => $appointmentTime,
+                ],
+            ],
+            'metadata' => $metadata,
         ]);
 
         if ($response->failed()) {
