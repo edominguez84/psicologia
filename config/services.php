@@ -62,4 +62,12 @@ return [
         'whatsapp_from' => env('TWILIO_WHATSAPP_FROM'),
     ],
 
+    // --- Disparador externo del scheduler (ver App\Http\Controllers\CronRunnerController) ---
+    // El hosting no permite programar un cron nativo con la frecuencia
+    // necesaria, así que un servicio externo (cron-job.org) le pega a
+    // /cron/run-scheduler cada 5 minutos, autenticado con este secreto.
+    'cron_runner' => [
+        'secret' => env('CRON_RUNNER_SECRET'),
+    ],
+
 ];
