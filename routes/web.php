@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ChatbotLeadController;
 use App\Http\Controllers\Api\ChatbotMessageController;
 use App\Http\Controllers\Api\CheckupController;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\CronRunnerController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\Webhooks\TelegramWebhookController;
 use App\Http\Controllers\Webhooks\VapiWebhookController;
@@ -74,6 +75,11 @@ Route::post('/webhooks/telegram', TelegramWebhookController::class)->name('webho
 // Resultado de las llamadas automáticas de confirmación de cita (VAPI) —
 // ver App\Http\Controllers\Webhooks\VapiWebhookController.
 Route::post('/webhooks/vapi', VapiWebhookController::class)->name('webhooks.vapi');
+
+// Dispara el scheduler (routes/console.php) por HTTP — ver
+// App\Http\Controllers\CronRunnerController. Pensado para un servicio
+// externo tipo cron-job.org, no para el cron nativo del hosting.
+Route::get('/cron/run-scheduler', CronRunnerController::class)->name('cron.run-scheduler');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
