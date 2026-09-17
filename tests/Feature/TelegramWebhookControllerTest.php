@@ -134,4 +134,34 @@ class TelegramWebhookControllerTest extends TestCase
         $conversation = ChatbotConversation::where('external_chat_id', '555')->first();
         $this->assertCount(4, $conversation->history);
     }
+
+    public function test_al_superar_el_limite_diario_de_mensajes_de_ia_cae_a_faq(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'daily_message_limit' => 1],
+        ]);
+        ChatbotFaq::create(['question' => '¿Ofrecen descuentos por paquete de sesiones?', 'answer' => 'Sí, con paquete.', 'is_active' => true]);
+        Http::fake([
+            'api.anthropic.com/*' => Http::response($this->fakeAiReply('Respuesta de IA'), 200),
+            'api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        // Primer mensaje: dentro del límite, responde con IA.
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => 'Hola']]);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && ($request['text'] ?? null) === 'Respuesta de IA');
+
+        // Segundo mensaje: ya alcanzó el límite diario, cae a FAQ sin
+        // siquiera llamar a Anthropic.
+        Http::fake([
+            'api.anthropic.com/*' => Http::response($this->fakeAiReply('Esto no debería usarse'), 200),
+            'api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        $this->postWebhook(['message' => ['chat' => ['id' => 555], 'text' => '¿Ofrecen descuentos por paquete de sesiones?']]);
+
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.anthropic.com'));
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && str_contains($request['text'] ?? '', 'Sí, con paquete.'));
+    }
 }

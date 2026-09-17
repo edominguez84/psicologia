@@ -63,6 +63,11 @@ Route::post('/analytics/social-click', [AnalyticsController::class, 'socialClick
 Route::post('/webhooks/wompi', WompiWebhookController::class)->name('webhooks.wompi');
 
 // Mensajes entrantes del bot de Telegram — ver App\Http\Controllers\Webhooks\TelegramWebhookController.
+// Sin throttle por IP a propósito: todos los mensajes llegan desde los
+// servidores de Telegram (misma IP/rango para todos los pacientes), así que
+// un límite aquí penalizaría a todo el mundo junto en vez de a quien abusa.
+// El límite de uso de IA real es por conversación individual, ver
+// App\Models\ChatbotConversation::hasReachedDailyAiLimit().
 Route::post('/webhooks/telegram', TelegramWebhookController::class)->name('webhooks.telegram');
 
 require __DIR__.'/auth.php';

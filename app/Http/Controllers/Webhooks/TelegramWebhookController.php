@@ -58,7 +58,10 @@ class TelegramWebhookController extends Controller
             ['channel' => 'telegram', 'external_chat_id' => (string) $chatId],
         );
 
-        if (! $ai->isUsable()) {
+        // isUsable($conversation) también cae a FAQ si esta conversación ya
+        // alcanzó el límite diario de mensajes de IA configurado — protege
+        // el gasto de la API ante abuso (el modo FAQ no cuesta nada).
+        if (! $ai->isUsable($conversation)) {
             $telegram->sendMessage($chatId, $this->faqReply($text));
 
             return response('ok', 200);
@@ -73,6 +76,7 @@ class TelegramWebhookController extends Controller
                 fn () => $conversation->update(['lead_captured' => true]),
             );
             $conversation->appendMessage('assistant', $reply);
+            $conversation->incrementAiMessageCount();
             $telegram->sendMessage($chatId, $reply);
         } catch (\Throwable $e) {
             // El servicio de IA falló en este momento (llave inválida, error
