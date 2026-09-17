@@ -17,12 +17,14 @@ class ChatbotConversation extends Model
     protected $fillable = [
         'channel', 'external_chat_id', 'history', 'lead_captured',
         'ai_message_count', 'ai_message_count_date',
+        'faq_capture_step', 'faq_capture_data',
     ];
 
     protected $casts = [
         'history' => 'array',
         'lead_captured' => 'boolean',
         'ai_message_count_date' => 'date',
+        'faq_capture_data' => 'array',
     ];
 
     /**

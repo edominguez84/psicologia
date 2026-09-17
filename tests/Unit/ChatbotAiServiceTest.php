@@ -113,6 +113,81 @@ class ChatbotAiServiceTest extends TestCase
     }
 
     /**
+     * Regla de negocio confirmada: si no hay llamadas gratis disponibles, el
+     * bot no debe mencionarlas en absoluto — la nota que recibe la IA debe
+     * indicarle tratar cada lista de forma independiente.
+     */
+    public function test_get_available_slots_indica_omitir_categorias_vacias_por_separado(): void
+    {
+        $this->configureCredentials();
+        AppointmentSlot::create(['starts_at' => now()->addDays(2), 'ends_at' => now()->addDays(2)->addHour(), 'is_active' => true]);
+        // Sin CallSlot creado — la lista de llamadas gratis queda vacía.
+
+        $capturedToolResult = null;
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push(['stop_reason' => 'tool_use', 'content' => [['type' => 'tool_use', 'id' => 'tool_1', 'name' => 'get_available_slots', 'input' => []]]], 200)
+                ->push(['stop_reason' => 'end_turn', 'content' => [['type' => 'text', 'text' => 'Ok.']]], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => '¿Qué horarios tienes?']]);
+
+        Http::assertSent(function ($request) use (&$capturedToolResult) {
+            foreach (($request['messages'] ?? []) as $message) {
+                foreach ((is_array($message['content'] ?? null) ? $message['content'] : []) as $block) {
+                    if (($block['type'] ?? null) === 'tool_result') {
+                        $capturedToolResult = $block['content'];
+                    }
+                }
+            }
+
+            return true;
+        });
+
+        $this->assertNotNull($capturedToolResult);
+        $decoded = json_decode($capturedToolResult, true);
+        $this->assertNotEmpty($decoded['citas_disponibles']);
+        $this->assertEmpty($decoded['llamadas_gratis_disponibles']);
+        $this->assertStringContainsString('de forma independiente', $decoded['nota']);
+    }
+
+    public function test_book_appointment_incluye_las_instrucciones_de_transferencia_para_que_la_ia_las_transmita(): void
+    {
+        Mail::fake();
+        $this->configureCredentials();
+        app(SiteSettingsService::class)->set('payment', [
+            'method' => 'bank_transfer',
+            'bank_transfer' => ['bank_name' => 'Banco Agrícola', 'account_number' => '123456', 'account_holder' => 'Erika Magaña', 'instructions' => 'Envía el comprobante.'],
+        ]);
+        $slot = AppointmentSlot::create(['starts_at' => now()->addDays(2), 'ends_at' => now()->addDays(2)->addHour(), 'is_active' => true]);
+
+        $capturedToolResult = null;
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push($this->bookAppointmentToolUseResponse($this->validAppointmentInput($slot->id)), 200)
+                ->push(['stop_reason' => 'end_turn', 'content' => [['type' => 'text', 'text' => 'Listo.']]], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Quiero agendar']]);
+
+        Http::assertSent(function ($request) use (&$capturedToolResult) {
+            foreach (($request['messages'] ?? []) as $message) {
+                foreach ((is_array($message['content'] ?? null) ? $message['content'] : []) as $block) {
+                    if (($block['type'] ?? null) === 'tool_result') {
+                        $capturedToolResult = $block['content'];
+                    }
+                }
+            }
+
+            return true;
+        });
+
+        $this->assertStringContainsString('Banco Agrícola', $capturedToolResult);
+        $this->assertStringContainsString('123456', $capturedToolResult);
+        $this->assertStringContainsString('WhatsApp', $capturedToolResult);
+    }
+
+    /**
      * Regresión: un tool_use.input vacío llega de Anthropic como array PHP
      * ([]) — al reenviarlo tal cual en el eco del historial del segundo
      * request, json_encode() lo codifica como array JSON ([]) en vez de

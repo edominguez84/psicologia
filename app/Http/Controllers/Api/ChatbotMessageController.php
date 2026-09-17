@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreChatbotMessageRequest;
 use App\Models\ChatbotConversation;
 use App\Services\ChatbotAiService;
+use App\Support\FaqLeadCapture;
 use App\Support\FaqMatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -33,7 +34,7 @@ class ChatbotMessageController extends Controller
         // alcanzó el límite diario de mensajes de IA configurado — protege
         // el gasto de la API ante abuso (el modo FAQ no cuesta nada).
         if (! $ai->isUsable($conversation)) {
-            return response()->json(['mode' => 'faq', 'reply' => $this->faqReply($text)]);
+            return response()->json(['mode' => 'faq', 'reply' => $this->faqReply($conversation, $text)]);
         }
 
         $conversation->appendMessage('user', $text);
@@ -51,14 +52,32 @@ class ChatbotMessageController extends Controller
         } catch (\Throwable $e) {
             Log::error('Fallo generando respuesta de IA para el widget web, usando FAQ como respaldo: '.$e->getMessage());
 
-            return response()->json(['mode' => 'faq', 'reply' => $this->faqReply($text)]);
+            return response()->json(['mode' => 'faq', 'reply' => $this->faqReply($conversation, $text)]);
         }
     }
 
-    private function faqReply(string $text): string
+    /**
+     * Modo FAQ (sin IA): nunca agenda ninguna cita ni llamada — solo
+     * responde preguntas frecuentes o, si no hay ninguna coincidencia,
+     * captura nombre/correo/teléfono paso a paso (App\Support\FaqLeadCapture)
+     * y promete seguimiento posterior. Regla de negocio confirmada
+     * explícitamente por el usuario.
+     */
+    private function faqReply(ChatbotConversation $conversation, string $text): string
     {
-        $faq = FaqMatcher::match($text);
+        if ($conversation->faq_capture_step !== null) {
+            return FaqLeadCapture::handle($conversation, $text);
+        }
 
-        return $faq ? $faq->answer : FaqMatcher::menuText();
+        $faq = FaqMatcher::match($text);
+        if ($faq) {
+            return $faq->answer;
+        }
+
+        if (! $conversation->lead_captured) {
+            return FaqLeadCapture::start($conversation);
+        }
+
+        return FaqMatcher::menuText();
     }
 }
