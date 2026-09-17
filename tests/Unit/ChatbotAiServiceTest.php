@@ -178,6 +178,29 @@ class ChatbotAiServiceTest extends TestCase
         Http::assertSent(fn ($request) => ($request['temperature'] ?? null) === 0.7);
     }
 
+    /**
+     * Regresión: Admin\ChatbotChannelsController::update() guardaba
+     * temperature tal cual llegaba del <input type="range"> (un string tipo
+     * "0.3"), y Anthropic rechaza la request completa si temperature no es
+     * un número JSON real — la IA nunca respondía, siempre caía al modo FAQ.
+     */
+    public function test_convierte_la_temperatura_a_numero_aunque_se_haya_guardado_como_texto(): void
+    {
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'temperature' => '0.3'],
+        ]);
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'content' => [['type' => 'text', 'text' => 'Ok.']],
+                'stop_reason' => 'end_turn',
+            ], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => 'Hola']]);
+
+        Http::assertSent(fn ($request) => $request['temperature'] === 0.3 && is_float($request['temperature']));
+    }
+
     public function test_incluye_el_texto_del_pdf_fuente_en_el_system_prompt(): void
     {
         app(SiteSettingsService::class)->set('chatbot_channels', [

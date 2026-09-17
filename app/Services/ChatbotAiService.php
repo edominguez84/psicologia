@@ -296,7 +296,7 @@ class ChatbotAiService
     {
         $channels = $this->settings->get('chatbot_channels', []);
 
-        return array_replace(
+        $credentials = array_replace(
             [
                 'enabled' => false,
                 'api_key' => '',
@@ -306,5 +306,13 @@ class ChatbotAiService
             ],
             $channels['anthropic'] ?? []
         );
+
+        // Cast defensivo: una configuración guardada antes de que
+        // ChatbotChannelsController::update() casteara explícitamente a
+        // float pudo quedar con temperature como string — Anthropic
+        // rechaza la request completa si no es un número JSON real.
+        $credentials['temperature'] = (float) $credentials['temperature'];
+
+        return $credentials;
     }
 }
