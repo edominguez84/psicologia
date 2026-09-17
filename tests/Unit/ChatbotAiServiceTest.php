@@ -108,6 +108,46 @@ class ChatbotAiServiceTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    /**
+     * Regresión: un tool_use.input vacío llega de Anthropic como array PHP
+     * ([]) — al reenviarlo tal cual en el eco del historial del segundo
+     * request, json_encode() lo codifica como array JSON ([]) en vez de
+     * objeto ({}), y Anthropic rechaza la request completa con
+     * "Input should be an object". Esto rompía CUALQUIER tool sin
+     * parámetros (get_available_slots) apenas se necesitaba una segunda
+     * ronda, cortando la conversación completa (la IA nunca llegaba a pedir
+     * los datos de contacto porque el reply entero fallaba).
+     */
+    public function test_el_segundo_request_reenvia_un_input_vacio_como_objeto_no_como_array(): void
+    {
+        $this->configureCredentials();
+
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push([
+                    'stop_reason' => 'tool_use',
+                    'content' => [['type' => 'tool_use', 'id' => 'tool_1', 'name' => 'get_available_slots', 'input' => []]],
+                ], 200)
+                ->push([
+                    'stop_reason' => 'end_turn',
+                    'content' => [['type' => 'text', 'text' => 'Ok.']],
+                ], 200),
+        ]);
+
+        app(ChatbotAiService::class)->reply([['role' => 'user', 'content' => '¿Qué horarios tienes?']]);
+
+        Http::assertSent(function ($request) {
+            $rawBody = $request->body();
+            // Si input se codificó como array vacío, el JSON crudo contiene
+            // "input":[] — con el fix, debe contener "input":{}.
+            if (! str_contains($rawBody, '"tool_use"')) {
+                return true; // primer request, no aplica esta aserción.
+            }
+
+            return str_contains($rawBody, '"input":{}') && ! str_contains($rawBody, '"input":[]');
+        });
+    }
+
     public function test_usa_la_tool_de_guardar_lead_y_persiste_el_cliente_potencial(): void
     {
         $this->configureCredentials();

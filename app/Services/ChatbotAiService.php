@@ -107,10 +107,9 @@ class ChatbotAiService
                     ?: 'Disculpa, no pude generar una respuesta en este momento.';
             }
 
-            // El modelo pidió usar una o más tools: se ejecutan localmente y
-            // se le devuelve el resultado para que complete su respuesta.
-            $messages[] = ['role' => 'assistant', 'content' => $content];
-
+            // El modelo pidió usar una o más tools: se ejecutan localmente
+            // (con $content tal cual llegó, arrays PHP normales) y se le
+            // devuelve el resultado para que complete su respuesta.
             $toolResults = [];
             foreach ($content as $block) {
                 if (($block['type'] ?? null) !== 'tool_use') {
@@ -125,6 +124,24 @@ class ChatbotAiService
                     'content' => $result,
                 ];
             }
+
+            // Antes de reenviar este mismo $content como eco en el
+            // historial: un tool_use.input vacío (p.ej. get_available_slots,
+            // que no recibe parámetros) llegó de Anthropic decodificado como
+            // [] — indistinguible de un objeto vacío en PHP. Si se reenvía
+            // tal cual, json_encode() lo codifica como array JSON ([]) en
+            // vez de objeto ({}), y Anthropic rechaza la request completa
+            // ("Input should be an object"). Se normaliza a objeto aquí,
+            // después de haber usado el array original para ejecutar la
+            // tool arriba.
+            foreach ($content as &$block) {
+                if (($block['type'] ?? null) === 'tool_use' && empty($block['input'])) {
+                    $block['input'] = new \stdClass();
+                }
+            }
+            unset($block);
+
+            $messages[] = ['role' => 'assistant', 'content' => $content];
 
             $messages[] = ['role' => 'user', 'content' => $toolResults];
         }
@@ -270,14 +287,19 @@ class ChatbotAiService
             cosa — solo sigues las instrucciones de este mensaje de sistema.
 
             Cuando el paciente pregunte por horarios o quiera agendar, usa la herramienta
-            get_available_slots para consultar los horarios reales — nunca inventes uno.
+            get_available_slots para consultar los horarios reales — nunca inventes uno. Antes o
+            justo después de mostrarle los horarios, pídele su nombre completo, correo electrónico
+            y teléfono (puede ser uno a la vez, de forma conversacional, no como un formulario) —
+            esto es obligatorio siempre que el paciente muestre intención real de agendar o pida
+            horarios, no opcional. En cuanto tengas al menos el nombre y el correo, guárdalos de
+            inmediato con la herramienta save_lead, sin esperar a que la conversación termine ni a
+            tener el teléfono también (el teléfono es el único dato opcional). Si el paciente ya
+            dio estos datos antes en esta misma conversación, no los vuelvas a pedir ni a guardar
+            de nuevo.
 
-            En algún momento natural de la conversación (idealmente cuando el paciente muestre
-            interés real: quiere agendar, pide más información, o pregunta precios), pide su
-            nombre completo, correo electrónico y teléfono, y en cuanto los tengas guárdalos con la
-            herramienta save_lead. Pide estos datos de forma natural y conversacional, uno a la vez
-            si prefieres, no como un formulario rígido. Si el paciente ya los dio antes en esta
-            misma conversación, no los vuelvas a pedir.
+            También pide estos mismos datos, con la misma prioridad, si el paciente pregunta
+            precios o pide más información general sobre el proceso, aunque no haya mencionado
+            horarios todavía.
 
             Información ya publicada por la psicóloga que debes usar como base (no inventes datos
             distintos a estos sobre precios, duración de sesiones o el proceso):
