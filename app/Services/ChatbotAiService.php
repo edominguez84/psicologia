@@ -300,7 +300,7 @@ class ChatbotAiService
             [
                 'enabled' => false,
                 'api_key' => '',
-                'model' => 'claude-3-5-haiku-latest',
+                'model' => 'claude-haiku-4-5-20251001',
                 'temperature' => 0.3,
                 'pdf_source_text' => '',
             ],

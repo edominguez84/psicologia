@@ -34,7 +34,7 @@ class ChatbotChannelsControllerTest extends TestCase
             'telegram_enabled' => '1',
             'telegram_bot_token' => '123456:ABC-test-token',
             'anthropic_api_key' => 'sk-ant-test',
-            'anthropic_model' => 'claude-3-5-haiku-latest',
+            'anthropic_model' => 'claude-haiku-4-5-20251001',
             'whatsapp_phone_number_id' => '999',
             'whatsapp_access_token' => 'wa-token',
             'whatsapp_verify_token' => 'verify123',
@@ -90,7 +90,7 @@ class ChatbotChannelsControllerTest extends TestCase
         $this->actingAs($superAdmin)->put('/admin/chatbot-channels', [
             'anthropic_enabled' => '1',
             'anthropic_api_key' => 'sk-ant-test',
-            'anthropic_model' => 'claude-3-5-haiku-latest',
+            'anthropic_model' => 'claude-haiku-4-5-20251001',
             'anthropic_temperature' => '0.8',
         ]);
 
