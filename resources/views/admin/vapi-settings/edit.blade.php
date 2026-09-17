@@ -39,6 +39,13 @@
         </ol>
     </div>
 
+    <div class="mt-4 max-w-2xl rounded-2xl border border-sky-200 bg-sky-50 p-5 text-sm text-ink">
+        <p><strong>¿Ya tienes las tres credenciales cargadas?</strong> Guárdalas primero y va a aparecer un botón
+        "Hacer una llamada de prueba a mi teléfono" — genera una cita de demostración a tu propio nombre
+        y te llama de inmediato a tu teléfono registrado, sin esperar al horario ni al interruptor de
+        activación. Necesitas tener un teléfono guardado en tu perfil.</p>
+    </div>
+
     <form method="POST" action="{{ route('admin.vapi-settings.update') }}" class="mt-8 max-w-xl space-y-6">
         @csrf
         @method('PUT')
@@ -79,6 +86,12 @@
             @if (! empty($vapi['api_key']))
                 <button type="submit" form="vapi-test-form" class="btn btn-ghost text-sm">Probar conexión</button>
             @endif
+            @if (! empty($vapi['api_key']) && ! empty($vapi['assistant_id']) && ! empty($vapi['phone_number_id']))
+                <button type="submit" form="vapi-send-test-call-form" class="btn btn-ghost text-sm"
+                    onclick="return confirm('Esto va a llamar de verdad a tu propio teléfono (el de tu cuenta) para probar el guion del asistente. ¿Continuar?')">
+                    📞 Hacer una llamada de prueba a mi teléfono
+                </button>
+            @endif
         </div>
     </form>
 
@@ -87,6 +100,12 @@
          admin/payment-settings/edit.blade.php). --}}
     @if (! empty($vapi['api_key']))
         <form id="vapi-test-form" method="POST" action="{{ route('admin.vapi-settings.test-connection') }}" class="hidden">
+            @csrf
+        </form>
+    @endif
+
+    @if (! empty($vapi['api_key']) && ! empty($vapi['assistant_id']) && ! empty($vapi['phone_number_id']))
+        <form id="vapi-send-test-call-form" method="POST" action="{{ route('admin.vapi-settings.send-test-call') }}" class="hidden">
             @csrf
         </form>
     @endif
