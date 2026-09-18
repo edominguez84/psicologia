@@ -31,6 +31,7 @@ class AdminPermissions
         return [
             'theme' => ['label' => 'Apariencia', 'routes' => ['admin.theme.*'], 'default' => true],
             'section-visibility' => ['label' => 'Visibilidad de secciones', 'routes' => ['admin.section-visibility.*'], 'default' => true],
+            'landing-template' => ['label' => 'Plantilla de la landing', 'routes' => ['admin.landing-template.*'], 'default' => true],
             'custom-sections' => ['label' => 'Secciones personalizadas', 'routes' => ['admin.custom-sections.*'], 'default' => true],
             'logo' => ['label' => 'Logo', 'routes' => ['admin.logo.*'], 'default' => true],
             'about-photo' => ['label' => 'Foto de portada', 'routes' => ['admin.about-photo.*'], 'default' => true],

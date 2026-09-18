@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="400" height="300" fill="#f1f5f9"/>
+  <rect x="0" y="0" width="400" height="110" fill="#1e3a5f"/>
+  <text x="200" y="62" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#ffffff">Hero con imagen de fondo</text>
+  <rect x="24" y="130" width="106" height="90" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="147" y="130" width="106" height="90" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+  <rect x="270" y="130" width="106" height="90" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="200" y="285" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#38598a">Vista previa — Plantilla Tarjetas</text>
+</svg>

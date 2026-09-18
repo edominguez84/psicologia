@@ -75,6 +75,7 @@
                                 'links' => [
                                     ['route' => 'admin.theme.edit', 'label' => 'Apariencia', 'icon' => 'palette'],
                                     ['route' => 'admin.section-visibility.edit', 'label' => 'Visibilidad de secciones', 'icon' => 'eye'],
+                                    ['route' => 'admin.landing-template.edit', 'label' => 'Plantilla de la landing', 'icon' => 'layout'],
                                     ['route' => 'admin.custom-sections.index', 'label' => 'Secciones personalizadas', 'icon' => 'layout'],
                                     ['route' => 'admin.logo.edit', 'label' => 'Logo', 'icon' => 'image'],
                                     ['route' => 'admin.about-photo.edit', 'label' => 'Foto de portada', 'icon' => 'photo'],

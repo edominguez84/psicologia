@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CustomSectionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaviconController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\LandingTemplateController;
 use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MessagesController;
@@ -89,6 +90,9 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
 
     Route::get('/section-visibility', [SectionVisibilityController::class, 'edit'])->name('section-visibility.edit');
     Route::put('/section-visibility', [SectionVisibilityController::class, 'update'])->name('section-visibility.update');
+
+    Route::get('/landing-template', [LandingTemplateController::class, 'edit'])->name('landing-template.edit');
+    Route::put('/landing-template', [LandingTemplateController::class, 'update'])->name('landing-template.update');
 
     Route::get('/appointment-slots', [AppointmentSlotController::class, 'index'])->name('appointment-slots.index');
     Route::post('/appointment-slots', [AppointmentSlotController::class, 'store'])->name('appointment-slots.store');
