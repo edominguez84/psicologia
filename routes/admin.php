@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\LandingTemplateController;
 use App\Http\Controllers\Admin\LegalPageController;
 use App\Http\Controllers\Admin\LogoController;
+use App\Http\Controllers\Admin\MaintenanceController;
 use App\Http\Controllers\Admin\MessagesController;
 use App\Http\Controllers\Admin\PaymentSettingsController;
 use App\Http\Controllers\Admin\ProfanityFilterController;
@@ -93,6 +94,9 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
 
     Route::get('/landing-template', [LandingTemplateController::class, 'edit'])->name('landing-template.edit');
     Route::put('/landing-template', [LandingTemplateController::class, 'update'])->name('landing-template.update');
+
+    Route::get('/maintenance', [MaintenanceController::class, 'edit'])->name('maintenance.edit');
+    Route::put('/maintenance', [MaintenanceController::class, 'update'])->name('maintenance.update');
 
     Route::get('/appointment-slots', [AppointmentSlotController::class, 'index'])->name('appointment-slots.index');
     Route::post('/appointment-slots', [AppointmentSlotController::class, 'store'])->name('appointment-slots.store');

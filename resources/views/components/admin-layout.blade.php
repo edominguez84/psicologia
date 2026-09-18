@@ -117,6 +117,7 @@
                                     ['route' => 'admin.analytics.index', 'label' => 'Dashboard analítico', 'icon' => 'clipboard'],
                                     ['route' => 'admin.system-manual.index', 'label' => 'Manual del sistema', 'icon' => 'document'],
                                     ['route' => 'admin.roles.index', 'label' => 'Roles', 'icon' => 'people'],
+                                    ['route' => 'admin.maintenance.edit', 'label' => 'Modo mantenimiento', 'icon' => 'terminal'],
                                 ],
                             ],
                         ];
