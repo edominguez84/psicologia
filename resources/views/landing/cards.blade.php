@@ -104,7 +104,7 @@
             @foreach ($activePromotions as $promotion)
                 <div class="reveal reveal-delay-{{ ($loop->index % 6) + 1 }} flex flex-col rounded-3xl border border-paper-200 bg-card-fixed p-7 shadow-lg transition-transform hover:-translate-y-1">
                     <h3 class="text-xl !text-on-card-fixed">{{ $promotion->title }}</h3>
-                    <p class="mt-2 font-serif text-3xl text-sky-300">${{ number_format($promotion->price, 2) }}</p>
+                    <p class="mt-2 font-serif text-3xl text-sky-700">${{ number_format($promotion->price, 2) }}</p>
                     <p class="mt-3 grow text-sm leading-relaxed text-on-card-fixed-soft">{{ $promotion->description }}</p>
                     @if ($promotion->valid_until)
                         <p class="mt-3 text-xs text-on-card-fixed-soft">Vigente hasta {{ $promotion->valid_until->format('d/m/Y') }}</p>
@@ -143,7 +143,7 @@
         <div class="mx-auto max-w-3xl rounded-3xl border border-paper-200 bg-card-fixed p-8 shadow-lg sm:p-12">
             <p class="eyebrow">Quién te acompaña</p>
             <h2 class="mt-3 text-3xl !text-on-card-fixed sm:text-4xl">{{ $s['about']['title'] }}</h2>
-            <p class="mt-5 font-serif text-xl leading-relaxed text-sky-300">{{ $s['about']['lead'] }}</p>
+            <p class="mt-5 font-serif text-xl leading-relaxed text-sky-700">{{ $s['about']['lead'] }}</p>
             <div class="prose-soft mt-4 !text-on-card-fixed-soft">
                 @foreach ($s['about']['paragraphs'] as $p)
                     <p class="mt-4">{{ $p }}</p>
@@ -151,8 +151,8 @@
             </div>
             <ul class="mt-6 grid gap-3 sm:grid-cols-2">
                 @foreach ($s['about']['credentials'] as $c)
-                    <li class="flex items-center gap-3 text-sm font-semibold text-sky-300">
-                        <span class="grid size-6 shrink-0 place-items-center rounded-full bg-white/10 text-sky-300">
+                    <li class="flex items-center gap-3 text-sm font-semibold text-sky-700">
+                        <span class="grid size-6 shrink-0 place-items-center rounded-full bg-sky-100 text-sky-600">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </span>
                         {{ $c }}
@@ -276,7 +276,7 @@
             <h2 class="mt-3 text-3xl sm:text-4xl">{{ $s['testimonials']['title'] }}</h2>
         </div>
 
-        <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 [&>*:nth-child(3n+2)]:sm:translate-y-4">
+        <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @foreach (array_merge($s['testimonials']['items'], ($patientTestimonials ?? collect())->toArray()) as $t)
                 @php $rating = $t['rating'] ?? 5; @endphp
                 <figure class="reveal reveal-delay-{{ ($loop->index % 6) + 1 }} flex flex-col rounded-3xl border border-paper-200 bg-card-fixed p-7 shadow-lg">
@@ -285,7 +285,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 6.9 7.5.6-5.7 5 1.8 7.4L12 17.8 5.4 21.9 7.2 14.5 1.5 9.5 9 8.9z"/></svg>
                         @endfor
                     </div>
-                    <blockquote class="grow font-serif text-lg leading-relaxed !text-sky-300">
+                    <blockquote class="grow font-serif text-lg leading-relaxed text-on-card-fixed">
                         &ldquo;{{ $t['text'] }}&rdquo;
                     </blockquote>
                     <figcaption class="mt-5 text-sm font-bold text-on-card-fixed-soft">
