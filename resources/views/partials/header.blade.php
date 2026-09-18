@@ -6,6 +6,7 @@
         ['href' => '/#emdr', 'label' => 'Terapia EMDR', 'section' => 'emdr'],
         ['href' => '/#chequeo', 'label' => 'Chequeo emocional', 'section' => 'checkup'],
         ['href' => '/#faq', 'label' => 'Preguntas', 'section' => 'faq'],
+        ['href' => '/#contacto', 'label' => 'Contacto', 'section' => 'contact_section'],
     ];
     $navSectionVisibility = app(\App\Services\SiteSettingsService::class)->get('section_visibility', []);
     $navLinks = array_values(array_filter(
