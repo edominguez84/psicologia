@@ -47,6 +47,20 @@
                     Probar conexión y activar webhook
                 </button>
             @endif
+
+            @if ($channels['telegram']['enabled'] && ! empty($channels['telegram']['username']))
+                <p class="mt-3 text-xs text-ink-soft">
+                    ✅ El botón "Chatea con nosotros en Telegram" ya aparece en la landing, enlazando a
+                    <a href="https://t.me/{{ $channels['telegram']['username'] }}" target="_blank" rel="noopener" class="font-semibold text-sky-700 underline">
+                        t.me/{{ $channels['telegram']['username'] }}
+                    </a>.
+                </p>
+            @elseif ($channels['telegram']['enabled'])
+                <p class="mt-3 text-xs text-clay-600">
+                    El bot está activado, pero el botón todavía no aparece en la landing — dale clic a
+                    "Probar conexión y activar webhook" para obtener el usuario público del bot.
+                </p>
+            @endif
         </div>
 
         {{-- Inteligencia artificial (Anthropic) --}}

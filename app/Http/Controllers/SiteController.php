@@ -39,11 +39,18 @@ class SiteController extends Controller
                 'rating' => $t->rating,
             ]);
 
+        // Solo se muestra el botón de Telegram si el canal está activo Y ya
+        // se probó la conexión al menos una vez (así se obtuvo el username
+        // real del bot vía getMe() — ver ChatbotChannelsController::testTelegram()).
+        $telegramChannel = $demoMode ? [] : ($this->settings->get('chatbot_channels', [])['telegram'] ?? []);
+        $telegramUsername = ($telegramChannel['enabled'] ?? false) ? ($telegramChannel['username'] ?? '') : '';
+
         return view('home', [
             'site' => config('site'),
             'customSections' => $customSections,
             'patientTestimonials' => $patientTestimonials,
             'voiceRegistrationEnabled' => ! $demoMode && (bool) ($this->settings->get('voice_registration', [])['enabled'] ?? false),
+            'telegramUsername' => $telegramUsername,
         ]);
     }
 
