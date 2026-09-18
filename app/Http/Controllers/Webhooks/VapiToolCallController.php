@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Webhooks;
 use App\Http\Controllers\Controller;
 use App\Mail\AccountCreatedByVoiceCall;
 use App\Models\User;
+use App\Services\NotificationService;
 use App\Services\VapiCallService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,7 +36,7 @@ use Illuminate\Support\Str;
  */
 class VapiToolCallController extends Controller
 {
-    public function __invoke(Request $request, VapiCallService $vapi): JsonResponse
+    public function __invoke(Request $request, VapiCallService $vapi, NotificationService $notifications): JsonResponse
     {
         if (! $vapi->verifyVoiceRegistrationWebhookSecret($request->header('X-Vapi-Secret'))) {
             Log::warning('Tool-call de VAPI (registro por voz) con secreto inválido, ignorada.', ['ip' => $request->ip()]);
@@ -54,7 +55,7 @@ class VapiToolCallController extends Controller
             $results[] = [
                 'toolCallId' => $toolCallId,
                 'result' => match ($functionName) {
-                    'create_patient_account' => $this->createPatientAccount($arguments),
+                    'create_patient_account' => $this->createPatientAccount($arguments, $notifications),
                     default => $this->unknownTool($functionName),
                 },
             ];
@@ -70,7 +71,7 @@ class VapiToolCallController extends Controller
      * el 'result' se lo indica al asistente para que se lo diga al paciente
      * en la llamada.
      */
-    private function createPatientAccount(array $arguments): string
+    private function createPatientAccount(array $arguments, NotificationService $notifications): string
     {
         $name = trim((string) ($arguments['name'] ?? ''));
         $email = trim((string) ($arguments['email'] ?? ''));
@@ -107,6 +108,13 @@ class VapiToolCallController extends Controller
         } catch (\Throwable $e) {
             Log::warning('No se pudo enviar el correo de cuenta creada por registro de voz: '.$e->getMessage());
         }
+
+        $notifications->notify(
+            type: 'voice_account_created',
+            title: 'Cuenta creada por registro de voz',
+            body: $user->name,
+            link: route('admin.users.index'),
+        );
 
         return 'Cuenta creada correctamente. Le llegará un correo con su contraseña temporal para entrar al sitio, donde podrá elegir el horario de su cita y el método de pago. Confírmaselo al paciente y despídete.';
     }

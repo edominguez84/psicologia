@@ -114,6 +114,7 @@ class SendAppointmentCallRemindersTest extends TestCase
 
         Http::assertNothingSent();
         $this->assertSame('failed', $appointment->fresh()->vapi_call_status);
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'vapi_call_failed']);
     }
 
     public function test_marca_fallo_si_vapi_rechaza_la_llamada(): void
@@ -125,5 +126,6 @@ class SendAppointmentCallRemindersTest extends TestCase
         $this->artisan('appointments:call-reminders')->assertSuccessful();
 
         $this->assertSame('failed', $appointment->fresh()->vapi_call_status);
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'vapi_call_failed']);
     }
 }

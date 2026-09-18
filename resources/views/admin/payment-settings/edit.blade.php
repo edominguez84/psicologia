@@ -105,8 +105,7 @@
 
             <div>
                 <label for="wompi_api_secret" class="mb-1.5 block text-sm font-semibold text-sky-700">API Secret</label>
-                <input type="password" name="wompi_api_secret" id="wompi_api_secret" value="{{ old('wompi_api_secret', $payment['wompi']['api_secret']) }}"
-                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" autocomplete="off">
+                <x-password-input name="wompi_api_secret" id="wompi_api_secret" value="{{ old('wompi_api_secret', $payment['wompi']['api_secret']) }}" autocomplete="off" />
             </div>
 
             @if (! empty($payment['wompi']['app_id']) && ! empty($payment['wompi']['api_secret']))

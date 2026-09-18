@@ -17,4 +17,9 @@ class ChatbotLead extends Model
         'transcript' => 'array',
         'handled_at' => 'datetime',
     ];
+
+    public function scopeUnhandled($query)
+    {
+        return $query->whereNull('handled_at');
+    }
 }

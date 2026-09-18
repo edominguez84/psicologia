@@ -72,6 +72,7 @@ class VapiToolCallControllerTest extends TestCase
         $this->assertSame('77778888', $user->phone_number);
 
         Mail::assertSent(\App\Mail\AccountCreatedByVoiceCall::class, fn ($mail) => $mail->user->is($user));
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'voice_account_created']);
     }
 
     public function test_no_duplica_la_cuenta_si_ya_existe_una_con_ese_correo(): void

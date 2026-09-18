@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\AppointmentRequested;
+use App\Models\AdminNotification;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Models\Promotion;
@@ -71,6 +72,8 @@ class AppointmentBookingControllerTest extends TestCase
         Mail::assertSent(AppointmentRequested::class, function ($mail) use ($superAdmin1, $superAdmin2) {
             return $mail->hasTo($superAdmin1->email) && $mail->hasCc($superAdmin2->email);
         });
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'appointment_pending', 'feature' => 'appointments']);
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'payment_reported', 'feature' => 'appointments']);
     }
 
     public function test_no_puede_solicitar_un_horario_ya_tomado(): void
@@ -252,6 +255,8 @@ class AppointmentBookingControllerTest extends TestCase
             'payment_method' => 'wompi',
             'payment_reference' => '555',
         ]);
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'appointment_pending']);
+        $this->assertDatabaseMissing('admin_notifications', ['type' => 'payment_reported']);
     }
 
     public function test_pagar_con_wompi_sin_credenciales_configuradas_no_pierde_la_cita(): void

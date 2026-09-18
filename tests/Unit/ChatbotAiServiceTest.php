@@ -540,6 +540,8 @@ class ChatbotAiServiceTest extends TestCase
         $this->assertSame('pending', $appointment->status->value);
 
         Mail::assertSent(AccountCreatedByChatbot::class, fn ($mail) => $mail->hasTo('elian@example.com'));
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'chatbot_account_created']);
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'appointment_pending']);
     }
 
     public function test_book_appointment_reutiliza_la_cuenta_si_el_correo_ya_existe(): void
@@ -562,6 +564,7 @@ class ChatbotAiServiceTest extends TestCase
         $this->assertNotNull($appointment);
         // No se crea cuenta nueva, así que no se manda correo de credenciales.
         Mail::assertNotSent(AccountCreatedByChatbot::class);
+        $this->assertDatabaseMissing('admin_notifications', ['type' => 'chatbot_account_created']);
     }
 
     public function test_book_appointment_no_reserva_si_faltan_datos(): void

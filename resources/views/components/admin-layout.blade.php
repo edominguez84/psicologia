@@ -37,6 +37,9 @@
             <header class="flex items-center justify-between gap-2 border-b border-paper-200 bg-paper-alt px-4 py-3 md:hidden">
                 <a href="{{ route('admin.dashboard') }}" class="min-w-0 shrink">@include('partials.logo', ['class' => 'h-8 w-auto'])</a>
                 <div class="flex shrink-0 items-center gap-2">
+                    @auth
+                        @include('partials.notifications-bell')
+                    @endauth
                     @include('partials.theme-switch')
                     <button type="button" @click="open = !open" class="grid size-10 place-items-center rounded-full border border-paper-200 text-sky-700" aria-label="Abrir menú">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
@@ -51,7 +54,10 @@
             >
                 <div class="mb-8 hidden items-center justify-between gap-2 md:flex">
                     <a href="{{ route('admin.dashboard') }}" class="min-w-0 shrink">@include('partials.logo')</a>
-                    <div class="shrink-0">
+                    <div class="flex shrink-0 items-center gap-2">
+                        @auth
+                            @include('partials.notifications-bell')
+                        @endauth
                         @include('partials.theme-switch')
                     </div>
                 </div>

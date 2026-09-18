@@ -23,8 +23,11 @@ use Illuminate\Support\Facades\Storage;
  */
 class AppointmentBookingService
 {
-    public function __construct(private SiteSettingsService $settings, private WompiPaymentService $wompi)
-    {
+    public function __construct(
+        private SiteSettingsService $settings,
+        private WompiPaymentService $wompi,
+        private NotificationService $notifications,
+    ) {
     }
 
     public function book(User $user, int $appointmentSlotId, string $paymentMethod, ?int $promotionId = null, ?string $patientNote = null): ?Appointment
@@ -139,6 +142,24 @@ class AppointmentBookingService
             }
         } catch (\Throwable $e) {
             Log::warning('No se pudo notificar la nueva solicitud de cita: '.$e->getMessage());
+        }
+
+        $this->notifications->notify(
+            type: 'appointment_pending',
+            title: 'Nueva cita pendiente de aprobar',
+            body: $appointment->user->name,
+            link: route('admin.appointments.index'),
+            feature: 'appointments',
+        );
+
+        if ($appointment->payment_status === 'reported') {
+            $this->notifications->notify(
+                type: 'payment_reported',
+                title: 'Pago por transferencia reportado',
+                body: $appointment->user->name,
+                link: route('admin.appointments.index'),
+                feature: 'appointments',
+            );
         }
     }
 }

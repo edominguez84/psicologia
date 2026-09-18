@@ -39,8 +39,11 @@ class ChatbotAiService
     private const API_VERSION = '2023-06-01';
     private const MAX_TOOL_ROUNDS = 3;
 
-    public function __construct(private SiteSettingsService $settings, private AppointmentBookingService $booking)
-    {
+    public function __construct(
+        private SiteSettingsService $settings,
+        private AppointmentBookingService $booking,
+        private NotificationService $notifications,
+    ) {
     }
 
     /**
@@ -350,6 +353,13 @@ class ChatbotAiService
                 'password' => Hash::make($temporaryPassword),
                 'role' => 'patient',
             ]);
+
+            $this->notifications->notify(
+                type: 'chatbot_account_created',
+                title: 'Cuenta creada por el chatbot',
+                body: $user->name,
+                link: route('admin.users.index'),
+            );
         }
 
         $paymentMethod = $this->settings->get('payment', [])['method'] ?? 'bank_transfer';
