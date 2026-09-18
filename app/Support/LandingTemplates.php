@@ -21,10 +21,10 @@ class LandingTemplates
     public const DEFAULT = 'classic';
 
     /**
-     * 'preview' apunta hoy a un diagrama SVG simple (placeholder) en
-     * public/images/templates/ — se puede reemplazar por una captura de
-     * pantalla real (.png) de cada plantilla ya en producción sin tocar
-     * ningún otro archivo, solo esta ruta.
+     * 'preview' apunta a una captura de pantalla real de cada plantilla
+     * (public/images/templates/*.png, generadas con Playwright contra el
+     * entorno local) — si alguna plantilla cambia visualmente en el
+     * futuro, basta con regenerar esa captura sin tocar código.
      */
     public static function all(): array
     {
@@ -32,17 +32,17 @@ class LandingTemplates
             'classic' => [
                 'label' => 'Clásica',
                 'description' => 'La plantilla original del sitio: hero con foto lateral y secciones en columna, una debajo de otra.',
-                'preview' => 'images/templates/classic.svg',
+                'preview' => 'images/templates/classic.png',
             ],
             'minimal' => [
                 'label' => 'Minimalista',
                 'description' => 'Hero centrado sin foto, navegación por pasos y una sección final combinada de preguntas y contacto — más ligera y directa.',
-                'preview' => 'images/templates/minimal.svg',
+                'preview' => 'images/templates/minimal.png',
             ],
             'cards' => [
                 'label' => 'Tarjetas',
                 'description' => 'Hero con imagen de fondo a pantalla completa y todo el contenido presentado como tarjetas grandes con sombra — más visual.',
-                'preview' => 'images/templates/cards.svg',
+                'preview' => 'images/templates/cards.png',
             ],
         ];
     }
