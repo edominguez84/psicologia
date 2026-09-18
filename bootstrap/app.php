@@ -21,6 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Resuelve el idioma del contenido de fábrica (config('site')) en
         // toda request web, antes de que cualquier controlador/vista lo lea.
+        // EnsureSiteIsNotInMaintenance va primero: si el sitio está en
+        // mantenimiento no tiene sentido resolver idioma para una página
+        // que no se va a mostrar.
+        $middleware->web(prepend: [
+            \App\Http\Middleware\EnsureSiteIsNotInMaintenance::class,
+        ]);
         $middleware->web(append: [
             \App\Http\Middleware\ResolveSiteLocale::class,
         ]);
