@@ -111,7 +111,12 @@ class VapiCallService
                     'horarioCita' => $appointmentTime,
                 ],
             ],
-            'metadata' => $metadata,
+            // VAPI exige que 'metadata' sea un objeto JSON, aunque esté
+            // vacío ({}) — un array PHP vacío ([]) se codifica como array
+            // JSON ([]), que la API rechaza con "metadata must be an
+            // object" (rechazaba TODA llamada de prueba sin appointment_id,
+            // como el botón de prueba con nombre/teléfono libres).
+            'metadata' => empty($metadata) ? new \stdClass() : $metadata,
         ]);
 
         if ($response->failed()) {

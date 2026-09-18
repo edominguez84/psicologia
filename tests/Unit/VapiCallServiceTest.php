@@ -153,4 +153,24 @@ class VapiCallServiceTest extends TestCase
 
         app(VapiCallService::class)->callRaw('77778888', 'Juan Pérez', 'mañana');
     }
+
+    /**
+     * Regresión: sin metadata explícito (caso del botón de prueba con
+     * nombre/teléfono libres), el default [] se codificaba como array JSON
+     * ([]) en vez de objeto ({}), y VAPI rechazaba la request completa con
+     * "metadata must be an object" — el botón de prueba nunca funcionaba.
+     */
+    public function test_call_raw_sin_metadata_envia_un_objeto_json_no_un_array(): void
+    {
+        $this->configureCredentials();
+        Http::fake(['api.vapi.ai/call' => Http::response(['id' => 'call-raw-1'], 200)]);
+
+        app(VapiCallService::class)->callRaw('77778888', 'Juan Pérez', 'mañana');
+
+        Http::assertSent(function ($request) {
+            $rawBody = $request->body();
+
+            return str_contains($rawBody, '"metadata":{}') && ! str_contains($rawBody, '"metadata":[]');
+        });
+    }
 }
