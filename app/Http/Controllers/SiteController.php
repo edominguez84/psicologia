@@ -43,6 +43,7 @@ class SiteController extends Controller
             'site' => config('site'),
             'customSections' => $customSections,
             'patientTestimonials' => $patientTestimonials,
+            'voiceRegistrationEnabled' => ! $demoMode && (bool) ($this->settings->get('voice_registration', [])['enabled'] ?? false),
         ]);
     }
 

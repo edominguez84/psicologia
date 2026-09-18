@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'analytics/social-click',
             'webhooks/telegram',
             'webhooks/vapi',
+            'webhooks/vapi-tools',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -62,6 +62,7 @@ class AdminPermissions
             'analytics' => ['label' => 'Panel de analíticas', 'routes' => ['admin.analytics.*'], 'default' => false],
             'system-manual' => ['label' => 'Manual del sistema', 'routes' => ['admin.system-manual.*'], 'default' => false],
             'vapi-settings' => ['label' => 'Llamadas automáticas de confirmación (VAPI)', 'routes' => ['admin.vapi-settings.*'], 'default' => false],
+            'voice-registration-settings' => ['label' => 'Registro de pacientes por llamada de voz', 'routes' => ['admin.voice-registration-settings.*'], 'default' => false],
         ];
     }
 

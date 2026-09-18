@@ -8,7 +8,9 @@ use App\Http\Controllers\Api\CheckupController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\CronRunnerController;
 use App\Http\Controllers\SiteController;
+use App\Http\Controllers\VoiceRegistrationLeadController;
 use App\Http\Controllers\Webhooks\TelegramWebhookController;
+use App\Http\Controllers\Webhooks\VapiToolCallController;
 use App\Http\Controllers\Webhooks\VapiWebhookController;
 use App\Http\Controllers\Webhooks\WompiWebhookController;
 use App\Http\Middleware\ResolveSiteLocale;
@@ -75,6 +77,20 @@ Route::post('/webhooks/telegram', TelegramWebhookController::class)->name('webho
 // Resultado de las llamadas automáticas de confirmación de cita (VAPI) —
 // ver App\Http\Controllers\Webhooks\VapiWebhookController.
 Route::post('/webhooks/vapi', VapiWebhookController::class)->name('webhooks.vapi');
+
+// Tool-calls del asistente de registro de paciente por voz — ver
+// App\Http\Controllers\Webhooks\VapiToolCallController. Ruta separada de
+// webhooks/vapi porque el formato de payload/respuesta es distinto
+// (función invocada en vivo durante la llamada, no un reporte de cierre).
+Route::post('/webhooks/vapi-tools', VapiToolCallController::class)->name('webhooks.vapi-tools');
+
+// Punto de entrada del registro de paciente por llamada de voz: el
+// visitante deja su teléfono y el sistema le dispara la llamada — ver
+// App\Http\Controllers\VoiceRegistrationLeadController. Throttle agresivo:
+// cada intento dispara una llamada telefónica real, con costo.
+Route::post('/registro-por-llamada', [VoiceRegistrationLeadController::class, 'store'])
+    ->middleware('throttle:3,1')
+    ->name('voice-registration.store');
 
 // Dispara el scheduler (routes/console.php) por HTTP — ver
 // App\Http\Controllers\CronRunnerController. Pensado para un servicio
