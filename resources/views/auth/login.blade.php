@@ -1,3 +1,6 @@
+@if (($loginTemplate ?? 'classic') === 'carousel')
+    @include('auth.login-carousel')
+@else
 <x-guest-layout>
     <x-auth-session-status class="mb-4" :status="session('status')" />
     {{-- El aviso de "sesión cerrada por inactividad" también llega aquí como
@@ -59,3 +62,4 @@
         </div>
     @endif
 </x-guest-layout>
+@endif

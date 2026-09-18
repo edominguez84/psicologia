@@ -17,6 +17,8 @@ use App\Http\Controllers\Admin\FaviconController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\LandingTemplateController;
 use App\Http\Controllers\Admin\LegalPageController;
+use App\Http\Controllers\Admin\LoginCarouselController;
+use App\Http\Controllers\Admin\LoginTemplateController;
 use App\Http\Controllers\Admin\LogoController;
 use App\Http\Controllers\Admin\MaintenanceController;
 use App\Http\Controllers\Admin\MessagesController;
@@ -97,6 +99,12 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
 
     Route::get('/maintenance', [MaintenanceController::class, 'edit'])->name('maintenance.edit');
     Route::put('/maintenance', [MaintenanceController::class, 'update'])->name('maintenance.update');
+
+    Route::get('/login-template', [LoginTemplateController::class, 'edit'])->name('login-template.edit');
+    Route::put('/login-template', [LoginTemplateController::class, 'update'])->name('login-template.update');
+    Route::post('/login-carousel', [LoginCarouselController::class, 'store'])->name('login-carousel.store');
+    Route::put('/login-carousel', [LoginCarouselController::class, 'update'])->name('login-carousel.update');
+    Route::delete('/login-carousel/{index}', [LoginCarouselController::class, 'destroy'])->name('login-carousel.destroy');
 
     Route::get('/appointment-slots', [AppointmentSlotController::class, 'index'])->name('appointment-slots.index');
     Route::post('/appointment-slots', [AppointmentSlotController::class, 'store'])->name('appointment-slots.store');
