@@ -44,6 +44,11 @@ class HomeTelegramButtonTest extends TestCase
         $response = $this->get('/');
 
         $response->assertSee('https://t.me/PsicologaSv_bot', false);
+        // Regresión: '@{{ $telegramUsername }}' (escapado a propósito por
+        // Blade, para no interpolar) se imprimía tal cual en vez del
+        // username real — el texto visible debe ser "@PsicologaSv_bot".
+        $response->assertSee('@PsicologaSv_bot');
+        $response->assertDontSee('{{ $telegramUsername }}');
     }
 
     public function test_telegram_desactivado_no_muestra_el_boton_aunque_tenga_username_guardado(): void
