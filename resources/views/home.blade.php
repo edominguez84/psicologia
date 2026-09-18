@@ -138,6 +138,52 @@
                 @endif
             </div>
 
+            {{-- Registro de paciente por llamada de voz: alternativa al
+                 formulario de registro, solo visible si el super_admin la
+                 activó en /admin/voice-registration-settings. No requiere
+                 componente Vue: es un solo campo con envío por fetch(). --}}
+            @if ($voiceRegistrationEnabled)
+                <details class="mt-4 max-w-md rounded-2xl border border-paper-200 bg-paper-50 p-4 text-sm">
+                    <summary class="cursor-pointer font-semibold text-sky-700">
+                        📞 ¿Prefieres registrarte con una llamada?
+                    </summary>
+                    <p class="mt-2 text-ink-soft">
+                        Déjanos tu teléfono y te llamamos ahora mismo — un asistente te ayuda a crear tu
+                        cuenta por voz, sin llenar ningún formulario.
+                    </p>
+                    <form
+                        class="mt-3 flex flex-wrap gap-2"
+                        onsubmit="event.preventDefault();
+                            const form = event.target;
+                            const button = form.querySelector('button');
+                            const status = form.nextElementSibling;
+                            button.disabled = true;
+                            status.textContent = 'Enviando…';
+                            fetch('{{ route('voice-registration.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify({ phone_number: form.phone_number.value }),
+                            })
+                                .then(async (response) => ({ ok: response.ok, data: await response.json() }))
+                                .then(({ data }) => { status.textContent = data.message; })
+                                .catch(() => { status.textContent = 'No se pudo iniciar la llamada. Intenta de nuevo en unos minutos.'; })
+                                .finally(() => { button.disabled = false; });"
+                    >
+                        <input
+                            type="tel" name="phone_number" required maxlength="30"
+                            placeholder="Ej. 61079711"
+                            class="min-w-0 flex-1 rounded-xl border border-paper-200 bg-card-fixed px-3 py-2 text-sm outline-none focus:border-sky-400"
+                        >
+                        <button type="submit" class="btn btn-primary text-sm">Llamarme</button>
+                    </form>
+                    <p class="mt-2 text-xs text-ink-soft" role="status"></p>
+                </details>
+            @endif
+
             <dl class="mt-12 grid gap-6 sm:grid-cols-3">
                 @foreach ($s['hero']['points'] as $point)
                     <div>

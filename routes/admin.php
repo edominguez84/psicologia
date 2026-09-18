@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\SystemManualController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\VapiSettingsController;
+use App\Http\Controllers\Admin\VoiceRegistrationSettingsController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UsersController;
 use Illuminate\Support\Facades\Route;
@@ -157,6 +158,12 @@ Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])-
     Route::post('/vapi-settings/regenerate-webhook-secret', [VapiSettingsController::class, 'regenerateWebhookSecret'])->name('vapi-settings.regenerate-webhook-secret');
     Route::post('/vapi-settings/test-connection', [VapiSettingsController::class, 'testConnection'])->name('vapi-settings.test-connection');
     Route::post('/vapi-settings/send-test-call', [VapiSettingsController::class, 'sendTestCall'])->name('vapi-settings.send-test-call');
+
+    // Registro de paciente por llamada de voz.
+    Route::get('/voice-registration-settings', [VoiceRegistrationSettingsController::class, 'edit'])->name('voice-registration-settings.edit');
+    Route::put('/voice-registration-settings', [VoiceRegistrationSettingsController::class, 'update'])->name('voice-registration-settings.update');
+    Route::post('/voice-registration-settings/regenerate-webhook-secret', [VoiceRegistrationSettingsController::class, 'regenerateWebhookSecret'])->name('voice-registration-settings.regenerate-webhook-secret');
+    Route::post('/voice-registration-settings/send-test-call', [VoiceRegistrationSettingsController::class, 'sendTestCall'])->name('voice-registration-settings.send-test-call');
 
     // Aprobación de testimonios y filtro de contenido.
     Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');

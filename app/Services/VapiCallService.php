@@ -47,6 +47,26 @@ class VapiCallService
     }
 
     /**
+     * Registro de paciente por llamada de voz (ver
+     * Admin\VoiceRegistrationSettingsController) — usa la misma API key y el
+     * mismo phoneNumberId ya configurados en 'vapi' (una sola cuenta de
+     * VAPI/Twilio), pero un Assistant ID distinto, dedicado a recolectar
+     * nombre/correo/teléfono en vez de confirmar una cita.
+     */
+    public function isVoiceRegistrationConfigured(): bool
+    {
+        $credentials = $this->credentials();
+        $voiceRegistration = $this->voiceRegistrationCredentials();
+
+        return filled($credentials['api_key']) && filled($voiceRegistration['assistant_id']) && filled($credentials['phone_number_id']);
+    }
+
+    public function isVoiceRegistrationUsable(): bool
+    {
+        return (bool) $this->voiceRegistrationCredentials()['enabled'] && $this->isVoiceRegistrationConfigured();
+    }
+
+    /**
      * Cuántas horas antes del horario de la cita se debe disparar la
      * llamada — configurable por el super_admin, usado por
      * App\Console\Commands\SendAppointmentCallReminders para calcular la
@@ -89,9 +109,11 @@ class VapiCallService
      * un nombre y teléfono cualquiera al momento para probar el guion del
      * asistente sin depender de que exista una cuenta con ese teléfono
      * cargado. $appointmentTime ya debe venir formateado como texto legible
-     * (mismo formato que usa callForAppointment()).
+     * (mismo formato que usa callForAppointment()). $assistantId permite
+     * usar un asistente distinto al de confirmación de citas (ver
+     * callForVoiceRegistration()) sin duplicar esta lógica HTTP.
      */
-    public function callRaw(string $phoneNumber, string $patientName, string $appointmentTime, array $metadata = []): string
+    public function callRaw(string $phoneNumber, string $patientName, string $appointmentTime, array $metadata = [], ?string $assistantId = null): string
     {
         $credentials = $this->credentials();
 
@@ -100,7 +122,7 @@ class VapiCallService
         }
 
         $response = Http::withToken($credentials['api_key'])->post(self::API_URL, [
-            'assistantId' => $credentials['assistant_id'],
+            'assistantId' => $assistantId ?? $credentials['assistant_id'],
             'phoneNumberId' => $credentials['phone_number_id'],
             'customer' => [
                 'number' => $this->normalizePhoneNumber($phoneNumber),
@@ -124,6 +146,31 @@ class VapiCallService
         }
 
         return $response->json('id');
+    }
+
+    /**
+     * Dispara la llamada saliente de registro de paciente por voz — el
+     * visitante solo deja su teléfono en el sitio (ver
+     * VoiceRegistrationLeadController), sin nombre ni horario todavía (eso
+     * lo recolecta el propio asistente por voz durante la llamada, e invoca
+     * la tool 'create_patient_account' contra VapiToolCallController). No
+     * hay nombre/horario que mandar de antemano, así que se pasan cadenas
+     * vacías — el guion de este asistente no las usa.
+     */
+    public function callForVoiceRegistration(string $phoneNumber): string
+    {
+        $voiceRegistration = $this->voiceRegistrationCredentials();
+
+        if (! $this->isVoiceRegistrationConfigured()) {
+            throw new RuntimeException('El registro de pacientes por voz no tiene configuradas todas las credenciales necesarias.');
+        }
+
+        return $this->callRaw(
+            phoneNumber: $phoneNumber,
+            patientName: '',
+            appointmentTime: '',
+            assistantId: $voiceRegistration['assistant_id'],
+        );
     }
 
     /**
@@ -190,5 +237,40 @@ class VapiCallService
             'webhook_secret' => '',
             'hours_before' => 24,
         ], $vapi);
+    }
+
+    /**
+     * Configuración propia del registro de paciente por voz — separada de
+     * 'vapi' porque es un asistente distinto (con su propio Assistant ID e
+     * interruptor enabled/disabled) y un secreto de webhook propio para la
+     * tool-call entrante (ver VapiToolCallController), aunque comparta la
+     * misma api_key/phone_number_id de la cuenta de VAPI.
+     */
+    private function voiceRegistrationCredentials(): array
+    {
+        $voiceRegistration = $this->settings->get('voice_registration', []);
+
+        return array_replace([
+            'enabled' => false,
+            'assistant_id' => '',
+            'webhook_secret' => '',
+        ], $voiceRegistration);
+    }
+
+    /**
+     * Compara el header 'X-Vapi-Secret' de la tool-call entrante de registro
+     * por voz contra el secreto configurado para esta sección — secreto
+     * propio, distinto al de 'vapi' (verifyWebhookSecret()), porque es un
+     * endpoint y un asistente completamente separados.
+     */
+    public function verifyVoiceRegistrationWebhookSecret(?string $received): bool
+    {
+        $secret = $this->voiceRegistrationCredentials()['webhook_secret'];
+
+        if (! $received || ! filled($secret)) {
+            return false;
+        }
+
+        return hash_equals($secret, $received);
     }
 }

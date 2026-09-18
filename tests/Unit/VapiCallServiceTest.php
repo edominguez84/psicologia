@@ -173,4 +173,96 @@ class VapiCallServiceTest extends TestCase
             return str_contains($rawBody, '"metadata":{}') && ! str_contains($rawBody, '"metadata":[]');
         });
     }
+
+    /**
+     * Registro de paciente por voz — usa la misma api_key/phoneNumberId de
+     * 'vapi' pero un Assistant ID propio de 'voice_registration'.
+     */
+    private function configureVoiceRegistration(array $overrides = []): void
+    {
+        app(SiteSettingsService::class)->set('voice_registration', array_merge([
+            'enabled' => true,
+            'assistant_id' => 'assistant-voice-registration',
+            'webhook_secret' => 'voice-secret-abc',
+        ], $overrides));
+    }
+
+    public function test_registro_por_voz_no_esta_configurado_sin_assistant_id_propio(): void
+    {
+        $this->configureCredentials();
+
+        $this->assertFalse(app(VapiCallService::class)->isVoiceRegistrationConfigured());
+    }
+
+    public function test_registro_por_voz_esta_configurado_con_cuenta_vapi_y_assistant_id_propio(): void
+    {
+        $this->configureCredentials();
+        $this->configureVoiceRegistration();
+
+        $this->assertTrue(app(VapiCallService::class)->isVoiceRegistrationConfigured());
+    }
+
+    public function test_registro_por_voz_no_es_usable_si_esta_apagado_aunque_haya_credenciales(): void
+    {
+        $this->configureCredentials();
+        $this->configureVoiceRegistration(['enabled' => false]);
+
+        $this->assertFalse(app(VapiCallService::class)->isVoiceRegistrationUsable());
+    }
+
+    public function test_registro_por_voz_es_usable_activado_y_configurado(): void
+    {
+        $this->configureCredentials();
+        $this->configureVoiceRegistration();
+
+        $this->assertTrue(app(VapiCallService::class)->isVoiceRegistrationUsable());
+    }
+
+    public function test_call_for_voice_registration_usa_el_assistant_id_de_registro_por_voz(): void
+    {
+        $this->configureCredentials();
+        $this->configureVoiceRegistration();
+        Http::fake(['api.vapi.ai/call' => Http::response(['id' => 'call-voice-1'], 200)]);
+
+        $callId = app(VapiCallService::class)->callForVoiceRegistration('77778888');
+
+        $this->assertSame('call-voice-1', $callId);
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.vapi.ai/call'
+            && $request['assistantId'] === 'assistant-voice-registration'
+            && $request['phoneNumberId'] === 'phone-456'
+            && $request['customer']['number'] === '+50377778888');
+    }
+
+    public function test_call_for_voice_registration_lanza_excepcion_si_no_esta_configurado(): void
+    {
+        $this->configureCredentials();
+
+        $this->expectException(RuntimeException::class);
+
+        app(VapiCallService::class)->callForVoiceRegistration('77778888');
+    }
+
+    public function test_verifica_el_secreto_del_webhook_de_registro_por_voz(): void
+    {
+        $this->configureVoiceRegistration();
+        $service = app(VapiCallService::class);
+
+        $this->assertTrue($service->verifyVoiceRegistrationWebhookSecret('voice-secret-abc'));
+        $this->assertFalse($service->verifyVoiceRegistrationWebhookSecret('otro-valor'));
+        $this->assertFalse($service->verifyVoiceRegistrationWebhookSecret(null));
+    }
+
+    /**
+     * Los secretos de 'vapi' y 'voice_registration' son independientes —
+     * uno no debe validar el header de la otra sección.
+     */
+    public function test_el_secreto_de_vapi_y_el_de_registro_por_voz_son_independientes(): void
+    {
+        $this->configureCredentials(['webhook_secret' => 'secret-abc']);
+        $this->configureVoiceRegistration(['webhook_secret' => 'voice-secret-abc']);
+        $service = app(VapiCallService::class);
+
+        $this->assertFalse($service->verifyWebhookSecret('voice-secret-abc'));
+        $this->assertFalse($service->verifyVoiceRegistrationWebhookSecret('secret-abc'));
+    }
 }
