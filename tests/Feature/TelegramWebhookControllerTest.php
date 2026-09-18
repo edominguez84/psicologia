@@ -17,7 +17,7 @@ class TelegramWebhookControllerTest extends TestCase
     {
         parent::setUp();
         app(SiteSettingsService::class)->set('chatbot_channels', [
-            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token', 'webhook_secret' => 'test-token'],
             'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'model' => 'claude-haiku-4-5-20251001'],
         ]);
     }
@@ -81,7 +81,7 @@ class TelegramWebhookControllerTest extends TestCase
     public function test_sin_api_key_responde_con_faq_en_vez_de_ia(): void
     {
         app(SiteSettingsService::class)->set('chatbot_channels', [
-            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token', 'webhook_secret' => 'test-token'],
             'anthropic' => ['enabled' => false, 'api_key' => ''],
         ]);
         ChatbotFaq::create(['question' => '¿Cuánto dura una sesión?', 'answer' => 'Las sesiones duran 50 minutos.', 'is_active' => true]);
@@ -96,7 +96,7 @@ class TelegramWebhookControllerTest extends TestCase
     public function test_si_la_ia_esta_apagada_manualmente_responde_con_faq_aunque_haya_api_key(): void
     {
         app(SiteSettingsService::class)->set('chatbot_channels', [
-            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token', 'webhook_secret' => 'test-token'],
             'anthropic' => ['enabled' => false, 'api_key' => 'sk-ant-test'],
         ]);
         Http::fake(['api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200)]);
@@ -138,7 +138,7 @@ class TelegramWebhookControllerTest extends TestCase
     public function test_al_superar_el_limite_diario_de_mensajes_de_ia_cae_a_faq(): void
     {
         app(SiteSettingsService::class)->set('chatbot_channels', [
-            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token', 'webhook_secret' => 'test-token'],
             'anthropic' => ['enabled' => true, 'api_key' => 'sk-ant-test', 'daily_message_limit' => 1],
         ]);
         ChatbotFaq::create(['question' => '¿Ofrecen descuentos por paquete de sesiones?', 'answer' => 'Sí, con paquete.', 'is_active' => true]);
@@ -168,7 +168,7 @@ class TelegramWebhookControllerTest extends TestCase
     public function test_en_modo_faq_sin_coincidencia_arranca_la_captura_de_datos_en_vez_del_menu(): void
     {
         app(SiteSettingsService::class)->set('chatbot_channels', [
-            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token', 'webhook_secret' => 'test-token'],
             'anthropic' => ['enabled' => false, 'api_key' => ''],
         ]);
         Http::fake(['api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200)]);
@@ -184,7 +184,7 @@ class TelegramWebhookControllerTest extends TestCase
     public function test_en_modo_faq_completa_la_captura_de_datos_a_lo_largo_de_varios_mensajes(): void
     {
         app(SiteSettingsService::class)->set('chatbot_channels', [
-            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token', 'webhook_secret' => 'test-token'],
             'anthropic' => ['enabled' => false, 'api_key' => ''],
         ]);
         Http::fake(['api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => []], 200)]);

@@ -16,7 +16,7 @@ class TelegramBotServiceTest extends TestCase
     private function configureCredentials(): void
     {
         app(SiteSettingsService::class)->set('chatbot_channels', [
-            'telegram' => ['enabled' => true, 'bot_token' => 'test-token'],
+            'telegram' => ['enabled' => true, 'bot_token' => 'test-token', 'webhook_secret' => 'test-webhook-secret'],
         ]);
     }
 
@@ -61,9 +61,27 @@ class TelegramBotServiceTest extends TestCase
         $this->configureCredentials();
         $service = app(TelegramBotService::class);
 
-        $this->assertTrue($service->verifySecretToken('test-token'));
+        $this->assertTrue($service->verifySecretToken('test-webhook-secret'));
+        $this->assertFalse($service->verifySecretToken('test-token'));
         $this->assertFalse($service->verifySecretToken('otro-token'));
         $this->assertFalse($service->verifySecretToken(null));
+    }
+
+    /**
+     * Regresión: setWebhook() enviaba el bot_token tal cual como
+     * secret_token — Telegram lo rechaza con "secret token contains illegal
+     * characters" porque el bot_token trae un ':' (formato "123456:AAxxxx"),
+     * carácter no permitido ahí. Debe usar el webhook_secret propio.
+     */
+    public function test_set_webhook_envia_el_webhook_secret_no_el_bot_token(): void
+    {
+        $this->configureCredentials();
+        Http::fake(['api.telegram.org/*/setWebhook' => Http::response(['ok' => true, 'result' => true], 200)]);
+
+        app(TelegramBotService::class)->setWebhook('https://example.com/webhooks/telegram');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'setWebhook')
+            && $request['secret_token'] === 'test-webhook-secret');
     }
 
     public function test_send_message_llama_al_endpoint_correcto(): void

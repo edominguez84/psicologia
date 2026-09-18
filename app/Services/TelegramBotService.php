@@ -27,17 +27,18 @@ class TelegramBotService
 
     /**
      * Compara el header 'X-Telegram-Bot-Api-Secret-Token' del webhook
-     * entrante contra el bot_token propio (usado como secreto compartido al
-     * registrar el webhook, ver setWebhook()) — descarta tráfico que no
-     * viene de nuestra configuración real.
+     * entrante contra el webhook_secret propio (ver setWebhook()) — descarta
+     * tráfico que no viene de nuestra configuración real.
      */
     public function verifySecretToken(?string $received): bool
     {
-        if (! $received) {
+        $secret = $this->credentials()['webhook_secret'];
+
+        if (! $received || ! filled($secret)) {
             return false;
         }
 
-        return hash_equals($this->credentials()['bot_token'], $received);
+        return hash_equals($secret, $received);
     }
 
     /**
@@ -56,14 +57,21 @@ class TelegramBotService
      * nuevo — se vuelve a llamar cada vez que se guarda/prueba la
      * configuración, así que un cambio de dominio no requiere un paso manual
      * aparte. secret_token viaja en el header 'X-Telegram-Bot-Api-Secret-Token'
-     * de cada webhook entrante — se usa el propio bot_token como secreto
-     * compartido simple (ver TelegramWebhookController).
+     * de cada webhook entrante (ver TelegramWebhookController).
+     *
+     * Importante: Telegram exige que secret_token solo contenga letras,
+     * números, guiones y guiones bajos (rechaza la solicitud completa con
+     * "secret token contains illegal characters" si no) — por eso NO se
+     * puede reusar el bot_token tal cual (viene con un ':' en medio,
+     * formato "123456:AAxxxx", carácter no permitido aquí). Se usa en su
+     * lugar un webhook_secret propio, autogenerado con Str::random() (mismo
+     * patrón que VapiCallService), guardado junto al bot_token.
      */
     public function setWebhook(string $url): void
     {
         $this->call('setWebhook', [
             'url' => $url,
-            'secret_token' => $this->credentials()['bot_token'],
+            'secret_token' => $this->credentials()['webhook_secret'],
         ]);
     }
 
@@ -103,7 +111,7 @@ class TelegramBotService
         $channels = $this->settings->get('chatbot_channels', []);
 
         return array_replace(
-            ['enabled' => false, 'bot_token' => ''],
+            ['enabled' => false, 'bot_token' => '', 'webhook_secret' => ''],
             $channels['telegram'] ?? []
         );
     }
