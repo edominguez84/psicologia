@@ -18,6 +18,9 @@ class ChatbotConversation extends Model
         'channel', 'external_chat_id', 'history', 'lead_captured',
         'ai_message_count', 'ai_message_count_date',
         'faq_capture_step', 'faq_capture_data',
+        // closed_at NO es fillable a propósito — solo lo debe tocar
+        // App\Console\Commands\CloseInactiveChatbotConversations (vía
+        // forceFill), nunca un mensaje entrante normal.
     ];
 
     protected $casts = [
@@ -25,7 +28,13 @@ class ChatbotConversation extends Model
         'lead_captured' => 'boolean',
         'ai_message_count_date' => 'date',
         'faq_capture_data' => 'array',
+        'closed_at' => 'datetime',
     ];
+
+    public function scopeInactiveSince($query, \Illuminate\Support\Carbon $threshold)
+    {
+        return $query->whereNull('closed_at')->where('updated_at', '<', $threshold);
+    }
 
     /**
      * Máximo de mensajes que se conservan por conversación — evita que el

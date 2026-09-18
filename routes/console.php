@@ -26,3 +26,9 @@ Artisan::command('inspire', function () {
 // PROCESO PHP que ya está corriendo (vía Artisan::call()), sin depender
 // de proc_open — funciona igual en local y en cualquier hosting.
 Schedule::call(fn () => Artisan::call('appointments:call-reminders'))->everyFiveMinutes();
+
+// Despedida automática por inactividad del bot de Telegram — ver
+// App\Console\Commands\CloseInactiveChatbotConversations. Mismo criterio
+// que arriba: Schedule::call() en vez de Schedule::command() para no
+// depender de proc_open (deshabilitado en el hosting de producción).
+Schedule::call(fn () => Artisan::call('chatbot:close-inactive-conversations'))->everyFiveMinutes();

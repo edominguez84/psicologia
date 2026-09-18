@@ -72,6 +72,16 @@ class ChatbotChannelsController extends Controller
             // cuesta nada.
             'daily_message_limit' => 60,
         ],
+        // Aplica a ambos canales (widget web y Telegram) y a ambos modos
+        // (FAQ e IA) — ver ChatbotWidget.vue (timeout resuelto en el
+        // navegador) y App\Console\Commands\CloseInactiveChatbotConversations
+        // (timeout de Telegram, resuelto por cron ya que no hay conexión
+        // abierta esperando una respuesta).
+        'chat_widget' => [
+            'web_widget_enabled' => true,
+            'inactivity_timeout_minutes' => 5,
+            'farewell_message' => 'Veo que no tienes otra consulta, buen día, adiós.',
+        ],
     ];
 
     public function __construct(private SiteSettingsService $settings)
@@ -115,6 +125,9 @@ class ChatbotChannelsController extends Controller
             'anthropic_greeting' => ['nullable', 'string', 'max:500'],
             'anthropic_data_to_request' => ['nullable', 'string', 'max:500'],
             'anthropic_daily_message_limit' => ['nullable', 'integer', 'min:1', 'max:1000'],
+            'web_widget_enabled' => ['nullable', 'boolean'],
+            'chat_inactivity_timeout_minutes' => ['nullable', 'integer', 'min:1', 'max:120'],
+            'chat_farewell_message' => ['nullable', 'string', 'max:500'],
         ]);
 
         $current = array_replace_recursive(self::DEFAULTS, $this->settings->get('chatbot_channels', []));
@@ -163,6 +176,11 @@ class ChatbotChannelsController extends Controller
                 'pdf_source_path' => $current['anthropic']['pdf_source_path'],
                 'pdf_source_name' => $current['anthropic']['pdf_source_name'],
                 'pdf_source_text' => $current['anthropic']['pdf_source_text'],
+            ],
+            'chat_widget' => [
+                'web_widget_enabled' => $request->boolean('web_widget_enabled'),
+                'inactivity_timeout_minutes' => isset($data['chat_inactivity_timeout_minutes']) ? (int) $data['chat_inactivity_timeout_minutes'] : self::DEFAULTS['chat_widget']['inactivity_timeout_minutes'],
+                'farewell_message' => $data['chat_farewell_message'] ?? self::DEFAULTS['chat_widget']['farewell_message'],
             ],
         ]);
 
