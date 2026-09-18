@@ -94,6 +94,41 @@ class ChatbotChannelsControllerTest extends TestCase
         // contiene ':', carácter que Telegram rechaza en secret_token).
         Http::assertSent(fn ($request) => str_contains($request->url(), 'setWebhook')
             && $request['secret_token'] === 'webhook-secret-abc');
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertSame('mi_bot', $channels['telegram']['username']);
+    }
+
+    public function test_cambiar_el_bot_token_limpia_el_username_guardado(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'telegram' => ['enabled' => true, 'bot_token' => '123:abc', 'webhook_secret' => 'secret', 'username' => 'bot_viejo'],
+        ]);
+
+        $this->actingAs($superAdmin)->put('/admin/chatbot-channels', [
+            'telegram_enabled' => '1',
+            'telegram_bot_token' => '999:xyz',
+        ]);
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertSame('', $channels['telegram']['username']);
+    }
+
+    public function test_guardar_sin_cambiar_el_bot_token_conserva_el_username(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'telegram' => ['enabled' => true, 'bot_token' => '123:abc', 'webhook_secret' => 'secret', 'username' => 'mi_bot'],
+        ]);
+
+        $this->actingAs($superAdmin)->put('/admin/chatbot-channels', [
+            'telegram_enabled' => '1',
+            'telegram_bot_token' => '123:abc',
+        ]);
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertSame('mi_bot', $channels['telegram']['username']);
     }
 
     public function test_probar_conexion_de_telegram_fallida_muestra_el_error(): void

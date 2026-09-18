@@ -33,6 +33,12 @@ class ChatbotChannelsController extends Controller
             // carácter que Telegram rechaza en secret_token). Se autogenera
             // en edit(), igual criterio que VapiSettingsController.
             'webhook_secret' => '',
+            // Username público del bot (sin '@'), ej. "PsicologaSv_bot" —
+            // se obtiene solo de getMe() al probar la conexión (testTelegram),
+            // nunca se escribe a mano, así no puede quedar mal tipeado.
+            // Usado para armar el link público t.me/<username> en la landing
+            // (ver SiteController::home()).
+            'username' => '',
         ],
         'whatsapp' => ['enabled' => false, 'phone_number_id' => '', 'access_token' => '', 'verify_token' => ''],
         'facebook' => ['enabled' => false, 'page_id' => '', 'page_access_token' => '', 'verify_token' => ''],
@@ -118,6 +124,11 @@ class ChatbotChannelsController extends Controller
                 'enabled' => $request->boolean('telegram_enabled'),
                 'bot_token' => $data['telegram_bot_token'] ?? '',
                 'webhook_secret' => $current['telegram']['webhook_secret'],
+                // Si cambia el token (bot distinto), el username guardado ya
+                // no aplica hasta la próxima "Probar conexión" — se limpia
+                // para no mostrar en la landing el bot equivocado mientras
+                // tanto.
+                'username' => ($data['telegram_bot_token'] ?? '') === $current['telegram']['bot_token'] ? $current['telegram']['username'] : '',
             ],
             'whatsapp' => [
                 'enabled' => $request->boolean('whatsapp_enabled'),
@@ -226,6 +237,10 @@ class ChatbotChannelsController extends Controller
         try {
             $me = $telegram->getMe();
             $telegram->setWebhook(route('webhooks.telegram'));
+
+            $channels = array_replace_recursive(self::DEFAULTS, $this->settings->get('chatbot_channels', []));
+            $channels['telegram']['username'] = $me['username'] ?? '';
+            $this->settings->set('chatbot_channels', $channels);
 
             return back()->with('telegram_test_result', [
                 'ok' => true,

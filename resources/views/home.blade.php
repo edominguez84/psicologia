@@ -501,6 +501,17 @@
                         <span class="block text-sm font-semibold text-on-card-fixed">{{ $s['contact']['whatsapp_show'] }}</span>
                     </span>
                 </a>
+                @if (! empty($telegramUsername))
+                    <a href="https://t.me/{{ $telegramUsername }}" target="_blank" rel="noopener" class="flex items-center gap-3 rounded-2xl border border-paper-200 bg-card-fixed p-4 transition-colors hover:border-sky-300">
+                        <span class="grid size-10 place-items-center rounded-full bg-sky-100 text-sky-600">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.6 20c-.2 1-.9 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9L18 7.5c.4-.3-.1-.5-.6-.2L6.6 14.2l-4.8-1.5c-1-.3-1-1 .2-1.5L20.6 3.4c.8-.3 1.6.2 1.3 1z"/></svg>
+                        </span>
+                        <span>
+                            <span class="block text-xs font-bold uppercase tracking-wider text-on-card-fixed-soft">Telegram</span>
+                            <span class="block text-sm font-semibold text-on-card-fixed">@{{ $telegramUsername }}</span>
+                        </span>
+                    </a>
+                @endif
                 <a href="mailto:{{ $s['contact']['email'] }}" class="flex items-center gap-3 rounded-2xl border border-paper-200 bg-card-fixed p-4 transition-colors hover:border-sky-300">
                     <span class="grid size-10 place-items-center rounded-full bg-sky-100 text-sky-600">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
