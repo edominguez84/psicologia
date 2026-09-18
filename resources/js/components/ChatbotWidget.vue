@@ -23,6 +23,15 @@ const props = defineProps({
     // Preguntas frecuentes administrables desde /admin/chatbot-faqs
     // (super_admin), en el orden que ella definió. Cada una: {id, question, answer}.
     faqs: { type: Array, default: () => [] },
+    // Cierre automático por inactividad (configurable en
+    // /admin/chatbot-channels) — aplica tanto al modo FAQ como al modo IA.
+    // Se resuelve enteramente en el navegador: no depende de ningún cron ni
+    // llamada al backend, a diferencia del mismo timeout para Telegram (ver
+    // App\Console\Commands\CloseInactiveChatbotConversations), que sí
+    // necesita un push real porque no hay una ventana de chat abierta
+    // esperando la respuesta.
+    inactivityTimeoutMinutes: { type: Number, default: 5 },
+    farewellMessage: { type: String, default: 'Veo que no tienes otra consulta, buen día, adiós.' },
 });
 
 // Pasos del flujo sin IA: recoger datos de contacto antes de dejar conversar.
@@ -46,6 +55,39 @@ function pushMessage(from, text) {
     });
 }
 
+// Cierre por inactividad: el reloj se reinicia solo cuando el visitante
+// manda un mensaje nuevo (no por abrir la ventana ni por leer la
+// respuesta) — ver resetInactivityTimer(), llamado desde submitPhone(),
+// sendDraft() y sendAiMessage().
+let inactivityTimer = null;
+
+function clearInactivityTimer() {
+    if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = null;
+    }
+}
+
+function resetInactivityTimer() {
+    clearInactivityTimer();
+    if (!(props.inactivityTimeoutMinutes > 0)) return;
+
+    inactivityTimer = setTimeout(() => {
+        endConversationByInactivity();
+    }, props.inactivityTimeoutMinutes * 60 * 1000);
+}
+
+function endConversationByInactivity() {
+    if (!open.value || step.value === 'intro') return;
+
+    pushMessage('bot', props.farewellMessage);
+    // Breve pausa para que el visitante alcance a leer la despedida antes
+    // de que la ventana se cierre sola.
+    setTimeout(() => {
+        close();
+    }, 2500);
+}
+
 function toggle() {
     open.value = !open.value;
     if (open.value && step.value === 'intro') {
@@ -61,6 +103,7 @@ function toggle() {
 
 function close() {
     open.value = false;
+    clearInactivityTimer();
 }
 
 function submitName() {
@@ -89,6 +132,7 @@ async function submitPhone() {
     }
     step.value = 'chat';
     pushMessage('bot', `Gracias, ${lead.name.split(' ')[0]}. Elige una opción o escríbeme directamente lo que necesitas:`);
+    resetInactivityTimer();
     await saveLead();
 }
 
@@ -122,6 +166,7 @@ function sendDraft() {
     pushMessage('user', text);
     draft.value = '';
     pushMessage('bot', `Gracias por contarme. Le paso este mensaje a la psicóloga y te contactaremos pronto a ${lead.email || 'tu correo'}. Si prefieres una respuesta inmediata, escríbenos por WhatsApp.`);
+    resetInactivityTimer();
 }
 
 async function sendAiMessage() {
@@ -129,6 +174,7 @@ async function sendAiMessage() {
     if (!text || sending.value) return;
     pushMessage('user', text);
     draft.value = '';
+    resetInactivityTimer();
     sending.value = true;
     try {
         const { data } = await window.axios.post(props.chatEndpoint, { message: text });

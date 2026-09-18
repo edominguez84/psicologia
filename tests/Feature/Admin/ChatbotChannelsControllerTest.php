@@ -250,4 +250,34 @@ class ChatbotChannelsControllerTest extends TestCase
 
         $this->actingAs($admin)->post('/admin/chatbot-channels/pdf-source', ['pdf_source' => $pdf])->assertForbidden();
     }
+
+    public function test_guarda_el_toggle_del_widget_web_y_el_timeout_de_inactividad(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+        $this->actingAs($superAdmin)->put('/admin/chatbot-channels', [
+            'web_widget_enabled' => '1',
+            'chat_inactivity_timeout_minutes' => '10',
+            'chat_farewell_message' => 'Hasta luego, que tengas buen día.',
+        ]);
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertTrue($channels['chat_widget']['web_widget_enabled']);
+        $this->assertSame(10, $channels['chat_widget']['inactivity_timeout_minutes']);
+        $this->assertSame('Hasta luego, que tengas buen día.', $channels['chat_widget']['farewell_message']);
+    }
+
+    public function test_desmarcar_el_toggle_del_widget_web_lo_apaga(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        app(SiteSettingsService::class)->set('chatbot_channels', [
+            'chat_widget' => ['web_widget_enabled' => true, 'inactivity_timeout_minutes' => 5, 'farewell_message' => 'Adiós.'],
+        ]);
+
+        // No se envía 'web_widget_enabled' en el POST — checkbox desmarcado.
+        $this->actingAs($superAdmin)->put('/admin/chatbot-channels', []);
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertFalse($channels['chat_widget']['web_widget_enabled']);
+    }
 }

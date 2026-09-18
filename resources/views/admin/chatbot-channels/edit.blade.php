@@ -155,6 +155,35 @@
             </div>
         </div>
 
+        {{-- Chat del sitio web --}}
+        <div class="rounded-2xl border border-paper-200 p-5">
+            <h2 class="font-serif text-lg text-sky-800">Chat del sitio web</h2>
+            <p class="mt-1 text-sm text-ink-soft">
+                Controla el widget de chat flotante que ven los visitantes en el sitio, y el cierre
+                automático por inactividad — aplica tanto al modo preguntas frecuentes como al modo IA,
+                y tanto al chat del sitio como al bot de Telegram.
+            </p>
+
+            <label class="mt-4 flex items-center gap-3 rounded-xl border border-paper-200 bg-paper-50 px-4 py-3 text-sm">
+                <input type="checkbox" name="web_widget_enabled" value="1" @checked($channels['chat_widget']['web_widget_enabled']) class="accent-sky-600">
+                Mostrar el widget de chat en el sitio web
+            </label>
+
+            <div class="mt-4">
+                <label for="chat_inactivity_timeout_minutes" class="mb-1.5 block text-sm font-semibold text-sky-700">Minutos de inactividad antes de despedirse</label>
+                <input type="number" name="chat_inactivity_timeout_minutes" id="chat_inactivity_timeout_minutes" min="1" max="120"
+                    value="{{ old('chat_inactivity_timeout_minutes', $channels['chat_widget']['inactivity_timeout_minutes']) }}"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">
+                <p class="mt-1 text-xs text-ink-soft">Si el visitante no escribe nada en este tiempo, el chat se despide y se cierra solo.</p>
+            </div>
+
+            <div class="mt-4">
+                <label for="chat_farewell_message" class="mb-1.5 block text-sm font-semibold text-sky-700">Mensaje de despedida por inactividad</label>
+                <textarea name="chat_farewell_message" id="chat_farewell_message" rows="2" maxlength="500"
+                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400">{{ old('chat_farewell_message', $channels['chat_widget']['farewell_message']) }}</textarea>
+            </div>
+        </div>
+
         {{-- WhatsApp Business --}}
         <div class="rounded-2xl border border-paper-200 p-5">
             <div class="flex items-center justify-between gap-4">

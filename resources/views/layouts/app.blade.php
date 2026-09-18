@@ -103,6 +103,11 @@
         $chatbotFaqs = $chatbotDemoMode
             ? []
             : \App\Models\ChatbotFaq::active()->ordered()->get(['id', 'question', 'answer'])->toArray();
+        // Mostrar/ocultar el widget + timeout de inactividad y su mensaje de
+        // despedida — configurables en /admin/chatbot-channels, aplican
+        // tanto al modo FAQ como al modo IA (ver ChatbotWidget.vue).
+        $chatbotWidgetSettings = app(\App\Services\SiteSettingsService::class)->get('chatbot_channels', [])['chat_widget'] ?? [];
+        $chatbotWebWidgetEnabled = $chatbotDemoMode ? true : ($chatbotWidgetSettings['web_widget_enabled'] ?? true);
         $chatbotProps = [
             'botName'     => $chatbotName,
             'botTagline'  => 'Asistente virtual de '.$chatbotOwnerFirstName,
@@ -117,9 +122,13 @@
             // en vez del flujo fijo de nombre→correo→teléfono→FAQ por
             // botones (ver App\Services\ChatbotAiService::isUsable()).
             'aiEnabled'   => $chatbotAiEnabled,
+            'inactivityTimeoutMinutes' => (int) ($chatbotWidgetSettings['inactivity_timeout_minutes'] ?? 5),
+            'farewellMessage' => $chatbotWidgetSettings['farewell_message'] ?? 'Veo que no tienes otra consulta, buen día, adiós.',
         ];
     @endphp
-    <div data-vue="ChatbotWidget" data-props="{{ json_encode($chatbotProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>
+    @if ($chatbotWebWidgetEnabled)
+        <div data-vue="ChatbotWidget" data-props="{{ json_encode($chatbotProps, JSON_HEX_APOS | JSON_HEX_QUOT) }}"></div>
+    @endif
 
     @auth
         @php
