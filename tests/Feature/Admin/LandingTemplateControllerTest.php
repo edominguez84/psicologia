@@ -47,6 +47,33 @@ class LandingTemplateControllerTest extends TestCase
         $edit->assertViewHas('active', 'minimal');
     }
 
+    /**
+     * Regresión: el <form> del panel usaba method="POST" sin @method('PUT')
+     * — Laravel enrutaba la petición como POST real contra una ruta
+     * registrada solo como PUT, y el navegador recibía "405 Method Not
+     * Allowed" al hacer clic en cualquier tarjeta. Los tests anteriores
+     * (arriba) llaman a $this->put() directo, bypaseando el <form> HTML por
+     * completo — nunca hubieran detectado esto. Este test sí envía la
+     * petición tal como el botón del formulario real la genera: un POST con
+     * el campo oculto _method=PUT que @method() imprime.
+     */
+    public function test_el_formulario_hace_el_spoofing_correcto_de_metodo_put(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $edit = $this->actingAs($admin)->get('/admin/landing-template');
+        $edit->assertSee('name="_method"', false);
+        $edit->assertSee('value="PUT"', false);
+
+        $response = $this->actingAs($admin)->post('/admin/landing-template', [
+            '_method' => 'PUT',
+            'template' => 'minimal',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionDoesntHaveErrors();
+    }
+
     public function test_rechaza_una_plantilla_que_no_existe_en_el_catalogo(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
