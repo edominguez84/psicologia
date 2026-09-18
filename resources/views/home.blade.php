@@ -508,7 +508,7 @@
                         </span>
                         <span>
                             <span class="block text-xs font-bold uppercase tracking-wider text-on-card-fixed-soft">Telegram</span>
-                            <span class="block text-sm font-semibold text-on-card-fixed">@{{ $telegramUsername }}</span>
+                            <span class="block text-sm font-semibold text-on-card-fixed">{{ '@'.$telegramUsername }}</span>
                         </span>
                     </a>
                 @endif
