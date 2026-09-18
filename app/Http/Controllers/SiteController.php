@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\ContactFormSettingsController;
 use App\Models\AnalyticsEvent;
+use App\Models\AppointmentSlot;
+use App\Models\CallSlot;
 use App\Models\CustomSection;
+use App\Models\Promotion;
 use App\Models\Testimonial;
 use App\Services\SiteSettingsService;
 use App\Support\HtmlSanitizer;
+use App\Support\LandingTemplates;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class SiteController extends Controller
 {
@@ -15,6 +21,14 @@ class SiteController extends Controller
     {
     }
 
+    /**
+     * Arma TODOS los datos que cualquier plantilla de landing necesita
+     * (resources/views/landing/{classic,minimal,cards}.blade.php) y decide
+     * cuál renderizar — ver App\Support\LandingTemplates. Este cálculo vivía
+     * antes dentro de home.blade.php; se movió aquí para que agregar una
+     * plantilla nueva sea solo una vista Blade nueva, sin duplicar esta
+     * lógica de negocio en cada una.
+     */
     public function home()
     {
         // Modo demo (Netlify sin backend): sin BD, sin secciones
@@ -24,6 +38,9 @@ class SiteController extends Controller
         if (! $demoMode) {
             $this->recordPageView();
         }
+
+        $s = config('site');
+        $wa = 'https://wa.me/'.$s['contact']['whatsapp'].'?text='.rawurlencode($s['whatsapp_prefill']);
 
         $customSections = $demoMode ? collect() : CustomSection::active()->ordered()->get();
 
@@ -45,12 +62,117 @@ class SiteController extends Controller
         $telegramChannel = $demoMode ? [] : ($this->settings->get('chatbot_channels', [])['telegram'] ?? []);
         $telegramUsername = ($telegramChannel['enabled'] ?? false) ? ($telegramChannel['username'] ?? '') : '';
 
-        return view('home', [
-            'site' => config('site'),
+        // Props para los componentes Vue (se serializan a JSON en el atributo data-props).
+        $mythProps = ['items' => $s['myths']['items']];
+        $faqProps = ['items' => $s['faq']['items']];
+        $checkupProps = [
+            'questions' => $s['checkup']['questions'],
+            'options' => $s['checkup']['options'],
+            'period' => $s['checkup']['period'],
+            'disclaimer' => $s['checkup']['disclaimer'],
+            'endpoint' => $demoMode ? null : route('checkup.store'),
+            'whatsapp' => $wa,
+            'demoMode' => $demoMode,
+            'results' => $s['checkup']['results'],
+        ];
+
+        // Campos del formulario de contacto: cuáles fijos mostrar y cuáles
+        // personalizados añadió el admin desde /admin/contact-form.
+        $contactFormSettings = $this->settings->get('contact_form', []);
+        $contactFieldDefaults = array_fill_keys(array_keys(ContactFormSettingsController::OPTIONAL_FIXED_FIELDS), true);
+        $contactVisibleFields = array_merge($contactFieldDefaults, $contactFormSettings['fields'] ?? []);
+        $contactCustomFields = $contactFormSettings['custom_fields'] ?? [];
+
+        $contactProps = [
+            'subjects' => $s['contact_section']['subjects'],
+            'endpoint' => $demoMode ? null : route('contact.store'),
+            'demoMode' => $demoMode,
+            'whatsapp' => $wa,
+            'visibleFields' => $contactVisibleFields,
+            'customFields' => $contactCustomFields,
+        ];
+
+        // La llamada gratis y "Agendar una cita" solo se ofrecen si hay cupo
+        // real configurado — evita que la paciente llene un formulario o se
+        // registre para toparse después con que no hay ningún horario
+        // disponible.
+        $availableCallSlots = $demoMode ? collect() : CallSlot::available()->ordered()->get();
+        $hasAvailableCallSlots = $demoMode || $availableCallSlots->isNotEmpty();
+        $hasAvailableAppointmentSlots = $demoMode || AppointmentSlot::available()->exists();
+
+        $scheduleCallProps = [
+            'subjects' => $s['contact_section']['subjects'],
+            'endpoint' => $demoMode ? null : route('contact.store'),
+            'demoMode' => $demoMode,
+            'whatsapp' => $wa,
+            'subject' => $s['contact_section']['subjects'][0] ?? null,
+            'visibleFields' => $contactVisibleFields,
+            'customFields' => $contactCustomFields,
+            'callSlots' => $availableCallSlots->map(fn ($slot) => [
+                'id' => $slot->id,
+                'label' => $slot->starts_at->format('d/m/Y H:i').' — '.$slot->ends_at->format('H:i'),
+            ])->values()->all(),
+        ];
+
+        // Foto de "Sobre mí": la subida desde /admin/about-photo tiene
+        // prioridad sobre la de config/site.php (mismo orden de prioridad
+        // que el logo).
+        $aboutPhotoOverride = $this->settings->get('about_photo');
+        $aboutPhotoUrl = ! empty($aboutPhotoOverride['path'])
+            ? Storage::url($aboutPhotoOverride['path'])
+            : asset($s['about']['photo']);
+
+        // Galería del carrusel de inicio: overrides de /admin/gallery si
+        // existen, si no las imágenes de ejemplo de config/site.php. Cada
+        // ruta se resuelve con asset() (imágenes de fábrica en
+        // public/images/) o Storage::url() (imágenes subidas por la
+        // administradora).
+        $galleryOverride = $this->settings->get('gallery');
+        $galleryImages = collect($galleryOverride['images'] ?? $s['gallery']['images'])
+            ->map(fn ($img) => [
+                'url' => str_starts_with($img['path'], 'gallery/')
+                    ? Storage::url($img['path'])
+                    : asset($img['path']),
+                'alt' => $img['alt'] ?: $s['name'],
+            ])
+            ->values()
+            ->all();
+        $galleryProps = ['images' => $galleryImages, 'aspectClass' => 'aspect-[4/3]'];
+
+        // Visibilidad de secciones: el admin puede ocultar (sin borrar)
+        // cualquier sección "hideable" desde /admin/section-visibility.
+        // Ausencia de key en lo guardado = visible (comportamiento de
+        // fábrica).
+        $sectionVisibility = $this->settings->get('section_visibility', []);
+        $isSectionVisible = fn (string $key) => $sectionVisibility[$key] ?? true;
+
+        // Promociones activas y todavía vigentes (scopeActive ya filtra por
+        // is_active y valid_until), en el orden definido por el admin.
+        $activePromotions = $demoMode ? collect() : Promotion::active()->ordered()->get();
+
+        $template = LandingTemplates::resolve($this->settings->get('landing_template')['key'] ?? null);
+
+        return view("landing.{$template}", [
+            'site' => $s,
+            's' => $s,
+            'wa' => $wa,
+            'demoMode' => $demoMode,
             'customSections' => $customSections,
             'patientTestimonials' => $patientTestimonials,
             'voiceRegistrationEnabled' => ! $demoMode && (bool) ($this->settings->get('voice_registration', [])['enabled'] ?? false),
             'telegramUsername' => $telegramUsername,
+            'mythProps' => $mythProps,
+            'faqProps' => $faqProps,
+            'checkupProps' => $checkupProps,
+            'contactProps' => $contactProps,
+            'scheduleCallProps' => $scheduleCallProps,
+            'hasAvailableCallSlots' => $hasAvailableCallSlots,
+            'hasAvailableAppointmentSlots' => $hasAvailableAppointmentSlots,
+            'aboutPhotoUrl' => $aboutPhotoUrl,
+            'galleryImages' => $galleryImages,
+            'galleryProps' => $galleryProps,
+            'isSectionVisible' => $isSectionVisible,
+            'activePromotions' => $activePromotions,
         ]);
     }
 
