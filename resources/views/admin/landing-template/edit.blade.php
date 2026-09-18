@@ -18,6 +18,7 @@
         @foreach ($templates as $key => $template)
             <form method="POST" action="{{ route('admin.landing-template.update') }}">
                 @csrf
+                @method('PUT')
                 <input type="hidden" name="template" value="{{ $key }}">
                 <button
                     type="submit"
