@@ -50,8 +50,7 @@
 
         <div>
             <label for="api_key" class="mb-1.5 block text-sm font-semibold text-sky-700">API key (Private Key)</label>
-            <input type="password" name="api_key" id="api_key" value="{{ old('api_key', $vapi['api_key']) }}"
-                class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" autocomplete="off">
+            <x-password-input name="api_key" id="api_key" value="{{ old('api_key', $vapi['api_key']) }}" autocomplete="off" />
         </div>
 
         <div>

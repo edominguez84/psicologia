@@ -39,6 +39,11 @@ class ContactMessage extends Model
         return $this->belongsTo(CallSlot::class);
     }
 
+    public function scopeUnhandled($query)
+    {
+        return $query->whereNull('handled_at');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

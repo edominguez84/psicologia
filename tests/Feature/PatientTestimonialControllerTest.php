@@ -32,6 +32,7 @@ class PatientTestimonialControllerTest extends TestCase
             'rating' => 5,
             'is_approved' => 0,
         ]);
+        $this->assertDatabaseHas('admin_notifications', ['type' => 'testimonial_pending', 'feature' => 'testimonials']);
     }
 
     public function test_requiere_una_calificacion_entre_1_y_5(): void

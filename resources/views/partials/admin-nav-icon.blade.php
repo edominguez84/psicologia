@@ -8,6 +8,8 @@
         'home'        => '<path d="M4 11.5 12 4l8 7.5M6 10v9a1 1 0 001 1h4v-6h2v6h4a1 1 0 001-1v-9"/>',
         'palette'     => '<circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10.5" r="1.2" fill="currentColor" stroke="none"/><path d="M12 21a9 9 0 010-18c1 3 3 2 3 4.5S13 12 16 12c2 0 3.5 1 3.5 3-1 4-4.5 6-7.5 6z"/>',
         'eye'         => '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+        'eye-off'     => '<path d="M3 3l18 18"/><path d="M10.6 5.6A9.9 9.9 0 0112 5.5c6 0 9.5 6.5 9.5 6.5a15.6 15.6 0 01-3.2 4M6.5 7.9C4 9.7 2.5 12 2.5 12S6 18.5 12 18.5a9.7 9.7 0 004.2-.9"/><path d="M9.9 10a3 3 0 004.1 4.1"/>',
+        'bell'        => '<path d="M6 9a6 6 0 1112 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 19a2 2 0 004 0"/>',
         'layout'      => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>',
         'image'       => '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m3 17 5-5 4 4 4-4 5 5"/>',
         'photo'       => '<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6l1.5-2h5L16 6"/><circle cx="12" cy="13" r="3.5"/>',

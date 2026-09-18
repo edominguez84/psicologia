@@ -33,11 +33,21 @@ use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\VapiSettingsController;
 use App\Http\Controllers\Admin\VoiceRegistrationSettingsController;
 use App\Http\Controllers\Admin\ThemeController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\UsersController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'banned', 'admin', 'session.idle', 'admin.feature'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // La campana de notificaciones (partials/notifications-bell.blade.php) —
+    // deliberadamente NO registrada en App\Support\AdminPermissions, así que
+    // cualquier admin autenticado puede consultarla; el filtrado por
+    // feature ocurre dentro del propio controlador.
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
 
     Route::get('/theme', [ThemeController::class, 'edit'])->name('theme.edit');
     Route::put('/theme', [ThemeController::class, 'update'])->name('theme.update');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Testimonial;
+use App\Services\NotificationService;
 use App\Support\ProfanityFilter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class PatientTestimonialController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, NotificationService $notifications): RedirectResponse
     {
         $data = $request->validate([
             'text' => ['required', 'string', 'max:1000'],
@@ -58,6 +59,14 @@ class PatientTestimonialController extends Controller
         $testimonial->rating = $data['rating'];
         $testimonial->forceFill(['is_approved' => false, 'approved_at' => null, 'approved_by' => null]);
         $testimonial->save();
+
+        $notifications->notify(
+            type: 'testimonial_pending',
+            title: 'Testimonio pendiente de aprobación',
+            body: Auth::user()->name,
+            link: route('admin.testimonials.index'),
+            feature: 'testimonials',
+        );
 
         return back()->with('status', 'Testimonio guardado. Quedará visible en el sitio una vez que lo revisemos.');
     }

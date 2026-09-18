@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreContactRequest;
 use App\Mail\ContactReceived;
 use App\Models\ContactMessage;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class ContactController extends Controller
 {
-    public function store(StoreContactRequest $request)
+    public function store(StoreContactRequest $request, NotificationService $notifications)
     {
         $data = $request->safe()->only([
             'name', 'email', 'phone', 'subject', 'message', 'preferred_contact', 'custom_fields', 'call_slot_id',
@@ -33,6 +34,14 @@ class ContactController extends Controller
         } catch (\Throwable $e) {
             Log::warning('No se pudo enviar el email de contacto: '.$e->getMessage());
         }
+
+        $notifications->notify(
+            type: 'contact_message',
+            title: 'Nuevo mensaje de contacto',
+            body: $message->name,
+            link: route('admin.messages.index'),
+            feature: 'messages',
+        );
 
         return response()->json([
             'ok'      => true,

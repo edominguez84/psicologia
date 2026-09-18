@@ -39,8 +39,7 @@
 
             <div class="mt-4">
                 <label for="telegram_bot_token" class="mb-1.5 block text-sm font-semibold text-sky-700">Token del bot</label>
-                <input type="password" name="telegram_bot_token" id="telegram_bot_token" value="{{ old('telegram_bot_token', $channels['telegram']['bot_token']) }}"
-                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" autocomplete="off">
+                <x-password-input name="telegram_bot_token" id="telegram_bot_token" value="{{ old('telegram_bot_token', $channels['telegram']['bot_token']) }}" autocomplete="off" />
             </div>
 
             @if (! empty($channels['telegram']['bot_token']))
@@ -68,8 +67,7 @@
 
             <div class="mt-4">
                 <label for="anthropic_api_key" class="mb-1.5 block text-sm font-semibold text-sky-700">API key</label>
-                <input type="password" name="anthropic_api_key" id="anthropic_api_key" value="{{ old('anthropic_api_key', $channels['anthropic']['api_key']) }}"
-                    class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" autocomplete="off" placeholder="sk-ant-...">
+                <x-password-input name="anthropic_api_key" id="anthropic_api_key" value="{{ old('anthropic_api_key', $channels['anthropic']['api_key']) }}" autocomplete="off" placeholder="sk-ant-..." />
                 <p class="mt-1 text-xs text-ink-soft">Sin esta llave (o con la IA apagada), se responde con preguntas frecuentes.</p>
             </div>
 
@@ -168,8 +166,7 @@
                 </div>
                 <div>
                     <label for="whatsapp_access_token" class="mb-1.5 block text-sm font-semibold text-sky-700">Access Token</label>
-                    <input type="password" name="whatsapp_access_token" id="whatsapp_access_token" value="{{ old('whatsapp_access_token', $channels['whatsapp']['access_token']) }}"
-                        class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" autocomplete="off">
+                    <x-password-input name="whatsapp_access_token" id="whatsapp_access_token" value="{{ old('whatsapp_access_token', $channels['whatsapp']['access_token']) }}" autocomplete="off" />
                 </div>
                 <div>
                     <label for="whatsapp_verify_token" class="mb-1.5 block text-sm font-semibold text-sky-700">Verify Token (para el webhook)</label>
@@ -203,8 +200,7 @@
                 </div>
                 <div>
                     <label for="facebook_page_access_token" class="mb-1.5 block text-sm font-semibold text-sky-700">Page Access Token</label>
-                    <input type="password" name="facebook_page_access_token" id="facebook_page_access_token" value="{{ old('facebook_page_access_token', $channels['facebook']['page_access_token']) }}"
-                        class="w-full rounded-xl border border-paper-200 bg-paper-50 px-4 py-2.5 text-sm outline-none focus:border-sky-400" autocomplete="off">
+                    <x-password-input name="facebook_page_access_token" id="facebook_page_access_token" value="{{ old('facebook_page_access_token', $channels['facebook']['page_access_token']) }}" autocomplete="off" />
                 </div>
                 <div>
                     <label for="facebook_verify_token" class="mb-1.5 block text-sm font-semibold text-sky-700">Verify Token (para el webhook)</label>

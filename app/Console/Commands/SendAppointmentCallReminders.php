@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Appointment;
+use App\Services\NotificationService;
 use App\Services\VapiCallService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +23,7 @@ class SendAppointmentCallReminders extends Command
 
     protected $description = 'Llama automáticamente (VAPI) a los pacientes con cita aprobada dentro de la ventana de aviso configurada';
 
-    public function handle(VapiCallService $vapi): int
+    public function handle(VapiCallService $vapi, NotificationService $notifications): int
     {
         if (! $vapi->isUsable()) {
             return self::SUCCESS;
@@ -47,6 +48,7 @@ class SendAppointmentCallReminders extends Command
                 // Sin teléfono no hay a quién llamar — se marca así para no
                 // reintentarlo en cada ejecución.
                 $appointment->forceFill(['vapi_call_status' => 'failed', 'vapi_call_result' => ['error' => 'El paciente no tiene teléfono registrado.']])->save();
+                $this->notifyCallFailed($notifications, $appointment, 'El paciente no tiene teléfono registrado.');
 
                 continue;
             }
@@ -66,9 +68,20 @@ class SendAppointmentCallReminders extends Command
                     'vapi_call_status' => 'failed',
                     'vapi_call_result' => ['error' => $e->getMessage()],
                 ])->save();
+                $this->notifyCallFailed($notifications, $appointment, $e->getMessage());
             }
         }
 
         return self::SUCCESS;
+    }
+
+    private function notifyCallFailed(NotificationService $notifications, Appointment $appointment, string $reason): void
+    {
+        $notifications->notify(
+            type: 'vapi_call_failed',
+            title: 'Llamada de confirmación fallida',
+            body: $reason,
+            link: route('admin.appointments.index'),
+        );
     }
 }
