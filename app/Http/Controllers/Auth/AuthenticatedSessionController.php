@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\SiteSettingsService;
 use App\Services\TrustedDeviceService;
 use App\Services\TwoFactorChallengeService;
+use App\Support\LoginTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,11 +16,16 @@ use Illuminate\View\View;
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Display the login view. La plantilla elegida en /admin/login-template
+     * (ver App\Support\LoginTemplates) solo cambia qué se incluye dentro de
+     * auth/login.blade.php — la lógica de abajo (store()) es la misma sin
+     * importar cuál esté activa.
      */
-    public function create(): View
+    public function create(SiteSettingsService $settings): View
     {
-        return view('auth.login');
+        $template = LoginTemplates::resolve($settings->get('login_template')['key'] ?? null);
+
+        return view('auth.login', ['loginTemplate' => $template]);
     }
 
     /**
