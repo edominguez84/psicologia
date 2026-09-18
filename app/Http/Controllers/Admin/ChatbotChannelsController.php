@@ -10,6 +10,7 @@ use App\Support\PdfTextExtractor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -24,7 +25,15 @@ use Illuminate\View\View;
 class ChatbotChannelsController extends Controller
 {
     private const DEFAULTS = [
-        'telegram' => ['enabled' => false, 'bot_token' => ''],
+        'telegram' => [
+            'enabled' => false,
+            'bot_token' => '',
+            // Secreto propio para el header X-Telegram-Bot-Api-Secret-Token
+            // del webhook — no puede ser el bot_token (contiene ':', un
+            // carácter que Telegram rechaza en secret_token). Se autogenera
+            // en edit(), igual criterio que VapiSettingsController.
+            'webhook_secret' => '',
+        ],
         'whatsapp' => ['enabled' => false, 'phone_number_id' => '', 'access_token' => '', 'verify_token' => ''],
         'facebook' => ['enabled' => false, 'page_id' => '', 'page_access_token' => '', 'verify_token' => ''],
         'anthropic' => [
@@ -67,6 +76,11 @@ class ChatbotChannelsController extends Controller
     {
         $channels = array_replace_recursive(self::DEFAULTS, $this->settings->get('chatbot_channels', []));
 
+        if (blank($channels['telegram']['webhook_secret'])) {
+            $channels['telegram']['webhook_secret'] = Str::random(40);
+            $this->settings->set('chatbot_channels', $channels);
+        }
+
         return view('admin.chatbot-channels.edit', [
             'channels' => $channels,
             'models' => AnthropicModels::all(),
@@ -103,6 +117,7 @@ class ChatbotChannelsController extends Controller
             'telegram' => [
                 'enabled' => $request->boolean('telegram_enabled'),
                 'bot_token' => $data['telegram_bot_token'] ?? '',
+                'webhook_secret' => $current['telegram']['webhook_secret'],
             ],
             'whatsapp' => [
                 'enabled' => $request->boolean('whatsapp_enabled'),

@@ -26,6 +26,31 @@ class ChatbotChannelsControllerTest extends TestCase
         $this->actingAs($admin)->get('/admin/chatbot-channels')->assertForbidden();
     }
 
+    public function test_al_entrar_se_autogenera_el_webhook_secret_de_telegram(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+        $this->actingAs($superAdmin)->get('/admin/chatbot-channels');
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertNotEmpty($channels['telegram']['webhook_secret']);
+    }
+
+    public function test_guardar_credenciales_conserva_el_webhook_secret_ya_generado(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        $this->actingAs($superAdmin)->get('/admin/chatbot-channels');
+        $original = app(SiteSettingsService::class)->get('chatbot_channels')['telegram']['webhook_secret'];
+
+        $this->actingAs($superAdmin)->put('/admin/chatbot-channels', [
+            'telegram_enabled' => '1',
+            'telegram_bot_token' => 'nuevo-token',
+        ]);
+
+        $channels = app(SiteSettingsService::class)->get('chatbot_channels');
+        $this->assertSame($original, $channels['telegram']['webhook_secret']);
+    }
+
     public function test_super_admin_puede_guardar_credenciales_de_los_tres_canales(): void
     {
         $superAdmin = User::factory()->create(['role' => 'super_admin']);
@@ -59,13 +84,16 @@ class ChatbotChannelsControllerTest extends TestCase
         ]);
         $superAdmin = User::factory()->create(['role' => 'super_admin']);
         app(SiteSettingsService::class)->set('chatbot_channels', [
-            'telegram' => ['enabled' => true, 'bot_token' => '123:abc'],
+            'telegram' => ['enabled' => true, 'bot_token' => '123:abc', 'webhook_secret' => 'webhook-secret-abc'],
         ]);
 
         $response = $this->actingAs($superAdmin)->post('/admin/chatbot-channels/test-telegram');
 
         $response->assertRedirect();
-        Http::assertSent(fn ($request) => str_contains($request->url(), 'setWebhook'));
+        // Regresión: secret_token no debe llevar el bot_token ('123:abc',
+        // contiene ':', carácter que Telegram rechaza en secret_token).
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'setWebhook')
+            && $request['secret_token'] === 'webhook-secret-abc');
     }
 
     public function test_probar_conexion_de_telegram_fallida_muestra_el_error(): void
