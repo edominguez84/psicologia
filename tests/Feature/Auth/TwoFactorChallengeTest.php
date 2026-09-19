@@ -4,7 +4,10 @@ namespace Tests\Feature\Auth;
 
 use App\Mail\LoginCode;
 use App\Models\User;
+use App\Services\TwoFactorChallengeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -130,5 +133,66 @@ class TwoFactorChallengeTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('patient.profile.edit', absolute: false));
+    }
+
+    private function configureTwilioCredentials(): void
+    {
+        config([
+            'services.twilio.sid' => 'AC-test-sid',
+            'services.twilio.token' => 'test-token',
+            'services.twilio.from' => '+14483332827',
+        ]);
+    }
+
+    public function test_metodo_sms_con_twilio_exitoso_no_envia_correo_y_guarda_el_canal_sms(): void
+    {
+        Mail::fake();
+        $this->configureTwilioCredentials();
+        Http::fake(['api.twilio.com/*' => Http::response(['sid' => 'SM123', 'status' => 'queued'], 201)]);
+
+        $user = User::factory()->create(['two_factor_method' => 'sms', 'phone_number' => '77778888']);
+
+        app(TwoFactorChallengeService::class)->issueChallenge($user);
+
+        Mail::assertNotSent(LoginCode::class);
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.twilio.com/2010-04-01/Accounts/AC-test-sid/Messages.json'
+            && $request['To'] === '+50377778888');
+        $this->assertSame('sms', $user->loginCodes()->latest('id')->first()->channel);
+    }
+
+    public function test_metodo_sms_con_twilio_fallando_cae_a_email_y_actualiza_el_canal(): void
+    {
+        Log::spy();
+        Mail::fake();
+        $this->configureTwilioCredentials();
+        Http::fake(['api.twilio.com/*' => Http::response(['message' => 'The number is unverified'], 400)]);
+
+        $user = User::factory()->create(['two_factor_method' => 'sms', 'phone_number' => '77778888']);
+
+        app(TwoFactorChallengeService::class)->issueChallenge($user);
+
+        Mail::assertSent(LoginCode::class);
+        $this->assertSame('email', $user->loginCodes()->latest('id')->first()->channel);
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn (string $message) => str_contains($message, 'fallo enviando SMS'))
+            ->once();
+    }
+
+    public function test_metodo_sms_sin_credenciales_de_twilio_sigue_cayendo_a_email_como_antes(): void
+    {
+        Mail::fake();
+        config([
+            'services.twilio.sid' => null,
+            'services.twilio.token' => null,
+            'services.twilio.from' => null,
+        ]);
+
+        $user = User::factory()->create(['two_factor_method' => 'sms', 'phone_number' => '77778888']);
+
+        app(TwoFactorChallengeService::class)->issueChallenge($user);
+
+        Mail::assertSent(LoginCode::class);
+        Http::assertNothingSent();
+        $this->assertSame('email', $user->loginCodes()->latest('id')->first()->channel);
     }
 }

@@ -98,6 +98,29 @@
             <x-input-error :messages="$errors->get('municipality')" class="mt-1" />
         </div>
 
+        @if ($smsAvailable)
+            <div>
+                <x-input-label value="¿Cómo prefieres verificar tu cuenta?" />
+                <div class="mt-1 flex flex-wrap gap-2">
+                    @foreach (['email' => 'Correo', 'sms' => 'SMS'] as $channel => $label)
+                        <label
+                            class="cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition-colors {{ old('two_factor_method', 'email') === $channel ? 'border-sky-600 bg-sky-600 text-on-dark' : 'border-paper-200 bg-paper-50 text-ink-soft hover:border-sky-300' }}"
+                        >
+                            <input
+                                type="radio" name="two_factor_method" value="{{ $channel }}" class="sr-only"
+                                @checked(old('two_factor_method', 'email') === $channel)
+                            >
+                            {{ $label }}
+                        </label>
+                    @endforeach
+                </div>
+                <p class="mt-1 text-xs text-ink-soft">
+                    Si eliges SMS y no logra enviarse, te mandaremos el código por correo.
+                </p>
+                <x-input-error :messages="$errors->get('two_factor_method')" class="mt-1" />
+            </div>
+        @endif
+
         <x-password-strength-field name="password" label="Contraseña" />
 
         <div>

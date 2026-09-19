@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\StoreRegistrationRequest;
 use App\Models\Promotion;
 use App\Models\User;
+use App\Services\SecurityAvailability;
 use App\Services\TwoFactorChallengeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -20,10 +21,11 @@ class RegisteredUserController extends Controller
      * ni de $request->all(), ni de validated() — para que no exista ninguna
      * superficie de mass-assignment de rol desde un formulario público.
      */
-    public function create(Request $request): View
+    public function create(Request $request, SecurityAvailability $availability): View
     {
         return view('auth.register', [
             'promotionId' => $request->integer('promotion') ?: null,
+            'smsAvailable' => $availability->channels()['sms'],
         ]);
     }
 
@@ -41,6 +43,7 @@ class RegisteredUserController extends Controller
             'municipality' => $data['municipality'],
             'password' => Hash::make($data['password']),
             'role' => 'patient',
+            'two_factor_method' => $data['two_factor_method'] ?? 'email',
         ]);
 
         // Mismo flujo que el login normal: no se autentica todavía, se exige

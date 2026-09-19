@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Mail\LoginCode;
 use App\Models\User;
+use App\Services\SiteSettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -191,5 +192,64 @@ class RegistrationTest extends TestCase
         $response = $this->post('/2fa/verify', ['code' => $sent]);
 
         $response->assertRedirect(route('patient.appointments.index', ['promotion' => $promotion->id]));
+    }
+
+    private function enableSmsChannel(): void
+    {
+        config([
+            'services.twilio.sid' => 'AC-test-sid',
+            'services.twilio.token' => 'test-token',
+            'services.twilio.from' => '+14483332827',
+        ]);
+        app(SiteSettingsService::class)->set('security', ['channels' => ['sms' => true]]);
+    }
+
+    public function test_el_selector_de_metodo_no_aparece_si_sms_no_esta_disponible(): void
+    {
+        $response = $this->get('/register');
+
+        $response->assertOk();
+        $response->assertDontSee('name="two_factor_method"', false);
+    }
+
+    public function test_el_selector_de_metodo_aparece_si_sms_esta_disponible(): void
+    {
+        $this->enableSmsChannel();
+
+        $response = $this->get('/register');
+
+        $response->assertOk();
+        $response->assertSee('name="two_factor_method"', false);
+    }
+
+    public function test_registrarse_eligiendo_sms_guarda_el_metodo_sms(): void
+    {
+        $this->enableSmsChannel();
+        Mail::fake();
+
+        $this->post('/register', [...$this->validPayload, 'two_factor_method' => 'sms']);
+
+        $user = User::where('email', 'ana@example.com')->first();
+        $this->assertSame('sms', $user->two_factor_method);
+    }
+
+    public function test_registrarse_sin_elegir_metodo_sigue_quedando_email_por_defecto(): void
+    {
+        Mail::fake();
+
+        $this->post('/register', $this->validPayload);
+
+        $user = User::where('email', 'ana@example.com')->first();
+        $this->assertSame('email', $user->two_factor_method);
+    }
+
+    public function test_no_se_puede_forzar_whatsapp_desde_el_registro(): void
+    {
+        $this->enableSmsChannel();
+
+        $response = $this->post('/register', [...$this->validPayload, 'two_factor_method' => 'whatsapp']);
+
+        $response->assertSessionHasErrors('two_factor_method');
+        $this->assertDatabaseMissing('users', ['email' => 'ana@example.com']);
     }
 }
