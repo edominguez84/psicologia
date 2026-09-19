@@ -64,4 +64,24 @@ class SecurityControllerTest extends TestCase
 
         $this->assertTrue(app(SecurityAvailability::class)->channels()['sms']);
     }
+
+    public function test_el_formulario_incluye_el_spoofing_correcto_de_metodo_put(): void
+    {
+        // Regresión: el <form> tenía method="PUT" en el HTML, un valor
+        // inválido que todo navegador real trata como GET silenciosamente
+        // (el atributo method solo acepta GET/POST) — el _method=PUT viajaba
+        // como query string y Laravel lo ignoraba por venir en un GET, así
+        // que el guardado nunca llegaba a update() y la página solo volvía a
+        // mostrar los valores tal cual estaban, dando la impresión de que el
+        // checkbox marcado "se reseteaba" al guardar. El form debe declarar
+        // method="POST" en el HTML; @method('PUT') es lo que lo traduce a
+        // PUT del lado del servidor.
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $edit = $this->actingAs($admin)->get('/admin/security');
+        $edit->assertSee('method="POST"', false);
+        $edit->assertDontSee('method="PUT"', false);
+        $edit->assertSee('name="_method"', false);
+        $edit->assertSee('value="PUT"', false);
+    }
 }
