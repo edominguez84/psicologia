@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -125,7 +126,7 @@ class VapiCallService
             'assistantId' => $assistantId ?? $credentials['assistant_id'],
             'phoneNumberId' => $credentials['phone_number_id'],
             'customer' => [
-                'number' => $this->normalizePhoneNumber($phoneNumber),
+                'number' => PhoneNumber::normalize($phoneNumber),
             ],
             'assistantOverrides' => [
                 'variableValues' => [
@@ -203,26 +204,6 @@ class VapiCallService
         }
 
         return hash_equals($secret, $received);
-    }
-
-    /**
-     * VAPI espera el número en formato E.164 (+50370000000). Los teléfonos
-     * ya guardados en el sitio pueden venir sin el símbolo '+' o con
-     * espacios/guiones (el registro no fuerza un formato estricto) — se
-     * normaliza lo mejor posible antes de mandarlo; si ya trae un '+',
-     * se respeta tal cual.
-     */
-    private function normalizePhoneNumber(string $phone): string
-    {
-        $digitsOnly = preg_replace('/[^0-9+]/', '', $phone);
-
-        if (str_starts_with($digitsOnly, '+')) {
-            return $digitsOnly;
-        }
-
-        // Sin código de país explícito, se asume El Salvador (+503) — el
-        // sitio opera principalmente ahí (ver ElSalvadorLocations).
-        return '+503'.$digitsOnly;
     }
 
     private function credentials(): array

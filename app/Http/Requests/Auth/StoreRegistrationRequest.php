@@ -24,6 +24,9 @@ class StoreRegistrationRequest extends FormRequest
             'sex' => ['required', Rule::in(['male', 'female', 'other'])],
             'department' => ['required', Rule::in(array_keys(ElSalvadorLocations::all()))],
             'municipality' => ['required', 'string'],
+            // Solo email/sms desde el registro público — whatsapp/totp se
+            // activan luego desde el panel de seguridad, nunca de entrada.
+            'two_factor_method' => ['nullable', Rule::in(['email', 'sms'])],
             // Mínimo 10 caracteres, con mayúscula, minúscula, número y
             // símbolo — mismo criterio que el medidor de fuerza que ve la
             // persona en el formulario (resources/js/password-strength.js),

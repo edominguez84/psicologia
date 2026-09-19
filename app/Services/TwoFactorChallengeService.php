@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Mail\LoginCode as LoginCodeMail;
 use App\Models\LoginCode;
 use App\Models\User;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -12,8 +13,10 @@ use PragmaRX\Google2FA\Google2FA;
 
 class TwoFactorChallengeService
 {
-    public function __construct(private SecurityAvailability $availability)
-    {
+    public function __construct(
+        private SecurityAvailability $availability,
+        private TwilioSmsService $twilioSms,
+    ) {
     }
 
     /**
@@ -54,7 +57,7 @@ class TwoFactorChallengeService
         $code = (string) random_int(100000, 999999);
         $expiresAt = now()->addHours(2);
 
-        LoginCode::create([
+        $loginCode = LoginCode::create([
             'user_id' => $user->id,
             'code_hash' => Hash::make($code),
             'channel' => $effectiveChannel,
@@ -62,8 +65,26 @@ class TwoFactorChallengeService
             'created_at' => now(),
         ]);
 
-        // TODO: cuando haya credenciales Twilio configuradas, enviar por
-        // sms/whatsapp real en vez de caer siempre a email aquí.
+        if ($effectiveChannel === 'sms') {
+            try {
+                $this->twilioSms->send(
+                    PhoneNumber::normalize($user->phone_number),
+                    'Tu código de acceso a '.config('site.name')." es {$code}. Vence en 2 horas.",
+                );
+
+                return;
+            } catch (\Throwable $e) {
+                // Fallo real de Twilio (no solo falta de credenciales, ya
+                // cubierto arriba) — número inválido, cuenta suspendida,
+                // etc. Se cae a email en caliente para no dejar a la
+                // persona sin poder verificar su cuenta, actualizando el
+                // canal ya guardado para que quede reflejado el que
+                // realmente se usó.
+                Log::warning("2FA: fallo enviando SMS al usuario {$user->id}, se envía por email como respaldo: ".$e->getMessage());
+                $loginCode->update(['channel' => 'email']);
+            }
+        }
+
         Mail::to($user)->send(new LoginCodeMail($code, $expiresAt));
     }
 
