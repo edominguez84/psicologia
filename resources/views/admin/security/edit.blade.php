@@ -6,7 +6,7 @@
         de entorno configuradas queda "pendiente" y el sistema sigue usando email de respaldo.
     </p>
 
-    <form method="PUT" action="{{ route('admin.security.update') }}" class="mt-8 max-w-lg space-y-8">
+    <form method="POST" action="{{ route('admin.security.update') }}" class="mt-8 max-w-lg space-y-8">
         @csrf
         @method('PUT')
 
