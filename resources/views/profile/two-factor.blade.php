@@ -11,7 +11,7 @@
             Método actual: <strong class="text-sky-700">{{ ucfirst($user->effectiveTwoFactorMethod()) }}</strong>
         </p>
 
-        <form method="PUT" action="{{ route('two-factor.method.update') }}" class="mb-6 space-y-3">
+        <form method="POST" action="{{ route('two-factor.method.update') }}" class="mb-6 space-y-3">
             @csrf
             @method('PUT')
             <div class="flex flex-wrap gap-2">
